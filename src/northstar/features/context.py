@@ -113,3 +113,108 @@ def add_backward_looking_player_context(
     )
 
     return frame
+
+
+def _daily_prior_metric_features(
+    frame: pd.DataFrame,
+    entity_column: str,
+    value_column: str,
+    prefix: str,
+) -> pd.DataFrame:
+    """Build prior-date expanding features for an arbitrary run-value metric."""
+    data = frame[[entity_column, "game_date", value_column]].copy()
+    positive_column = f"positive_{value_column}"
+    data[positive_column] = data[value_column].gt(0).astype(int)
+
+    daily = (
+        data.groupby([entity_column, "game_date"], as_index=False)
+        .agg(
+            daily_count=(value_column, "size"),
+            daily_value_sum=(value_column, "sum"),
+            daily_positive=(positive_column, "sum"),
+        )
+        .sort_values([entity_column, "game_date"])
+        .reset_index(drop=True)
+    )
+
+    grouped = daily.groupby(entity_column, sort=False)
+    daily[f"{prefix}_prior_count"] = (
+        grouped["daily_count"].cumsum() - daily["daily_count"]
+    )
+    daily[f"{prefix}_prior_value_sum"] = (
+        grouped["daily_value_sum"].cumsum() - daily["daily_value_sum"]
+    )
+    daily[f"{prefix}_prior_positive"] = (
+        grouped["daily_positive"].cumsum() - daily["daily_positive"]
+    )
+
+    count = daily[f"{prefix}_prior_count"].replace(0, np.nan)
+    daily[f"{prefix}_prior_value_per_pa"] = (
+        daily[f"{prefix}_prior_value_sum"] / count
+    )
+    daily[f"{prefix}_prior_positive_pa_pct"] = (
+        daily[f"{prefix}_prior_positive"] / count
+    ) * 100.0
+    daily[f"{prefix}_prior_log_count"] = np.log1p(daily[f"{prefix}_prior_count"])
+
+    return daily[
+        [
+            entity_column,
+            "game_date",
+            f"{prefix}_prior_count",
+            f"{prefix}_prior_value_per_pa",
+            f"{prefix}_prior_positive_pa_pct",
+            f"{prefix}_prior_log_count",
+        ]
+    ]
+
+
+def add_backward_looking_terminal_context(
+    plate_appearances: pd.DataFrame,
+) -> pd.DataFrame:
+    """Add prior-date batter/pitcher features based on terminal-event RE24."""
+    required = {"game_date", "batter", "pitcher", "terminal_event_re24"}
+    missing = required.difference(plate_appearances.columns)
+    if missing:
+        raise ValueError(f"Missing plate-appearance columns: {sorted(missing)}")
+
+    frame = plate_appearances.copy()
+    frame["game_date"] = pd.to_datetime(frame["game_date"], errors="coerce")
+    frame["batter"] = pd.to_numeric(frame["batter"], errors="coerce")
+    frame["pitcher"] = pd.to_numeric(frame["pitcher"], errors="coerce")
+    frame["terminal_event_re24"] = pd.to_numeric(
+        frame["terminal_event_re24"], errors="coerce"
+    )
+
+    frame = frame.dropna(
+        subset=["game_date", "batter", "pitcher", "terminal_event_re24"]
+    ).copy()
+    frame["batter"] = frame["batter"].astype("int64")
+    frame["pitcher"] = frame["pitcher"].astype("int64")
+
+    batter_daily = _daily_prior_metric_features(
+        frame,
+        entity_column="batter",
+        value_column="terminal_event_re24",
+        prefix="batter_terminal",
+    )
+    pitcher_daily = _daily_prior_metric_features(
+        frame,
+        entity_column="pitcher",
+        value_column="terminal_event_re24",
+        prefix="pitcher_terminal",
+    )
+
+    frame = frame.merge(
+        batter_daily,
+        on=["batter", "game_date"],
+        how="left",
+        validate="many_to_one",
+    )
+    frame = frame.merge(
+        pitcher_daily,
+        on=["pitcher", "game_date"],
+        how="left",
+        validate="many_to_one",
+    )
+    return frame
