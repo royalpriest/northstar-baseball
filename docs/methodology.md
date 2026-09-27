@@ -971,6 +971,47 @@ This design does not prove causality. It asks a narrower and cleaner question: w
 NorthStar component contains player information that helps predict future observed skill after the conventional
 early-season skill measures are already known.
 
+## Phase 2u: final hitter-metric decision
+
+The direct future-skill audit closes the first NorthStar hitter-metric research cycle.
+
+### Contact conclusion
+
+Early conventional contact skill already contains essentially all of the useful information for predicting
+late observed contact rate. Adding early NorthStar contact-above-expected changes paired out-of-fold R² by
+approximately zero and does not materially improve Pearson, Spearman, MAE, or RMSE.
+
+NorthStar contact remains valuable as an explanatory quantity because it conditions contact on the difficulty
+of the pitches a hitter actually swung at. It should be presented as a contextual diagnostic, not as an
+incrementally predictive standalone skill.
+
+### Damage conclusion
+
+Early NorthStar damage adds modest future-prediction value when the base model contains only average exit
+velocity, hard-hit rate, barrel rate, and sweet-spot rate. That increment disappears when raw xwOBA on contact
+is already available.
+
+This supports a narrower interpretation: NorthStar damage can summarize context adjustment beyond coarse
+batted-ball-quality descriptors, but it does not add incremental future information beyond the stronger
+xwOBA-on-contact construct used in the final comparison.
+
+### Product interpretation
+
+The research does not justify a single CCA-style hitter metric.
+
+NorthStar instead retains three contextual diagnostics:
+- selection / decision context
+- contact above expected
+- damage above expected
+
+These diagnostics are shown beside conventional measures rather than replacing them. The intended use is
+explanatory:
+
+`What part of this hitter's observed profile comes from choices, contact skill, damage skill, and opportunity?`
+
+This is a descriptive analytical framework, not a claim of causal player ability or a superior universal
+ranking statistic.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
