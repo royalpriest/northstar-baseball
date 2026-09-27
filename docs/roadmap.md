@@ -105,24 +105,36 @@
 - [x] Add stabilized weight diagnostics and effective sample size
 - [x] Add weight-cap refits at 3, 5, 10, and 20
 - [x] Add clustered policy-sensitivity reporting by cap
-- [ ] Run cross-fit evaluation and preserve results
-- [ ] Decide whether the result survives nuisance-model and weight-cap sensitivity
-- [ ] If stable, move to external-season validation before defining a player metric
+- [x] Run cross-fit evaluation and preserve results
+- [x] Confirm stability across caps 3, 5, 10, and 20
+- [x] Advance to external-season validation rather than further 2025 tuning
 
-## M11 — Canada layer
+## M11 — External-season validation
+- [x] Make baseline builder season-aware
+- [x] Add 2024 -> 2025 transport workflow
+- [x] Keep RE/state values, propensity calibration, and action models training-season only
+- [x] Add external state-coverage and propensity-transport diagnostics
+- [x] Add external factual and clustered policy sensitivity across weight caps
+- [x] Build the complete 2024 baseline dataset
+- [x] Run 2024 -> 2025 external validation and preserve results
+- [x] Confirm complete 2024-state coverage of 2025 external decision states
+- [x] Confirm stable external signal across weight caps 3, 5, 10, and 20
+- [x] Advance to player-metric prototyping while retaining observational caveats
+
+## M12 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M12 — Product
+## M13 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M13 — Production engineering
+## M14 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion

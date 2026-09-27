@@ -14,6 +14,21 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build NorthStar's Phase 1 run-expectancy baseline.")
     parser.add_argument("--start", default="2025-03-18", help="YYYY-MM-DD")
     parser.add_argument("--end", default="2025-09-28", help="YYYY-MM-DD")
+    parser.add_argument("--season", type=int, default=2025)
+    parser.add_argument(
+        "--raw-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Statcast cache directory. Defaults to data/raw/statcast for 2025 "
+            "and data/raw/statcast_<season> for other seasons."
+        ),
+    )
+    parser.add_argument(
+        "--processed-dir",
+        type=Path,
+        default=Path("data/processed"),
+    )
     parser.add_argument("--chunk-days", type=int, default=7)
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
@@ -21,8 +36,18 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    raw_dir = Path("data/raw/statcast")
-    processed_dir = Path("data/processed")
+    if args.season < 2008:
+        raise ValueError("--season must be >= 2008 for Statcast-era workflows")
+
+    raw_dir = args.raw_dir
+    if raw_dir is None:
+        raw_dir = (
+            Path("data/raw/statcast")
+            if args.season == 2025
+            else Path(f"data/raw/statcast_{args.season}")
+        )
+
+    processed_dir = args.processed_dir
     processed_dir.mkdir(parents=True, exist_ok=True)
 
     pull = StatcastPull(
@@ -40,10 +65,21 @@ def main() -> None:
     plate_appearances = add_re24(plate_appearances, expectancy)
     score_probability = build_scoring_probability_table(plate_appearances)
 
-    plate_appearances.to_parquet(processed_dir / "plate_appearances_2025.parquet", index=False)
-    expectancy.to_csv(processed_dir / "run_expectancy_2025.csv", index=False)
-    score_probability.to_csv(processed_dir / "scoring_probability_2025.csv", index=False)
+    plate_appearances.to_parquet(
+        processed_dir / f"plate_appearances_{args.season}.parquet",
+        index=False,
+    )
+    expectancy.to_csv(
+        processed_dir / f"run_expectancy_{args.season}.csv",
+        index=False,
+    )
+    score_probability.to_csv(
+        processed_dir / f"scoring_probability_{args.season}.csv",
+        index=False,
+    )
 
+    print(f"Season: {args.season}")
+    print(f"Raw cache: {raw_dir}")
     print(f"Pitches: {len(pitches):,}")
     print(f"Plate appearances: {len(plate_appearances):,}")
     print("\nRun expectancy table:")

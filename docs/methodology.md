@@ -425,6 +425,57 @@ For every cap NorthStar records:
 A credible result should not depend on one arbitrary weight cap. Large shifts in sign or magnitude, or severe
 effective-sample-size collapse, would block progression toward a player metric.
 
+## Phase 2j: external-season transport validation
+
+After cross-fitted propensity estimation and weight-cap sensitivity remain stable inside 2025, the next
+validation unit is an entirely different season.
+
+### Design
+
+Training:
+- complete 2024 regular season
+
+External evaluation:
+- complete 2025 regular season
+
+No 2025 observation contributes to:
+- the RE24 table used for the pitch-state target
+- decision-state values
+- propensity-model fitting
+- propensity calibration
+- common-support training selection
+- inverse-propensity training weights
+- swing/take value-model fitting
+
+The 2024 propensity model itself is cross-fitted by game to construct OOF training weights. Its isotonic
+calibrator is fit only on 2024 OOF predictions. A final propensity model is fit on all 2024 pitches and
+transported directly to 2025 before applying that 2024 calibrator.
+
+### State-value transport
+
+2025 pitch transitions are valued with 2024 run expectancy and 2024 count + base/out decision-state values.
+Exact state coverage is reported. Any unseen decision state falls back to the 2024 base/out value and then to
+the 2024 overall value.
+
+### Action-value transport
+
+On the calibrated 2024 5%-95% overlap sample, stabilized inverse-propensity weights are computed. Separate
+swing/take XGBoost transition-value models are fit at caps 3, 5, 10, and 20.
+
+The untouched 2025 season is evaluated with:
+- propensity ROC AUC / log loss / Brier score and calibration bins
+- exact decision-state coverage
+- overlap retention
+- factual transition-value MAE / RMSE / R² / Pearson / Spearman
+- model-selected swing share
+- doubly robust one-step model-action advantage
+- game-cluster bootstrap uncertainty
+- weight-cap sensitivity
+
+A successful transport result should preserve the broad direction and useful signal seen in 2025 internal
+holdouts without depending on a single cap. A failure is also informative: it would indicate temporal drift or
+that the learned relationships were more season-specific than internal validation suggested.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
