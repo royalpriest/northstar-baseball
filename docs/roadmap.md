@@ -207,12 +207,15 @@
 - [x] Retain all three as transparent contextual diagnostics
 
 ## M19 — NorthStar hitter profile
-- [ ] Build canonical player-profile dataset
-- [ ] Join NorthStar diagnostics with established offensive measures
-- [ ] Add percentile / league-relative presentation without implying a single overall score
-- [ ] Add per-player report generation
-- [ ] Add profile visualizations for selection, contact, damage, and conventional outcomes
-- [ ] Document interpretation and limitations for every displayed axis
+- [x] Build canonical player-profile dataset
+- [x] Join NorthStar diagnostics with established offensive measures
+- [x] Add percentile / league-relative presentation without implying a single overall score
+- [x] Add optional per-player profile-card generation
+- [x] Preserve sample sizes and three-axis completeness flags
+- [x] Document interpretation and limitations for every displayed axis
+- [ ] Run profile builder and preserve canonical table
+- [ ] Review profile-card readability with representative hitter types
+- [ ] Add additional profile visualizations only where they improve interpretation
 - [ ] Preserve research provenance from the validation phases
 
 ## M20 — Canada layer
