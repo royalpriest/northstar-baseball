@@ -99,20 +99,30 @@
 - [x] Add game-cluster bootstrap uncertainty and player split-half stability
 - [x] Decide that cross-fitted nuisance models and weight-clipping refits are necessary before sequential policy evaluation
 
-## M10 — Canada layer
+## M10 — Cross-fitted pitch-state nuisance models
+- [x] Add game-grouped OOF propensity estimation
+- [x] Add OOF-fitted isotonic propensity calibration
+- [x] Add stabilized weight diagnostics and effective sample size
+- [x] Add weight-cap refits at 3, 5, 10, and 20
+- [x] Add clustered policy-sensitivity reporting by cap
+- [ ] Run cross-fit evaluation and preserve results
+- [ ] Decide whether the result survives nuisance-model and weight-cap sensitivity
+- [ ] If stable, move to external-season validation before defining a player metric
+
+## M11 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M11 — Product
+## M12 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M12 — Production engineering
+## M13 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
