@@ -191,12 +191,58 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Success | Metric-validation work was merged into `main` through PR #3. | RE24 benchmark validation is now part of the main project history. |
 | 2026-09-27 | Success | First leakage-safe ML scoring model completed with **11 passing tests**. | Chronological split: 131,045 PA training, 31,877 validation, 28,065 September test. |
 | 2026-09-27 | Experiment result | Logistic V1 produced test ROC AUC **0.709**, log loss **0.5082**, and Brier **0.1667**. The 24-state baseline produced ROC AUC **0.707**, log loss **0.5071**, and Brier **0.1663**. | The ML model slightly improved ranking discrimination but did **not** beat the simpler baseline on probability quality. This establishes that base/out state is already a strong benchmark and motivates richer pre-PA batter/pitcher/context features for V2. |
+| 2026-09-27 | Success | First scoring-probability ML work was merged into `main` through PR #4. | The leakage-safe V1 model and its holdout evaluation became the official baseline for richer models. |
+| 2026-09-27 | Design decision | Context V2 was designed around only information available before the PA: handedness, score state, home/park context, and prior-date batter/pitcher RE24 history. | Same-day player outcomes are excluded from rolling history to avoid ambiguous doubleheader ordering and future leakage. |
 
 ### Logging rule going forward
 
 Every meaningful experiment should add an entry here with the date, whether it was a success, failure, error,
 workflow issue, or inconclusive result, what happened, and what changed because of it. Failed approaches should
 remain documented when they influenced the project architecture or methodology.
+
+## Train the context model V2
+
+V2 adds matchup and backward-looking player context while preserving the same chronological holdout design.
+The rebuilt plate-appearance dataset retains batter/pitcher handedness, score differential, home/away context,
+and the home team as a park proxy. NorthStar then creates batter and pitcher history features using only
+results from dates strictly before each plate appearance.
+
+This same-day exclusion is deliberate: Statcast's processed PA table does not currently preserve a trustworthy
+game-time ordering for doubleheaders, so the conservative implementation refuses to let any result from the
+current calendar day influence another PA on that date.
+
+V2 compares four models:
+
+- empirical 24-state scoring probability
+- logistic regression V1
+- context-aware logistic regression V2
+- context-aware XGBoost V2
+
+Because new pre-PA fields must be added to the processed plate-appearance file, rebuild the baseline first.
+The raw seven-day Statcast Parquet chunks are reused, so this should not redownload the season:
+
+```bash
+python scripts/build_baseline.py --start 2025-03-18 --end 2025-09-28
+```
+
+Then train V2:
+
+```bash
+python scripts/train_context_model.py
+```
+
+Outputs:
+
+```text
+reports/tables/context_model_metrics_2025.csv
+reports/tables/context_logistic_coefficients_2025.csv
+reports/tables/context_xgboost_feature_importance_2025.csv
+reports/figures/context_model_calibration_2025.png
+data/processed/context_model_test_predictions_2025.parquet
+```
+
+The processed prediction file remains local. Model metrics, importance tables, and the calibration figure can
+be committed after the holdout results are reviewed.
 
 ## Project layout
 
