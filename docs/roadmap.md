@@ -24,10 +24,13 @@
 - [ ] Run the full 2025 model and preserve holdout results
 
 ## M3 — Context model
-- [ ] Rolling batter features
-- [ ] Rolling pitcher features
-- [ ] Park context
-- [ ] XGBoost model
+- [x] Leakage-safe prior-date batter features implemented
+- [x] Leakage-safe prior-date pitcher features implemented
+- [x] Handedness, score, home/away, and park-proxy context implemented
+- [x] Context logistic-regression model implemented
+- [x] XGBoost context model implemented
+- [ ] Rebuild 2025 PA dataset with retained context fields
+- [ ] Run V2 holdout evaluation and preserve results
 - [ ] SHAP explanations
 - [ ] Model-card documentation
 

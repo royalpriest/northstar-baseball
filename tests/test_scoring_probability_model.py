@@ -5,6 +5,7 @@ from northstar.models.scoring_probability import (
     fit_state_probability_baseline,
     predict_state_probability,
     prepare_scoring_frame,
+    validate_context_columns,
 )
 
 
@@ -61,3 +62,15 @@ def test_state_probability_baseline_uses_train_only_mapping():
 
     assert probabilities.between(0.0, 1.0).all()
     assert len(probabilities) == len(split.test)
+
+
+
+def test_context_validation_reports_when_baseline_needs_rebuild():
+    frame = prepare_scoring_frame(_sample_plate_appearances())
+
+    try:
+        validate_context_columns(frame)
+    except ValueError as exc:
+        assert "Rebuild the 2025 baseline" in str(exc)
+    else:
+        raise AssertionError("Expected missing V2 context columns to be reported")

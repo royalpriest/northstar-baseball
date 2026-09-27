@@ -67,3 +67,44 @@ def test_pa_uses_first_pitch_for_start_state_and_last_pitch_for_result():
     assert first_pa["events"] == "double"
     assert first_pa["runs_scored_on_pa"] == 1
     assert first_pa["base_state_after"] == "010"
+
+
+
+def test_pa_retains_optional_pre_pa_context_when_available():
+    pitches = pd.DataFrame(
+        [
+            {
+                "game_pk": 2,
+                "game_date": "2025-04-02",
+                "inning": 1,
+                "inning_topbot": "Bottom",
+                "at_bat_number": 1,
+                "pitch_number": 1,
+                "outs_when_up": 0,
+                "on_1b": None,
+                "on_2b": None,
+                "on_3b": None,
+                "bat_score": 2,
+                "fld_score": 1,
+                "post_bat_score": 2,
+                "batter": 30,
+                "pitcher": 40,
+                "events": "field_out",
+                "stand": "R",
+                "p_throws": "L",
+                "home_team": "TOR",
+                "away_team": "BOS",
+            }
+        ]
+    )
+
+    pa = build_plate_appearances(pitches)
+    row = pa.iloc[0]
+
+    assert row["batter_hand"] == "R"
+    assert row["pitcher_hand"] == "L"
+    assert row["score_diff_before"] == 1
+    assert row["batting_team"] == "TOR"
+    assert row["fielding_team"] == "BOS"
+    assert row["is_home_batting"] == 1
+    assert row["park_team"] == "TOR"
