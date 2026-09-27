@@ -235,8 +235,11 @@
 - [x] Add Canadian-born and historical team-scope endpoints
 - [x] Add explicit named-metric leaderboard endpoint
 - [x] Add 2-4 player comparison endpoint without an overall winner
-- [ ] Run API test suite and local smoke test
-- [ ] PostgreSQL results store
+- [x] Run API test suite and local smoke test
+- [x] Add SQLAlchemy PostgreSQL schema and transactional profile loader
+- [x] Add normalized historical team-membership storage
+- [x] Add SQL-backed API store with CSV fallback
+- [ ] Run PostgreSQL integration load and API parity smoke test
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
