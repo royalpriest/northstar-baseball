@@ -157,11 +157,17 @@
 - [x] Retain the validated quantity as a selection / plate-discipline component
 
 ## M15 — Selection / execution decomposition
-- [ ] Define a swing-execution target conditional on pitch quality and context
-- [ ] Build chronological / external-season execution models
-- [ ] Validate player-level execution reliability independently of selection
+- [x] Define swing execution as actual minus expected one-step swing value
+- [x] Exclude batter identity and post-swing/contact leakage from execution features
+- [x] Add 2024 -> 2025 external-season swing-execution model
+- [x] Add empirical count/zone/pitch-type execution baseline
+- [x] Add player execution value per 100 swings
+- [x] Add early/late 2025 execution reliability test
+- [x] Add a separate selection / execution two-axis profile
+- [ ] Run execution model and preserve results
+- [ ] Decide whether execution is sufficiently repeatable to retain as a player axis
 - [ ] Test whether execution adds incremental information beyond xwOBA / contact quality
-- [ ] Build a two-axis player profile before considering any combined metric
+- [ ] Consider a combined metric only if both axes survive validation
 
 ## M16 — Canada layer
 - [ ] Canadian-born player identity mapping
