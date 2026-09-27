@@ -181,6 +181,7 @@ or a design decision changes because of evidence.
 
 | Date | Type | Event | Outcome / fix |
 | --- | --- | --- | --- |
+| 2026-09-27 | Success | PostgreSQL Product Store V1 passed its first real local integration run. Docker Compose started `postgres:17-alpine` healthy on port 5432, the canonical 2025 profile loader inserted **404 profiles**, and FastAPI `/api/v1/meta` returned `storage_backend: postgresql` with **404 players**. | This confirms the application is reading NorthStar profiles from PostgreSQL rather than the CSV fallback. |
 | 2026-09-27 | Success | FastAPI V1 was merged into `main` through PR #21 after **117 tests**, Uvicorn runtime checks, live Judge search, Judge/Arráez comparison, and UTF-8 response hardening. | NorthStar now has a stable read-only application API over the validated profile dataset. |
 | 2026-09-27 | Product milestone | PostgreSQL Product Store V1 started on `feat/product-db-v1`. | Added SQLAlchemy models, normalized team membership, transactional season loading, a SQL-backed profile-store implementation, local PostgreSQL Compose service, and API backend selection through `NORTHSTAR_DATABASE_URL`. |
 | 2026-09-27 | Runtime fix | Live Judge search and Judge/Arráez comparison endpoints returned the expected records, but Windows PowerShell rendered the accented name as `Luis ArrÃ¡ez` even though the stored profile uses `Luis Arráez`. | API JSON responses now explicitly declare `charset=utf-8`, and the test suite includes an accented-name round-trip assertion so browser/CLI clients receive unambiguous UTF-8 metadata. |
