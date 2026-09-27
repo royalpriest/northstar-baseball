@@ -658,6 +658,71 @@ The next player-level research question is a decomposition:
 Only after both components are validated separately should NorthStar test whether a combined offensive
 decision profile contains stable, incremental information.
 
+## Phase 2o: selection / execution decomposition
+
+The first player decision-value prototype is reliable but largely reconstructable from ordinary plate-discipline
+statistics. Rather than force a new aggregate metric, NorthStar decomposes hitter behavior into separate
+selection and execution components.
+
+### Selection
+
+Selection remains the validated context-weighted swing/take component. It answers whether the observed action
+was favorable relative to the opportunity-conditioned league action mixture.
+
+Because construct validation showed that this component is largely plate discipline, it is retained as a
+descriptive selection axis rather than promoted as a novel standalone statistic.
+
+### Execution
+
+For execution, NorthStar conditions on **observed swings only**.
+
+A 2024 league model estimates:
+
+`E[one-step transition value | swing, pitch/context]`
+
+using the same leakage-safe pitch features as the decision system:
+
+- count
+- pitch type
+- hitter/pitcher handedness
+- exact hitter-oriented location
+- normalized vertical location
+- pitch velocity and movement
+- base/out state
+- inning / half-inning
+- score differential
+
+The model does **not** use:
+- batter identity
+- realized pitch description
+- exit velocity
+- launch angle
+- batted-ball type
+- realized event
+- any other post-swing outcome variable
+
+For every clean 2025 swing:
+
+`Execution = realized one-step transition value - expected swing transition value`
+
+The one-step target is defined with 2024 run expectancy and 2024 decision-state values, preserving the same
+external-season transport discipline as the earlier validation work.
+
+### Player reliability
+
+Execution is aggregated as value per 100 swings and split at July 1. Early/late Pearson and Spearman
+correlations test whether hitters persistently outperform or underperform league expectation after controlling
+for the pitch/context they chose to swing at.
+
+The workflow also reports actual swing value and expected swing value separately. This helps distinguish a
+stable execution trait from stable differences in the quality of swing opportunities a player receives.
+
+### Two-axis profile
+
+NorthStar joins the existing selection component with execution as two separate coordinates. No combined score
+is created at this stage. A combined statistic will only be considered if execution shows meaningful
+out-of-time and player-level reliability and later survives construct validation against xwOBA/contact quality.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
