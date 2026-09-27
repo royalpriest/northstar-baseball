@@ -628,6 +628,36 @@ the simpler behaviors that already explain most of NorthStar's cross-sectional v
 Residuals are also compared with RE24, wOBA, and xwOBA. These outcome correlations are descriptive and do not
 convert the observational decision-value model into a causal statistic.
 
+## Phase 2n: interpretation of the incremental-signal result
+
+The incremental audit provides a clear stopping rule for the first player prototype.
+
+Raw decision value per 100 is strongly reliable across season halves, but that reliability is mostly reproduced
+by ordinary swing-selection behavior. Chase rate alone explains a large share of the cross-sectional signal
+and leaves a moderately stable residual. Once overall swing tendency and two-strike chase behavior are added,
+the residual early/late reliability falls below 0.20. The full plate-discipline residual is only slightly
+higher, around 0.21.
+
+NorthStar therefore interprets the current quantity as a **context-weighted plate-discipline / selection-value
+component**, not as evidence for a new independent all-purpose hitter metric.
+
+This distinction is intentional:
+
+- the pitch-level transition-value and policy machinery remains useful
+- the player aggregation is repeatable
+- the player aggregation is not sufficiently distinct from established discipline behavior to justify a new
+  standalone name
+- a weak residual should not be amplified or rebranded simply to manufacture novelty
+
+The next player-level research question is a decomposition:
+
+1. **Selection value** — was swing/take the better decision given the pitch/context?
+2. **Execution value** — conditional on choosing to swing, did the hitter convert that opportunity better or
+   worse than expected from pitch/context?
+
+Only after both components are validated separately should NorthStar test whether a combined offensive
+decision profile contains stable, incremental information.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
