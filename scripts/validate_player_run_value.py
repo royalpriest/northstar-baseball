@@ -38,10 +38,19 @@ def _player_name_column(frame: pd.DataFrame) -> str | None:
     return None
 
 
+def _display_player_name(value: object) -> str:
+    text = str(value).strip()
+    if "," in text:
+        last, first = [part.strip() for part in text.split(",", 1)]
+        if first and last:
+            return f"{first} {last}"
+    return text
+
+
 def save_scatter(
     merged: pd.DataFrame,
     output: Path,
-    annotate: int = 8,
+    annotate: int = 4,
 ) -> None:
     required = {"re24_per_100_pa", "est_woba"}
     if not required.issubset(merged.columns):
@@ -54,7 +63,9 @@ def save_scatter(
         columns.append(name_column)
 
     plot = merged.loc[:, columns].copy()
-    plot["re24_per_100_pa"] = pd.to_numeric(plot["re24_per_100_pa"], errors="coerce")
+    plot["re24_per_100_pa"] = pd.to_numeric(
+        plot["re24_per_100_pa"], errors="coerce"
+    )
     plot["est_woba"] = pd.to_numeric(plot["est_woba"], errors="coerce")
     plot = plot.dropna(subset=["re24_per_100_pa", "est_woba"])
 
@@ -62,27 +73,60 @@ def save_scatter(
         print("xwOBA scatter skipped because there were no matched rows.")
         return
 
-    fig, ax = plt.subplots(figsize=(8, 6))
-    ax.scatter(plot["est_woba"], plot["re24_per_100_pa"], alpha=0.7)
+    fig, ax = plt.subplots(figsize=(10, 7))
+
+    ax.scatter(
+        plot["est_woba"],
+        plot["re24_per_100_pa"],
+        alpha=0.68,
+        s=34,
+    )
+
     ax.set_xlabel("Baseball Savant xwOBA")
     ax.set_ylabel("NorthStar RE24 per 100 PA")
     ax.set_title("2025 MLB: NorthStar RE24 vs xwOBA")
-    ax.grid(alpha=0.2)
+    ax.grid(alpha=0.18)
 
     if annotate > 0 and name_column:
-        labels = plot.nlargest(annotate, "re24_per_100_pa")
-        for _, row in labels.iterrows():
+        labels = plot.nlargest(annotate, "re24_per_100_pa").copy()
+
+        offsets = [
+            (12, 12),
+            (12, -18),
+            (-58, 12),
+            (-58, -18),
+            (20, 24),
+            (-70, 24),
+        ]
+
+        for index, (_, row) in enumerate(labels.iterrows()):
+            dx, dy = offsets[index % len(offsets)]
+            label = _display_player_name(row[name_column])
+
             ax.annotate(
-                str(row[name_column]),
+                label,
                 (row["est_woba"], row["re24_per_100_pa"]),
-                xytext=(4, 4),
+                xytext=(dx, dy),
                 textcoords="offset points",
                 fontsize=8,
+                ha="left" if dx >= 0 else "right",
+                va="bottom" if dy >= 0 else "top",
+                bbox={
+                    "boxstyle": "round,pad=0.22",
+                    "facecolor": "white",
+                    "edgecolor": "0.8",
+                    "alpha": 0.9,
+                },
+                arrowprops={
+                    "arrowstyle": "-",
+                    "linewidth": 0.7,
+                    "alpha": 0.55,
+                },
             )
 
-    fig.tight_layout()
+    fig.tight_layout(pad=1.2)
     output.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output, dpi=180, bbox_inches="tight")
+    fig.savefig(output, dpi=200, bbox_inches="tight")
     plt.close(fig)
 
 
