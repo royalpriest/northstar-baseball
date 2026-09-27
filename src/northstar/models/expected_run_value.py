@@ -35,6 +35,7 @@ EXPECTED_RE24_REQUIRED_COLUMNS = set(
         "game_date",
         "base_out_state_before",
         EXPECTED_RE24_TARGET,
+        "within_pa_state_re24",
     ]
 )
 
@@ -46,8 +47,18 @@ class RunValueSplit:
     test: pd.DataFrame
 
 
-def prepare_expected_re24_frame(frame: pd.DataFrame) -> pd.DataFrame:
-    """Prepare leakage-safe features for terminal-event RE24 regression."""
+def prepare_expected_re24_frame(
+    frame: pd.DataFrame,
+    clean_attribution_only: bool = True,
+    attribution_tolerance: float = 1e-12,
+) -> pd.DataFrame:
+    """Prepare leakage-safe features for terminal-event RE24 regression.
+
+    By default, PAs with a non-zero within-PA state shift are excluded. For those
+    PAs the terminal event begins from a different base/out state than was known
+    at the start of the plate appearance, so they are kept for the attribution
+    audit rather than mixed into the first pre-PA expected-value model.
+    """
     missing = EXPECTED_RE24_REQUIRED_COLUMNS.difference(frame.columns)
     if missing:
         raise ValueError(
@@ -61,15 +72,24 @@ def prepare_expected_re24_frame(frame: pd.DataFrame) -> pd.DataFrame:
     out[EXPECTED_RE24_TARGET] = pd.to_numeric(
         out[EXPECTED_RE24_TARGET], errors="coerce"
     )
+    out["within_pa_state_re24"] = pd.to_numeric(
+        out["within_pa_state_re24"], errors="coerce"
+    )
     out["outs_before"] = pd.to_numeric(out["outs_before"], errors="coerce")
     out["inning"] = pd.to_numeric(out["inning"], errors="coerce")
 
     out = out[
         out["game_date"].notna()
         & out[EXPECTED_RE24_TARGET].notna()
+        & out["within_pa_state_re24"].notna()
         & out["outs_before"].between(0, 2)
         & out["inning"].notna()
     ].copy()
+
+    if clean_attribution_only:
+        out = out.loc[
+            out["within_pa_state_re24"].abs().le(attribution_tolerance)
+        ].copy()
 
     out["outs_before"] = out["outs_before"].astype("int64")
     out["inning"] = out["inning"].astype("int64")
