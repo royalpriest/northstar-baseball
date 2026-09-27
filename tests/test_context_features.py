@@ -1,7 +1,10 @@
 import pandas as pd
 import pytest
 
-from northstar.features.context import add_backward_looking_player_context
+from northstar.features.context import (
+    add_backward_looking_player_context,
+    add_backward_looking_terminal_context,
+)
 
 
 def test_player_context_excludes_current_day_results():
@@ -65,3 +68,32 @@ def test_player_context_validates_required_columns():
                 }
             )
         )
+
+
+
+def test_terminal_context_uses_prior_dates_only():
+    frame = pd.DataFrame(
+        {
+            "game_date": [
+                "2025-04-01",
+                "2025-04-01",
+                "2025-04-02",
+            ],
+            "batter": [10, 10, 10],
+            "pitcher": [20, 21, 20],
+            "terminal_event_re24": [0.6, -0.2, 0.4],
+        }
+    )
+
+    enriched = add_backward_looking_terminal_context(frame)
+
+    first_day = enriched[enriched["game_date"].eq(pd.Timestamp("2025-04-01"))]
+    assert first_day["batter_terminal_prior_count"].eq(0).all()
+
+    day_two = enriched[
+        enriched["game_date"].eq(pd.Timestamp("2025-04-02"))
+    ].iloc[0]
+    assert day_two["batter_terminal_prior_count"] == 2
+    assert day_two["batter_terminal_prior_value_per_pa"] == pytest.approx(0.2)
+    assert day_two["pitcher_terminal_prior_count"] == 1
+    assert day_two["pitcher_terminal_prior_value_per_pa"] == pytest.approx(0.6)
