@@ -48,10 +48,15 @@ def make_scoring_baseline(
     )
 
 
-def evaluate_binary_classifier(model: Pipeline, x: pd.DataFrame, y: pd.Series) -> ClassificationMetrics:
-    probabilities = model.predict_proba(x)[:, 1]
+def evaluate_probabilities(y: pd.Series, probabilities: pd.Series | list[float]) -> ClassificationMetrics:
+    """Evaluate probability predictions for a binary scoring target."""
     return ClassificationMetrics(
         roc_auc=float(roc_auc_score(y, probabilities)),
-        log_loss=float(log_loss(y, probabilities)),
+        log_loss=float(log_loss(y, probabilities, labels=[0, 1])),
         brier=float(brier_score_loss(y, probabilities)),
     )
+
+
+def evaluate_binary_classifier(model: Pipeline, x: pd.DataFrame, y: pd.Series) -> ClassificationMetrics:
+    probabilities = model.predict_proba(x)[:, 1]
+    return evaluate_probabilities(y, probabilities)
