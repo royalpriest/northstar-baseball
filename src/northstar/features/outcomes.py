@@ -13,7 +13,6 @@ OUTCOME_CLASSES = (
     "field_out",
     "sacrifice",
     "reach_other",
-    "other",
 )
 
 OUTCOME_TO_CODE = {name: index for index, name in enumerate(OUTCOME_CLASSES)}
@@ -54,7 +53,7 @@ def classify_pa_outcome(event: object) -> str | None:
     normalized = str(event).strip().lower()
     if not normalized:
         return None
-    return EVENT_TO_OUTCOME.get(normalized, "other")
+    return EVENT_TO_OUTCOME.get(normalized, "reach_other")
 
 
 def add_outcome_class(frame: pd.DataFrame) -> pd.DataFrame:
