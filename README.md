@@ -286,6 +286,8 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Experiment result | The direct future-skill audit found **no meaningful incremental predictive value for contact**. Early raw contact predicted late contact at OOF R² **0.6316**; adding NorthStar contact changed this to **0.6310** (Δ **-0.0006**). With situational contact features, R² changed from **0.6264** to **0.6266** (Δ **+0.0002**). | NorthStar contact-above-expected is a highly reliable context-adjusted diagnostic, but it does not materially improve prediction of future contact skill beyond conventional contact metrics. |
 | 2026-09-27 | Experiment result | Damage showed a conditional result. Adding NorthStar damage to EV/hard-hit/barrel/sweet-spot features improved late xwOBA-on-contact OOF R² from **0.4653** to **0.4898** (Δ **+0.0245**), but once early xwOBA-on-contact was included the full model moved from **0.4906** to **0.4886** (Δ **-0.0021**). | NorthStar damage contains some information beyond coarse batted-ball-quality summaries, but no incremental future prediction once the stronger conventional xwOBA-on-contact measure is already known. |
 | 2026-09-27 | Methodology decision | NorthStar will not promote selection, contact, or damage as novel standalone predictive statistics. | The validated outputs will be retained as **contextual hitter diagnostics** inside a transparent multi-axis player profile alongside established measures. The project now shifts from inventing a single metric toward explaining *why* conventional hitter outcomes look the way they do. |
+| 2026-09-27 | Visualization issue | Hitter Profile Card V1 was functionally correct but read like a diagnostic Matplotlib chart: oversized bars dominated the layout, rate statistics were shown as decimals, percentile notation was inconsistent, and the conventional context block had weak visual hierarchy. | Reworked the card into V2 with equal-weight Selection/Contact/Damage diagnostic cards, natural percentage formatting, ordinal percentiles, separate plate-discipline / bat-to-ball / contact-quality panels, compact sample footer, and a single-line interpretation disclaimer. |
+| 2026-09-27 | Error | Accented player names produced awkward profile filenames (for example, Luis Arráez became `luis-arr-ez`). | Profile filename slugs now normalize Unicode accents to ASCII before replacing punctuation, producing stable names such as `luis-arraez`. |
 | 2026-09-27 | Error | The first contact-model cross-fit failed in scikit-learn's ColumnTransformer because nullable pandas `Float64` columns (for example `release_speed`) still contained `pd.NA`. | Contact/damage chunk loading now passes every pitch frame through the existing `prepare_pitch_decision_model_frame` normalization step before modeling, converting numeric features to ordinary `float32`, categorical features to strings, and dropping incomplete model rows consistently with the validated pitch-decision pipeline. |
 
 ### Logging rule going forward
@@ -1404,6 +1406,58 @@ predictive statistic.
 The product direction is therefore a **NorthStar Hitter Profile**: show established measures and NorthStar's
 context-adjusted diagnostics together, with clear labels separating conventional skill, opportunity/context,
 and NorthStar explanatory adjustments.
+
+## Build the NorthStar Hitter Profile
+
+The validated hitter research now feeds a product-facing profile rather than a single invented score.
+
+Run:
+
+```bash
+python scripts/build_hitter_profiles.py
+```
+
+This creates a canonical 2025 table joining:
+
+```text
+NorthStar selection context
+NorthStar contact-above-expected context
+NorthStar damage-above-expected context
+
+conventional swing / chase / contact measures
+xwOBA on contact
+exit velocity / hard-hit / barrel measures
+wOBA / xwOBA
+RE24 / 100 PA
+sample sizes and uncertainty fields
+```
+
+The profile deliberately has **no overall score**.
+
+Each axis receives its own league-relative percentile so users can compare dimensions without collapsing them
+into one ranking. The percentiles describe position within the available 2025 profile sample; they are not
+claims that NorthStar has discovered new independent predictive skills.
+
+Output:
+
+```text
+reports/tables/hitter_profile_2025.csv
+```
+
+To generate an individual profile card:
+
+```bash
+python scripts/build_hitter_profiles.py --player "Aaron Judge"
+```
+
+or use an MLBAM ID:
+
+```bash
+python scripts/build_hitter_profiles.py --player 592450
+```
+
+The player card places the three NorthStar contextual axes beside established measures and explicitly states
+that no composite overall rating is being produced.
 
 ## Project layout
 
