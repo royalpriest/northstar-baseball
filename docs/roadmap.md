@@ -151,24 +151,32 @@
 - [x] Add full plate-discipline residualization
 - [x] Add early-OOF to late-season residual reliability test
 - [x] Add residual association checks against RE24 / wOBA / xwOBA
-- [ ] Run incremental-signal audit and preserve results
-- [ ] Decide whether a repeatable player signal remains beyond plate discipline
-- [ ] Decide whether to formalize, redesign, or demote the player metric
+- [x] Run incremental-signal audit
+- [x] Confirm full-discipline residual reliability is only about 0.21
+- [x] Reject CCA/public standalone naming for the current player prototype
+- [x] Retain the validated quantity as a selection / plate-discipline component
 
-## M15 — Canada layer
+## M15 — Selection / execution decomposition
+- [ ] Define a swing-execution target conditional on pitch quality and context
+- [ ] Build chronological / external-season execution models
+- [ ] Validate player-level execution reliability independently of selection
+- [ ] Test whether execution adds incremental information beyond xwOBA / contact quality
+- [ ] Build a two-axis player profile before considering any combined metric
+
+## M16 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M16 — Product
+## M17 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M17 — Production engineering
+## M18 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
