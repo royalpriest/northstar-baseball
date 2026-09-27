@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -278,6 +279,101 @@ def make_xgboost_outcome_model(
                     reg_lambda=1.5,
                     objective="multi:softprob",
                     eval_metric="mlogloss",
+                    random_state=42,
+                    n_jobs=-1,
+                ),
+            ),
+        ]
+    )
+
+
+def _make_low_memory_pitch_preprocessor(
+    categorical_features: list[str],
+    numeric_features: list[str],
+    scale_numeric: bool,
+) -> ColumnTransformer:
+    """Sparse float32 preprocessing for full-season pitch-level models."""
+    categorical = OneHotEncoder(
+        handle_unknown="ignore",
+        sparse_output=True,
+        dtype=np.float32,
+    )
+
+    if scale_numeric:
+        numeric = Pipeline(
+            steps=[
+                ("scale", StandardScaler()),
+            ]
+        )
+    else:
+        numeric = "passthrough"
+
+    return ColumnTransformer(
+        transformers=[
+            ("categorical", categorical, categorical_features),
+            ("numeric", numeric, numeric_features),
+        ],
+        sparse_threshold=1.0,
+    )
+
+
+def make_pitch_logistic_model(
+    categorical_features: list[str],
+    numeric_features: list[str],
+) -> Pipeline:
+    """Memory-efficient sparse logistic model for swing/take decisions."""
+    return Pipeline(
+        steps=[
+            (
+                "preprocess",
+                _make_low_memory_pitch_preprocessor(
+                    categorical_features,
+                    numeric_features,
+                    scale_numeric=True,
+                ),
+            ),
+            (
+                "model",
+                LogisticRegression(
+                    max_iter=2500,
+                    tol=1e-3,
+                    solver="saga",
+                    random_state=42,
+                ),
+            ),
+        ]
+    )
+
+
+def make_pitch_xgboost_model(
+    categorical_features: list[str],
+    numeric_features: list[str],
+) -> Pipeline:
+    """Memory-efficient sparse XGBoost model for swing/take decisions."""
+    return Pipeline(
+        steps=[
+            (
+                "preprocess",
+                _make_low_memory_pitch_preprocessor(
+                    categorical_features,
+                    numeric_features,
+                    scale_numeric=False,
+                ),
+            ),
+            (
+                "model",
+                XGBClassifier(
+                    n_estimators=300,
+                    max_depth=4,
+                    learning_rate=0.05,
+                    subsample=0.85,
+                    colsample_bytree=0.85,
+                    min_child_weight=5,
+                    reg_lambda=1.0,
+                    objective="binary:logistic",
+                    eval_metric="logloss",
+                    tree_method="hist",
+                    max_bin=128,
                     random_state=42,
                     n_jobs=-1,
                 ),
