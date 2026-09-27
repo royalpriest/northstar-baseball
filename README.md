@@ -204,6 +204,13 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Experiment result | The clean-attribution expected-RE24 regression produced essentially no useful September holdout signal. State mean: MAE **0.3596**, RMSE **0.4855**, R² **0.0000**. Ridge context: **0.3601 / 0.4852 / 0.0009**. XGBoost context: **0.3643 / 0.4855 / ~0.0000**. | Directly regressing terminal-event RE24 is too noisy with the current pre-PA feature set. The project will not promote residuals from this model to CCA and will instead model discrete PA outcome probabilities before translating them into expected run value. |
 | 2026-09-27 | Interpretation note | XGBoost's top expected-RE24 features included several park indicators, handedness, and base/out terms despite near-zero holdout R². | Feature importance from a model with almost no predictive power is not treated as substantive baseball evidence. |
 | 2026-09-27 | Git workflow error | The local expected-RE24 results commit was rejected on push because the remote branch had newer implementation/documentation commits. | Rebased the local result commit onto `origin/feat/expected-re24-v1` with `git pull --rebase`, then pushed successfully without force-pushing. |
+| 2026-09-27 | Success | Attribution and expected-RE24 work was merged into `main` through PR #6. | The attribution audit remains a useful result; the near-zero direct-regression signal is preserved as a documented failed hypothesis rather than hidden. |
+| 2026-09-27 | Design decision | NorthStar moved from direct continuous RE24 regression to a structured terminal-PA outcome model. | V1 predicts eight outcome families first, then converts the full probability distribution into expected terminal-event RE24 using training-only state/outcome run values. |
+| 2026-09-27 | Success | Leakage-safe prior-date batter/pitcher outcome rates, multinomial logistic regression, XGBoost multiclass classification, class-prior baseline, confusion-matrix reporting, and probability-to-RE24 translation were implemented on `feat/pa-outcome-model-v1`. | The next local experiment tests whether structured outcome probabilities outperform both a class-frequency baseline and the failed direct regression approach on the September holdout. |
+| 2026-09-27 | Experiment result | PA outcome V1 learned modest but real out-of-time outcome signal. On the September holdout, XGBoost improved multiclass log loss from **1.5325** (class prior) to **1.4868**, macro F1 from **0.0764** to **0.0950**, and top-2 accuracy from **0.6733** to **0.6826**. | Modeling discrete outcomes is more learnable than directly regressing RE24, but hard-class accuracy barely moved because field outs dominate the class distribution. Probability quality is the more useful result. |
+| 2026-09-27 | Experiment result | Translating PA outcome probabilities back into terminal-event RE24 still produced negligible September holdout signal. XGBoost implied-value R² was only **0.0026** with Pearson **0.061**. | The structured outcome model improves event probabilities, but current state × coarse-outcome values still do not explain enough within-outcome run-value variation to support CCA residuals. |
+| 2026-09-27 | Warning | scikit-learn emitted `y_prob values do not sum to one` during multiclass top-k evaluation. | The model outputs were valid probability-like scores, but rows are now explicitly normalized before classification metrics and expected-value translation to remove floating-point / alignment drift and silence the warning. |
+| 2026-09-27 | Interpretation note | XGBoost feature importance remained led by base/out state, but batter prior strikeout, field-out, and home-run rates plus pitcher prior strikeout rate entered the top features. | Player history is contributing real classification signal, but importance magnitudes should still be interpreted cautiously because overall multiclass performance remains modest. |
 
 ### Logging rule going forward
 
@@ -337,6 +344,69 @@ actual terminal-event RE24 - expected terminal-event RE24
 ```
 
 Those residuals are **not yet called CCA**. They first need stability, attribution, and player-level validation.
+
+## Train the PA outcome model V1
+
+Directly regressing terminal-event RE24 produced essentially zero holdout R², so NorthStar now decomposes the
+problem into a more structured question:
+
+> Given only information known before the PA, what terminal outcome distribution should we expect?
+
+The first outcome model uses eight stable classes:
+
+- strikeout
+- walk / hit-by-pitch
+- single
+- double / triple
+- home run
+- field out
+- sacrifice
+- other reach / rare terminal event
+
+Unknown rare Statcast terminal events are folded into the final reach/other bucket so the class IDs remain
+stable and contiguous for both scikit-learn and XGBoost.
+
+In addition to game state, handedness, score, and park context, V1 builds prior-date batter and pitcher rates
+for every outcome family. Same-day outcomes remain excluded to preserve the project's conservative leakage
+rule.
+
+Models compared:
+
+- training class-frequency baseline
+- multinomial logistic regression
+- XGBoost multiclass classifier
+
+The predicted outcome probabilities are also translated back into expected terminal-event RE24 with a
+training-only table of:
+
+```text
+starting base/out state × outcome class -> mean terminal-event RE24
+```
+
+This lets NorthStar test whether predicting the *distribution of baseball outcomes* is a better route to
+expected run value than directly regressing a noisy RE24 number.
+
+Run:
+
+```bash
+python scripts/train_pa_outcome_model.py
+```
+
+Outputs:
+
+```text
+reports/tables/pa_outcome_class_distribution_2025.csv
+reports/tables/pa_outcome_model_metrics_2025.csv
+reports/tables/pa_outcome_expected_re24_metrics_2025.csv
+reports/tables/pa_outcome_xgboost_feature_importance_2025.csv
+reports/tables/pa_outcome_xgboost_confusion_2025.csv
+reports/figures/pa_outcome_xgboost_confusion_2025.png
+data/processed/pa_outcome_test_predictions_2025.parquet
+```
+
+Classification is evaluated with multiclass log loss, accuracy, macro F1, and top-2 accuracy. The implied
+expected-RE24 predictions are separately evaluated with MAE, RMSE, R², Pearson correlation, and Spearman
+correlation. The prediction Parquet stays local.
 
 ## Project layout
 
