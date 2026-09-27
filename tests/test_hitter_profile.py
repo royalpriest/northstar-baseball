@@ -79,6 +79,7 @@ def test_build_hitter_profile_keeps_axes_separate_and_adds_percentiles():
     assert "contact_context_percentile" in profile.columns
     assert "damage_context_percentile" in profile.columns
     assert "chase_avoidance_percentile" in profile.columns
+    assert "swing_rate_percentile" in profile.columns
     assert "overall_score" not in profile.columns
 
     alpha = profile.loc[profile["batter"].eq(10)].iloc[0]
