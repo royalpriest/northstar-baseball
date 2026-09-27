@@ -283,6 +283,9 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Experiment result | Contact construct validation showed very high overlap with conventional contact skill. Raw contact rate reconstructed **84.1%** of full-season contact-above-expected variance and the situational contact set reconstructed **96.1%**. Raw NorthStar split-half reliability was **0.820/0.803** Pearson/Spearman, while the situational-contact residual retained **0.403/0.359**. | Contact execution is mostly conventional contact skill with a smaller repeatable context-adjusted remainder; a stronger future-prediction test is required before claiming incrementality. |
 | 2026-09-27 | Experiment result | Damage construct validation showed raw xwOBA on contact reconstructed **96.5%** of full-season damage-above-expected variance. Raw damage reliability was **0.677/0.645**, and the full-contact-quality residual remained **0.648/0.651**. | This apparently strong residual is not sufficient evidence of novelty because damage is algebraically defined as observed xwOBA minus expected xwOBA; residualizing against observed xwOBA can leave a stable negative expected-opportunity component. |
 | 2026-09-27 | Validation warning | Residual reliability can be misleading for metrics defined as **observed minus expected**. | NorthStar will therefore compare whether EARLY conventional metrics plus the EARLY NorthStar adjustment improve out-of-fold prediction of the LATE observed conventional skill versus EARLY conventional metrics alone. This targets future skill directly and avoids interpreting stable opportunity/context as new player ability. |
+| 2026-09-27 | Experiment result | The direct future-skill audit found **no meaningful incremental predictive value for contact**. Early raw contact predicted late contact at OOF R² **0.6316**; adding NorthStar contact changed this to **0.6310** (Δ **-0.0006**). With situational contact features, R² changed from **0.6264** to **0.6266** (Δ **+0.0002**). | NorthStar contact-above-expected is a highly reliable context-adjusted diagnostic, but it does not materially improve prediction of future contact skill beyond conventional contact metrics. |
+| 2026-09-27 | Experiment result | Damage showed a conditional result. Adding NorthStar damage to EV/hard-hit/barrel/sweet-spot features improved late xwOBA-on-contact OOF R² from **0.4653** to **0.4898** (Δ **+0.0245**), but once early xwOBA-on-contact was included the full model moved from **0.4906** to **0.4886** (Δ **-0.0021**). | NorthStar damage contains some information beyond coarse batted-ball-quality summaries, but no incremental future prediction once the stronger conventional xwOBA-on-contact measure is already known. |
+| 2026-09-27 | Methodology decision | NorthStar will not promote selection, contact, or damage as novel standalone predictive statistics. | The validated outputs will be retained as **contextual hitter diagnostics** inside a transparent multi-axis player profile alongside established measures. The project now shifts from inventing a single metric toward explaining *why* conventional hitter outcomes look the way they do. |
 | 2026-09-27 | Error | The first contact-model cross-fit failed in scikit-learn's ColumnTransformer because nullable pandas `Float64` columns (for example `release_speed`) still contained `pd.NA`. | Contact/damage chunk loading now passes every pitch frame through the existing `prepare_pitch_decision_model_frame` normalization step before modeling, converting numeric features to ordinary `float32`, categorical features to strings, and dropping incomplete model rows consistently with the validated pitch-decision pipeline. |
 
 ### Logging rule going forward
@@ -1347,6 +1350,60 @@ reports/tables/contact_execution_future_predictions_2025.csv
 reports/tables/damage_execution_future_predictions_2025.csv
 reports/figures/execution_future_incremental_value_2025.png
 ```
+
+## Final interpretation of the hitter research phase
+
+NorthStar's hitter research produced three reliable context-adjusted diagnostics:
+
+```text
+selection
+contact execution
+damage execution
+```
+
+The validation program also established an important limit: none currently supports a claim of being a new
+standalone predictive hitter statistic once sufficiently strong conventional measures are already known.
+
+The direct future-skill audit is the final gate.
+
+### Contact
+
+Adding early NorthStar contact-above-expected to early conventional contact metrics produced essentially no
+change in out-of-fold prediction of late contact rate.
+
+```text
+raw contact:
+R² 0.6316 -> 0.6310   delta -0.0006
+
+situational contact:
+R² 0.6264 -> 0.6266   delta +0.0002
+```
+
+NorthStar contact is therefore retained as a **context adjustment / explanatory diagnostic**, not as a new
+predictive contact skill.
+
+### Damage
+
+NorthStar damage added modest predictive information beyond coarse batted-ball-quality summaries:
+
+```text
+EV + hard-hit + barrel + sweet spot:
+R² 0.4653 -> 0.4898   delta +0.0245
+```
+
+But once early xwOBA on contact was already included:
+
+```text
+full contact-quality set:
+R² 0.4906 -> 0.4886   delta -0.0021
+```
+
+So NorthStar damage is also retained as a contextual diagnostic rather than promoted as a standalone new
+predictive statistic.
+
+The product direction is therefore a **NorthStar Hitter Profile**: show established measures and NorthStar's
+context-adjusted diagnostics together, with clear labels separating conventional skill, opportunity/context,
+and NorthStar explanatory adjustments.
 
 ## Project layout
 
