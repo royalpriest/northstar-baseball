@@ -7,7 +7,7 @@ from northstar.validation.offense import (
 )
 
 
-def test_merge_with_reference_stats_uses_id_crosswalk():
+def test_merge_with_reference_stats_uses_mlbam_id():
     leaderboard = pd.DataFrame(
         {
             "batter": [1001, 1002],
@@ -15,15 +15,9 @@ def test_merge_with_reference_stats_uses_id_crosswalk():
             "re24_per_100_pa": [5.0, 2.5],
         }
     )
-    lookup = pd.DataFrame(
-        {
-            "key_mlbam": [1001, 1002],
-            "key_fangraphs": [501, 502],
-        }
-    )
     reference = pd.DataFrame(
         {
-            "IDfg": [501, 502],
+            "xMLBAMID": [1001, 1002],
             "Name": ["Player One", "Player Two"],
             "PA": [600, 500],
             "OPS": [0.950, 0.800],
@@ -32,7 +26,7 @@ def test_merge_with_reference_stats_uses_id_crosswalk():
         }
     )
 
-    merged = merge_with_reference_stats(leaderboard, lookup, reference)
+    merged = merge_with_reference_stats(leaderboard, reference)
 
     assert merged["Name"].tolist() == ["Player One", "Player Two"]
     assert merged["wRC+"].tolist() == [150, 115]
@@ -59,6 +53,11 @@ def test_validation_rejects_missing_required_columns():
     with pytest.raises(ValueError, match="Leaderboard is missing columns"):
         merge_with_reference_stats(
             pd.DataFrame({"batter": [1]}),
-            pd.DataFrame({"key_mlbam": [1], "key_fangraphs": [10]}),
-            pd.DataFrame({"IDfg": [10], "Name": ["A"], "PA": [300]}),
+            pd.DataFrame(
+                {
+                    "xMLBAMID": [1],
+                    "Name": ["A"],
+                    "PA": [300],
+                }
+            ),
         )
