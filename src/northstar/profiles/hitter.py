@@ -244,16 +244,44 @@ def build_hitter_profile(
             "damage_xwoba_points_above_expected",
             True,
         ),
+        "swing_rate_percentile": (
+            "statcast_swing_rate",
+            True,
+        ),
+        "zone_swing_rate_percentile": (
+            "statcast_zone_swing_rate",
+            True,
+        ),
+        "first_pitch_swing_rate_percentile": (
+            "statcast_first_pitch_swing_rate",
+            True,
+        ),
+        "two_strike_swing_rate_percentile": (
+            "statcast_two_strike_swing_rate",
+            True,
+        ),
         "contact_rate_percentile": (
             "statcast_contact_rate",
+            True,
+        ),
+        "zone_contact_percentile": (
+            "statcast_zone_contact_rate",
             True,
         ),
         "chase_avoidance_percentile": (
             "statcast_chase_rate",
             False,
         ),
+        "two_strike_chase_avoidance_percentile": (
+            "statcast_two_strike_chase_rate",
+            False,
+        ),
         "chase_contact_percentile": (
             "statcast_chase_contact_rate",
+            True,
+        ),
+        "two_strike_contact_percentile": (
+            "statcast_two_strike_contact_rate",
             True,
         ),
         "xwoba_on_contact_percentile": (
@@ -270,6 +298,10 @@ def build_hitter_profile(
         ),
         "barrel_percentile": (
             "statcast_barrel_rate",
+            True,
+        ),
+        "sweet_spot_percentile": (
+            "statcast_sweet_spot_rate",
             True,
         ),
         "woba_percentile": (
