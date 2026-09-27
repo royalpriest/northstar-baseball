@@ -105,6 +105,30 @@ reports/figures/player_run_value_2025_top20.png
 This is a benchmark, not CCA. The later machine-learning metric must be evaluated against this simpler
 run-expectancy baseline.
 
+## Validate the player benchmark
+
+NorthStar compares RE24 per 100 plate appearances with established Baseball Savant outcome and expected
+metrics before developing CCA. The validation uses Statcast batter IDs directly and compares RE24 with actual
+wOBA plus expected contact-quality measures such as xwOBA, xBA, and xSLG.
+
+Run:
+
+```bash
+python scripts/validate_player_run_value.py --season 2025 --min-pa 300
+```
+
+Outputs:
+
+```text
+reports/tables/player_run_value_validation_2025.csv
+reports/tables/player_run_value_correlations_2025.csv
+reports/figures/re24_vs_xwoba_2025.png
+```
+
+The goal is not for RE24 to perfectly duplicate an existing statistic. A strong positive relationship is a
+sanity check that the pipeline captures real offensive quality; meaningful differences help identify what
+NorthStar may be measuring differently and what the later CCA model needs to explain.
+
 ## Project layout
 
 ```text

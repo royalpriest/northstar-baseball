@@ -11,7 +11,7 @@ from northstar.metrics.player_value import build_player_run_value
 
 
 DEFAULT_INPUT = Path("data/processed/plate_appearances_2025.parquet")
-DEFAULT_TABLE = Path("reports/tables/player_run_value_2025.csv")
+DEFAULT_TOTAL_TABLE = Path("reports/tables/player_run_value_2025.csv")\nDEFAULT_RATE_TABLE = Path("reports/tables/player_run_value_2025_rate.csv")
 DEFAULT_FIGURE = Path("reports/figures/player_run_value_2025_top20.png")
 
 
@@ -181,7 +181,7 @@ def main() -> None:
     )
 
     print()
-    print(f"Saved table: {DEFAULT_TABLE}")
+    print(f"Saved table: {table_output}")
     if not leaderboard.empty:
         print(f"Saved chart: {figure_output}")
 
