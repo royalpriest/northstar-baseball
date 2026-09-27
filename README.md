@@ -255,6 +255,17 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Interpretation note | The 2024 → 2025 run is a strong model-transport test, but 2025 was used earlier while developing the methodology. | Treat this as external-to-the-fitted-model season validation rather than a pristine never-observed confirmatory dataset. A future untouched season remains valuable for final confirmation. |
 | 2026-09-27 | Success | External-season validation and its preserved 2024 → 2025 results were merged into `main` through PR #13. | NorthStar now has full-season transport evidence strong enough to prototype a player-facing descriptive decision metric. |
 | 2026-09-27 | Design decision | The first player metric prototype is **not** named CCA. | It compares the modeled value of a hitter's observed swing/take choice with an opportunity-conditioned league-like action mixture, reports missed value versus the modeled optimal action, and requires full-season split-half reliability before any public metric name is considered. |
+| 2026-09-27 | Experiment result | The full-season 2025 player prototype passed a meaningful reliability gate across **347 hitters**. Split-half Pearson/Spearman reliability was **0.704/0.690** for decision value per 100, **0.627/0.614** for missed value per 100, **0.699/0.651** for optimal-choice rate, and **0.678/0.652** for value-weighted optimal-choice rate. | Player-level signal is substantially more repeatable over full-season halves than the earlier short September split. |
+| 2026-09-27 | Experiment result | The 20%-80% discretionary-opportunity view also remained repeatable: decision value per 100 Pearson/Spearman **0.656/0.639** and discretionary optimal-choice rate **0.677/0.633**. The per-pitch accounting identity had maximum absolute error only **2.98e-8**. | Repeatability is not driven only by obvious near-deterministic swing/take opportunities, but construct validation is still required before naming a public metric. |
+| 2026-09-27 | Success | The player decision-value prototype and preserved results were merged into `main` through PR #14. | NorthStar now moves from proving repeatability to testing what baseball behavior the player signal actually represents and stabilizing rankings for unequal sample sizes. |
+| 2026-09-27 | Design decision | Player metric validation compares the prototype with independently aggregated Statcast plate discipline plus existing RE24/wOBA/xwOBA references, and adds game-cluster empirical-Bayes-style shrinkage. | The public-facing candidate should be centered on league average, require both total and discretionary opportunity minimums, and avoid treating 500-pitch and 2,000-pitch samples as equally certain. |
+| 2026-09-27 | Experiment result | Construct validation showed that raw decision value per 100 is strongly associated with chase behavior: Statcast chase rate Pearson/Spearman **-0.805/-0.793** and two-strike chase rate **-0.795/-0.789**. Plate-discipline features reconstructed **82.0%** of out-of-fold player-level variance; adding RE24/wOBA/xwOBA increased that only to **83.5%**. | The prototype is highly repeatable but is also largely explainable by familiar plate-discipline behavior, so NorthStar should not name it as a novel public metric yet. |
+| 2026-09-27 | Experiment result | The discretionary version behaved similarly: plate discipline alone explained **79.7%** of out-of-fold variance and the combined construct set explained **81.3%**. Offensive outcome references alone explained only **13–15%**. | The metric is primarily a context-weighted plate-discipline signal rather than a disguised traditional outcome-value statistic. |
+| 2026-09-27 | Experiment result | Sample-aware shrinkage preserved the broad top group while reducing smaller-sample extremes. The pitch-weighted league mean raw decision value was **-0.0552 per 100 decisions** and is explicitly centered to zero for presentation. | Shrinkage improves ranking stability, but novelty now depends on whether a repeatable residual signal remains after removing simpler discipline constructs. |
+| 2026-09-27 | Design decision | NorthStar added an incremental-signal audit before any metric naming. | Early-half out-of-fold residuals after chase / plate-discipline models are compared with late-half residuals predicted from early-half construct relationships. If the residual is not repeatable, the player metric should be treated as a sophisticated plate-discipline summary rather than a new standalone statistic. |
+| 2026-09-27 | Experiment result | The incremental player-signal audit showed that **chase rate alone** leaves a moderately repeatable residual (early/late Pearson/Spearman **0.497/0.489**), but adding swing rate and two-strike chase collapses residual reliability to **0.178/0.168**. The full plate-discipline residual is only **0.211/0.205**. | Most of the raw ~0.70 split-half reliability belongs to repeatable plate-discipline behavior rather than a distinct NorthStar player trait. |
+| 2026-09-27 | Experiment result | Full-season OOF reconstruction reached **R² 0.646** with chase rate alone and **0.818–0.820** with swing/chase or the full discipline set. Residual associations with RE24, wOBA, and xwOBA remained small; the full-discipline residual correlated only **0.190/0.166** with RE24, **0.187/0.154** with wOBA, and **0.222/0.200** with xwOBA (Pearson/Spearman). | The remaining residual is neither strongly repeatable nor strongly tied to offensive outcomes. |
+| 2026-09-27 | Methodology decision | NorthStar will **not** promote the current raw player prototype as a novel standalone metric and will not name it CCA. | The validated signal is retained as a context-weighted **decision/plate-discipline component**. The next research phase separates *selection* (swing/take quality) from *execution* (what the hitter does after choosing to swing) instead of forcing novelty from a weak residual. |
 
 ### Logging rule going forward
 
@@ -878,6 +889,127 @@ reports/figures/player_decision_metric_reliability_2025.png
 
 This remains a descriptive, model-based prototype. The Q-functions are observational estimates and the metric
 does not claim that forcing the modeled alternative action would causally change runs by the quoted amount.
+
+## Validate and stabilize the player metric
+
+The player prototype is repeatable enough to justify construct validation, but repeatability alone does not
+tell us what the metric represents. The next workflow asks whether NorthStar is merely repackaging ordinary
+plate discipline or whether it contains a distinct context-adjusted signal.
+
+Run:
+
+```bash
+python scripts/validate_player_decision_metric.py
+```
+
+The workflow uses the cached 2025 Statcast pitch files to build independent full-season hitter summaries for:
+
+- swing rate
+- zone swing rate
+- chase rate
+- whiffs per swing
+- contact rate
+- first-pitch swing rate
+- two-strike swing rate
+- two-strike chase rate
+
+It then joins the existing RE24 / Baseball Savant validation table where available, including:
+
+- RE24 per 100 plate appearances
+- wOBA
+- xwOBA
+
+NorthStar reports both pairwise Pearson/Spearman relationships and player-level out-of-fold Ridge diagnostics
+showing how much of decision value can be reconstructed from simple plate discipline, offensive outcomes, or
+both together.
+
+### Sample-aware ranking prototype
+
+The same workflow creates an explicitly provisional shrunken ranking.
+
+For each hitter, the uncertainty of mean decision value is estimated with a game-cluster robust standard error.
+A method-of-moments between-player variance is then used for normal-normal shrinkage toward the pitch-weighted
+league mean.
+
+The default ranking requires:
+
+```text
+>= 500 eligible decisions
+>= 300 discretionary decisions
+```
+
+The displayed candidate is centered so league-average decision value is zero:
+
+```text
+centered value / 100
+= 100 * (player mean decision value - league mean decision value)
+```
+
+and the shrunken version pulls smaller/noisier samples toward zero more strongly.
+
+Outputs:
+
+```text
+reports/tables/player_metric_construct_dataset_2025.csv
+reports/tables/player_metric_construct_correlations_2025.csv
+reports/tables/player_metric_construct_cv_2025.csv
+reports/tables/player_metric_shrunk_2025.csv
+reports/figures/player_metric_construct_correlations_2025.png
+reports/figures/player_metric_shrunk_2025_top20.png
+```
+
+Shrinkage is a ranking-stability device, not causal correction. The Q-functions remain observational, and the
+normal-normal player model is an approximation rather than a claim that true player ability follows an exact
+Gaussian distribution.
+
+## Audit incremental player signal
+
+Construct validation showed that the first player prototype is highly related to existing plate-discipline
+behavior. NorthStar therefore tests the **residual**, not the raw leaderboard, before considering any public
+metric name.
+
+Run:
+
+```bash
+python scripts/audit_incremental_player_signal.py
+```
+
+The audit compares three increasingly rich explanations of player decision value:
+
+```text
+chase_only
+swing_chase
+plate_discipline
+```
+
+For the full season, each simple construct model is cross-fitted across players and NorthStar saves:
+
+```text
+incremental residual
+= observed NorthStar decision value / 100
+- out-of-fold construct prediction
+```
+
+The more important test is temporal. Early-2025 plate-discipline relationships are fit using the early half of
+the season. Early player residuals are out-of-fold, while the fitted early relationship is transported to the
+late half. NorthStar then asks whether the **same players remain above or below construct expectation** later
+in the season.
+
+A repeatable residual would support genuinely incremental player information. A near-zero residual
+early/late correlation would mean the original ~0.70 reliability largely belongs to ordinary plate discipline
+rather than to a distinct NorthStar player skill.
+
+Outputs:
+
+```text
+reports/tables/player_metric_incremental_residuals_2025.csv
+reports/tables/player_metric_incremental_summary_2025.csv
+reports/tables/player_metric_incremental_half_dataset_2025.csv
+reports/tables/player_metric_incremental_half_residuals_2025.csv
+reports/tables/player_metric_incremental_reliability_2025.csv
+reports/tables/player_metric_incremental_outcome_correlations_2025.csv
+reports/figures/player_metric_incremental_reliability_2025.png
+```
 
 ## Project layout
 

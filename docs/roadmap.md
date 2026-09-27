@@ -128,24 +128,55 @@
 - [x] Add 20%-80% discretionary-opportunity view
 - [x] Add full-season player leaderboard workflow
 - [x] Add early/late 2025 split-half reliability analysis
-- [ ] Run the player prototype and preserve results
-- [ ] Decide whether reliability supports a named NorthStar metric
-- [ ] If stable, compare against established plate-discipline / offensive metrics before naming CCA
+- [x] Run the player prototype and preserve results
+- [x] Confirm full-season split-half reliability around 0.70 for primary DV/100
+- [x] Confirm discretionary DV/100 reliability remains above 0.65 Pearson
+- [x] Advance to construct validation without naming CCA
 
-## M13 — Canada layer
+## M13 — Player metric construct validation
+- [x] Add independent Statcast plate-discipline summaries
+- [x] Join RE24 / wOBA / xwOBA reference outputs
+- [x] Add pairwise construct-correlation diagnostics
+- [x] Add out-of-fold construct reconstruction tests
+- [x] Add league centering
+- [x] Add game-cluster sample-aware shrinkage
+- [x] Require minimum total and discretionary opportunities
+- [x] Run construct validation
+- [x] Confirm plate discipline explains about 82% of raw DV/100 variance
+- [x] Reject immediate public naming of the raw prototype
+
+## M14 — Incremental player-signal audit
+- [x] Add chase-only residualization
+- [x] Add swing/chase residualization
+- [x] Add full plate-discipline residualization
+- [x] Add early-OOF to late-season residual reliability test
+- [x] Add residual association checks against RE24 / wOBA / xwOBA
+- [x] Run incremental-signal audit
+- [x] Confirm full-discipline residual reliability is only about 0.21
+- [x] Reject CCA/public standalone naming for the current player prototype
+- [x] Retain the validated quantity as a selection / plate-discipline component
+
+## M15 — Selection / execution decomposition
+- [ ] Define a swing-execution target conditional on pitch quality and context
+- [ ] Build chronological / external-season execution models
+- [ ] Validate player-level execution reliability independently of selection
+- [ ] Test whether execution adds incremental information beyond xwOBA / contact quality
+- [ ] Build a two-axis player profile before considering any combined metric
+
+## M16 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M14 — Product
+## M17 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M15 — Production engineering
+## M18 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
