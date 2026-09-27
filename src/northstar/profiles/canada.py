@@ -143,6 +143,12 @@ def attach_canada_context(
         .merge(teams, on="batter", how="left", validate="one_to_one")
     )
 
+    if "statcast_plate_appearances" in out.columns:
+        out["season_plate_appearances"] = pd.to_numeric(
+            out["statcast_plate_appearances"],
+            errors="coerce",
+        )
+
     if "player_name" in out.columns and "mlb_full_name" in out.columns:
         missing_name = (
             out["player_name"].isna()
@@ -175,13 +181,22 @@ def build_canadian_hitter_view(
 
     out = profile.loc[profile["canadian_born"].fillna(False)].copy()
 
-    if min_pa > 0 and "plate_appearances" in out.columns:
-        pa = pd.to_numeric(out["plate_appearances"], errors="coerce")
+    pa_column = (
+        "season_plate_appearances"
+        if "season_plate_appearances" in out.columns
+        else "plate_appearances"
+    )
+    if min_pa > 0 and pa_column in out.columns:
+        pa = pd.to_numeric(out[pa_column], errors="coerce")
         out = out.loc[pa.ge(min_pa)].copy()
 
     sort_columns = [
         column
-        for column in ["re24_per_100_pa", "plate_appearances", "player_name"]
+        for column in [
+            "re24_per_100_pa",
+            pa_column,
+            "player_name",
+        ]
         if column in out.columns
     ]
     if sort_columns:
@@ -218,7 +233,12 @@ def build_blue_jays_hitter_view(
     team_pa = f"{team.lower()}_plate_appearances"
     sort_columns = [
         column
-        for column in [team_pa, "plate_appearances", "player_name"]
+        for column in [
+            team_pa,
+            "season_plate_appearances",
+            "plate_appearances",
+            "player_name",
+        ]
         if column in out.columns
     ]
     if sort_columns:
@@ -269,6 +289,7 @@ def build_canadian_leaderboard(
         "birth_country",
         "primary_team_2025",
         "teams_2025",
+        "season_plate_appearances",
         "plate_appearances",
         "re24_per_100_pa",
         "woba",
