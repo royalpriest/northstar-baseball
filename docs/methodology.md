@@ -30,20 +30,26 @@ Target:
 
 Initial model: logistic regression.
 
-Candidate pre-PA features:
+Version 1 deliberately begins with a small leakage-safe feature set available in the current plate-appearance
+dataset:
 - base state
 - outs
 - inning
-- score differential
-- batter handedness
-- pitcher handedness
-- batter rolling quality estimates
-- pitcher rolling quality estimates
-- home/away
-- park
+- top/bottom of inning
 
-No post-PA features (event result, exit velocity from the current PA, post-play base state, etc.) may be used
-in a pre-PA prediction model.
+The 2025 season is split chronologically: training before August 1, validation during August, and a final
+September holdout. The model is compared with a 24-state empirical scoring-probability benchmark that is fit
+on the training partition only.
+
+Evaluation metrics:
+- ROC AUC for ranking discrimination
+- log loss for probability quality
+- Brier score for probabilistic accuracy
+- calibration curve on the September holdout
+
+Later context models will add batter/pitcher quality, handedness, park, score differential, and other
+pre-PA information. No post-PA features (event result, current-PA exit velocity, post-play base state, etc.)
+may be used in a pre-PA prediction model.
 
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 

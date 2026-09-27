@@ -16,11 +16,12 @@
 - [ ] Produce league RE24 visualization
 
 ## M2 — First ML model
-- [ ] Time-based train/validation/test split
-- [ ] Logistic-regression scoring model
-- [ ] Calibration curve
-- [ ] Brier score / log loss / ROC AUC
-- [ ] Leakage audit
+- [x] Time-based train/validation/test split implemented
+- [x] Logistic-regression scoring model implemented
+- [x] Calibration curve output implemented
+- [x] Brier score / log loss / ROC AUC reporting implemented
+- [x] Initial leakage-safe feature audit implemented
+- [ ] Run the full 2025 model and preserve holdout results
 
 ## M3 — Context model
 - [ ] Rolling batter features
