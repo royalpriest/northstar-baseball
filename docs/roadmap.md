@@ -94,9 +94,10 @@
 - [x] Add propensity calibration recheck on saved holdout
 - [x] Add count/zone subgroup stability audit
 - [x] Add early/late September batter stability audit
-- [ ] Run robustness audit and preserve results
-- [ ] Decide whether weight-clipping refits are necessary
-- [ ] Decide whether explicit sequential policy evaluation is justified
+- [x] Run robustness audit and preserve results
+- [x] Confirm positive advantage under 5%-95%, 10%-90%, and 20%-80% overlap
+- [x] Add game-cluster bootstrap uncertainty and player split-half stability
+- [x] Decide that cross-fitted nuisance models and weight-clipping refits are necessary before sequential policy evaluation
 
 ## M10 — Canada layer
 - [ ] Canadian-born player identity mapping
