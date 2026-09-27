@@ -53,26 +53,35 @@
 - [x] Add multinomial logistic model
 - [x] Add XGBoost multiclass model
 - [x] Translate outcome probabilities into expected RE24
-- [ ] Run September holdout evaluation and preserve results
-- [ ] Analyze per-class errors and confusion
-- [ ] Decide whether outcome-based expected value is strong enough for player residual analysis
-- [ ] SHAP explanations
-- [ ] Model-card documentation
+- [x] Run September holdout evaluation and preserve results
+- [x] Document that outcome probabilities improved while implied RE24 remained weak
 
-## M6 — Canada layer
+## M6 — Pitch decision model
+- [x] Define physical-pitch swing/take labels
+- [x] Build hitter-perspective pitch opportunity features
+- [x] Add count+zone empirical swing baseline
+- [x] Add logistic pitch-decision model
+- [x] Add XGBoost pitch-decision model
+- [x] Add out-of-time calibration and batter behavior summary
+- [ ] Run September holdout evaluation and preserve results
+- [ ] Audit unrecognized / excluded Statcast pitch descriptions
+- [ ] Build counterfactual swing-vs-take value model
+- [ ] Validate decision value before naming a player metric
+
+## M7 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M7 — Product
+## M8 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M8 — Production engineering
+## M9 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
