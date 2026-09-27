@@ -153,11 +153,23 @@ def repeat_class_prior(prior: np.ndarray, rows: int) -> np.ndarray:
     return np.tile(prior, (rows, 1))
 
 
+def normalize_probability_rows(probabilities: np.ndarray) -> np.ndarray:
+    """Return row-normalized probabilities for stable multiclass metrics."""
+    values = np.asarray(probabilities, dtype="float64")
+    if values.ndim != 2 or values.shape[1] != len(OUTCOME_CLASSES):
+        raise ValueError("Probability matrix has unexpected shape.")
+    row_sums = values.sum(axis=1, keepdims=True)
+    if np.any(row_sums <= 0):
+        raise ValueError("Probability rows must have positive mass.")
+    return values / row_sums
+
+
 def evaluate_multiclass_probabilities(
     y_true: pd.Series,
     probabilities: np.ndarray,
 ) -> MulticlassMetrics:
     labels = list(range(len(OUTCOME_CLASSES)))
+    probabilities = normalize_probability_rows(probabilities)
     predicted = probabilities.argmax(axis=1)
     return MulticlassMetrics(
         log_loss=float(log_loss(y_true, probabilities, labels=labels)),
@@ -189,7 +201,7 @@ def align_model_probabilities(model, x: pd.DataFrame) -> np.ndarray:
     aligned = np.zeros((len(x), len(OUTCOME_CLASSES)), dtype=float)
     for source_index, class_code in enumerate(classes):
         aligned[:, class_code] = raw[:, source_index]
-    return aligned
+    return normalize_probability_rows(aligned)
 
 
 def fit_outcome_run_value_table(
@@ -225,6 +237,7 @@ def expected_re24_from_outcome_probabilities(
     overall_fallback: float,
 ) -> np.ndarray:
     """Convert an outcome-probability distribution into expected run value."""
+    probabilities = normalize_probability_rows(probabilities)
     if probabilities.shape != (len(frame), len(OUTCOME_CLASSES)):
         raise ValueError("Probability matrix has unexpected shape.")
 
