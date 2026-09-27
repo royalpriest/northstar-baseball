@@ -141,24 +141,34 @@
 - [x] Add league centering
 - [x] Add game-cluster sample-aware shrinkage
 - [x] Require minimum total and discretionary opportunities
-- [ ] Run construct validation and preserve results
-- [ ] Determine whether NorthStar adds information beyond simpler discipline metrics
-- [ ] Decide whether a public metric name is justified
+- [x] Run construct validation
+- [x] Confirm plate discipline explains about 82% of raw DV/100 variance
+- [x] Reject immediate public naming of the raw prototype
 
-## M14 — Canada layer
+## M14 — Incremental player-signal audit
+- [x] Add chase-only residualization
+- [x] Add swing/chase residualization
+- [x] Add full plate-discipline residualization
+- [x] Add early-OOF to late-season residual reliability test
+- [x] Add residual association checks against RE24 / wOBA / xwOBA
+- [ ] Run incremental-signal audit and preserve results
+- [ ] Decide whether a repeatable player signal remains beyond plate discipline
+- [ ] Decide whether to formalize, redesign, or demote the player metric
+
+## M15 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M15 — Product
+## M16 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M16 — Production engineering
+## M17 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
