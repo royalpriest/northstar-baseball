@@ -181,6 +181,12 @@ or a design decision changes because of evidence.
 
 | Date | Type | Event | Outcome / fix |
 | --- | --- | --- | --- |
+| 2026-09-27 | Runtime fix | Live Judge search and Judge/Arráez comparison endpoints returned the expected records, but Windows PowerShell rendered the accented name as `Luis ArrÃ¡ez` even though the stored profile uses `Luis Arráez`. | API JSON responses now explicitly declare `charset=utf-8`, and the test suite includes an accented-name round-trip assertion so browser/CLI clients receive unambiguous UTF-8 metadata. |
+| 2026-09-27 | Success | Live API data smoke tests passed for player search and two-player comparison. Judge search returned MLBAM 592450 with the expected 2025 profile; comparison returned Judge and Arráez plus the no-winner/no-composite interpretation. | FastAPI V1 is functionally ready to preserve after the UTF-8 response hardening check. |
+| 2026-09-27 | Success | FastAPI V1 passed **116/116 tests with no warning summary**, started successfully under Uvicorn, and returned HTTP **200** from `/health` with service `northstar-baseball-api`, API version `v1`, season `2025`. | Automated and runtime smoke tests now agree. Added a small `/` discovery endpoint so opening the API base URL returns service/docs links instead of the previously observed harmless 404. |
+| 2026-09-27 | Warning | FastAPI tests passed **116/116**, but Starlette emitted a deprecation warning because `starlette.testclient` now prefers the successor package `httpx2`. An initial attempted fix incorrectly required nonexistent `httpx>=2` releases. | Corrected the dev dependency to `httpx2>=2,<3`; reinstall the dev environment and rerun pytest to confirm a warning-free suite. |
+| 2026-09-27 | Success | Canada Layer V1 was merged into `main` through PR #20 after full identity, historical team-scope, and comparison review. | The project now has validated Canadian-born, Toronto Blue Jays, and multi-player comparison datasets available as product inputs. |
+| 2026-09-27 | Product milestone | FastAPI V1 added on `feat/product-api-v1`. | Read-only endpoints now expose player search/detail, Canadian-born and team scopes, named-metric leaderboards, metadata, and 2–4 player comparisons while preserving NorthStar's no-composite-score interpretation. |
 | 2026-09-27 | Data-quality fix | Blue Jays review exposed blank `plate_appearances` for some sub-300-PA hitters because that field came from the qualified offensive-reference table rather than the full PA reconstruction. | Canada/team views now expose `season_plate_appearances` from the complete Statcast PA dataset and use it for season/team presentation, while the qualified outcome field remains available separately. |
 | 2026-09-27 | Success | Canada layer V1 completed locally with **110 passing tests**. MLB identity resolution covered **404/404** canonical hitters; the automated birthplace rule identified **8 Canadian-born hitters**, and the 2025 PA-derived team view identified **17 hitters with at least one Toronto PA**. | The Canada layer is now end-to-end functional, with cached identities, explicit birthplace scope, historical team exposure, Canadian-born views, and a Blue Jays view. |
 | 2026-09-27 | Success | The first multi-player comparison report completed for Aaron Judge and Luis Arráez. | The comparison preserved the opposing profile shapes from the individual cards (Judge: 98th Selection / 4th Contact / 100th Damage; Arráez: 4th / 100th / 6th) without creating an overall score or declaring a winner. |
@@ -1515,6 +1521,75 @@ with established measures such as chase avoidance, contact rate, xwOBA on contac
 RE24 / 100 PA.
 
 The comparison deliberately does **not** compute a winner, grade, or overall score.
+
+## Run the FastAPI service
+
+NorthStar now exposes the canonical hitter profile through a read-only FastAPI service.
+
+Install/update the local environment after pulling this branch:
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+Start the API:
+
+```bash
+uvicorn northstar.api.app:app --reload
+```
+
+Default local URLs:
+
+```text
+API:      http://127.0.0.1:8000
+OpenAPI:  http://127.0.0.1:8000/docs
+Schema:   http://127.0.0.1:8000/openapi.json
+```
+
+Core endpoints:
+
+```text
+GET /health
+GET /api/v1/meta
+GET /api/v1/players
+GET /api/v1/players/{mlbam_id}
+GET /api/v1/canada
+GET /api/v1/teams/{team_code}
+GET /api/v1/leaderboards
+GET /api/v1/compare
+```
+
+Examples:
+
+```text
+/api/v1/players?query=judge
+/api/v1/players?team=TOR
+/api/v1/players?canadian_born=true
+/api/v1/players/592450
+/api/v1/teams/TOR
+/api/v1/leaderboards?scope=canadian&sort_by=re24_per_100_pa
+/api/v1/leaderboards?scope=team:TOR&sort_by=est_woba&min_pa=200
+/api/v1/compare?player=592450&player=650333
+```
+
+The API returns the same validated product semantics as the report layer:
+
+- no composite NorthStar score
+- Canadian scope means Canadian-born, not inferred citizenship
+- team filters use 2025 plate-appearance exposure
+- player diagnostics are full-season MLB values unless a future endpoint explicitly says otherwise
+- comparison endpoints return profiles without declaring a winner
+
+Configuration:
+
+```text
+NORTHSTAR_PROFILE_PATH
+    Optional path to the enriched hitter-profile CSV.
+
+NORTHSTAR_CORS_ORIGINS
+    Comma-separated allowed browser origins.
+    Defaults to localhost:3000 and 127.0.0.1:3000.
+```
 
 ## Project layout
 
