@@ -197,6 +197,7 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Success | Context-model V2 and its preserved holdout results were merged into `main` through PR #5. | V2 became the documented evidence for changing the ML target rather than blindly increasing model complexity. |
 | 2026-09-27 | Design decision | Traditional whole-PA RE24 can include steals, wild pitches, balks, caught stealing, or runs that occur before the terminal PA-ending pitch. | NorthStar now retains the final-pitch pre-state and computes a separate **terminal-event RE24** so earlier within-PA state changes can be audited instead of automatically credited to the batter's terminal event. |
 | 2026-09-27 | Development error | While adding regression metrics, a code edit initially inserted literal `\\n` escapes into a Python import statement. | The malformed import was detected during repository inspection and corrected before the local model run. The error remains logged because it affected development history. |
+| 2026-09-27 | Success | Terminal-event attribution, the attribution audit, prior-date terminal-event player context, and Ridge/XGBoost expected-RE24 training pipelines were implemented on `feat/expected-re24-v1`. | The next local step is to rebuild the cached 2025 processed dataset, quantify how many PAs are affected by within-PA state movement, and only then evaluate expected run value on the September holdout. |
 
 ### Logging rule going forward
 
