@@ -191,25 +191,34 @@
 - [x] Add xwOBA-on-contact and batted-ball-quality reconstruction tests
 - [x] Add early-OOF to late-season residual reliability tests
 - [x] Add incremental residual association checks with RE24 / wOBA / xwOBA
-- [ ] Run construct validation and preserve results
-- [ ] Decide whether contact remains incremental beyond situational contact skill
-- [ ] Decide whether damage remains incremental beyond contact-quality metrics
-- [ ] Retain only components that remain repeatable beyond simpler metrics
+- [x] Run construct validation and preserve results
+- [x] Identify algebraic residual-risk for observed-minus-expected metrics
+- [x] Defer novelty decision to direct future-skill prediction
 
-## M18 — Canada layer
+## M18 — Future-skill incremental audit
+- [x] Add conventional-only vs conventional-plus-NorthStar paired OOF comparison
+- [x] Predict late observed contact from early contact constructs
+- [x] Predict late xwOBA on contact from early contact-quality constructs
+- [x] Use identical player samples and folds for paired model comparisons
+- [ ] Run future-skill audit and preserve results
+- [ ] Decide whether contact adds future predictive information
+- [ ] Decide whether damage adds future predictive information
+- [ ] Formalize only components that survive the direct predictive test
+
+## M19 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M19 — Product
+## M20 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M20 — Production engineering
+## M21 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
