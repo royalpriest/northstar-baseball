@@ -185,6 +185,59 @@ overall training mean if required.
 This structured value estimate is compared out-of-time using MAE, RMSE, R², Pearson correlation, and Spearman
 correlation. Residuals remain exploratory and are not called CCA unless the model proves stable and useful.
 
+## Phase 2e: pitch opportunity and batter decision model
+
+The PA-outcome model learned modest out-of-time event probability signal, but translating that distribution
+into exact terminal-event RE24 still produced negligible R². NorthStar therefore moves to the individual pitch,
+where substantially more information about the actual opportunity is observable.
+
+### Decision target
+
+Each physical Statcast pitch is labeled as `swing` or `take` from the pitch description. Automatic
+ball/strike clock violations are excluded because they are count changes without a physical pitch.
+
+The target is the hitter's decision, not the terminal PA result.
+
+### Opportunity features
+
+V1 uses:
+- pre-pitch balls and strikes
+- pitch type
+- release speed
+- horizontal and vertical pitch movement
+- plate location
+- plate height normalized to the hitter-specific strike zone
+- hitter-perspective horizontal location/movement
+- batter and pitcher handedness
+- base state and outs
+- inning / top-bottom
+- score differential and home batting indicator
+
+Exact pitch location is permissible here because the model conditions on the pitch opportunity as presented.
+Current-pitch contact quality, batted-ball result, and PA terminal event are prohibited.
+
+### Models and evaluation
+
+Models:
+- training-only count + Statcast-zone empirical swing rate
+- logistic regression
+- XGBoost binary classifier
+
+The same chronological design is retained:
+- train before August 1
+- validate in August
+- final test in September
+
+Evaluation:
+- ROC AUC
+- log loss
+- Brier score
+- calibration curve
+
+The out-of-time residual `actual swing - expected swing probability` is stored as **decision surprise**. It
+measures unusual aggressiveness/passivity relative to the opportunity, not quality. A later counterfactual
+value model must estimate swing and take consequences before any decision-value metric is defined.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
