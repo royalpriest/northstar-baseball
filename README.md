@@ -77,6 +77,34 @@ Raw and processed data are intentionally Git-ignored. The future public reposito
 methodology, small reproducible samples, and derived results where licensing/terms permit rather than blindly
 committing the entire raw dataset.
 
+## Build the 2025 hitter run-value leaderboard
+
+After the baseline has produced plate-appearance RE24 values, aggregate them by batter:
+
+```bash
+python scripts/build_player_leaderboard.py --min-pa 300 --top 20
+```
+
+Use rate value instead of seasonal total with:
+
+```bash
+python scripts/build_player_leaderboard.py --min-pa 300 --top 20 --sort rate
+```
+
+The leaderboard reports total RE24, RE24 per 100 plate appearances, and the share of plate appearances
+with positive RE24. Player names are resolved from MLBAM IDs through pybaseball's Chadwick player registry
+lookup. The 300-PA cutoff is an analysis threshold, not an official MLB qualification rule.
+
+Outputs:
+
+```text
+reports/tables/player_run_value_2025.csv
+reports/figures/player_run_value_2025_top20.png
+```
+
+This is a benchmark, not CCA. The later machine-learning metric must be evaluated against this simpler
+run-expectancy baseline.
+
 ## Project layout
 
 ```text
