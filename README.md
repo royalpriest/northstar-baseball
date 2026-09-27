@@ -181,6 +181,7 @@ or a design decision changes because of evidence.
 
 | Date | Type | Event | Outcome / fix |
 | --- | --- | --- | --- |
+| 2026-09-27 | Warning | FastAPI tests passed **116/116**, but Starlette emitted a deprecation warning because the environment used httpx 0.x/1.x compatibility with `starlette.testclient`. | Updated the dev dependency to `httpx>=2,<3`; reinstall the dev environment and rerun pytest to confirm a warning-free suite. |
 | 2026-09-27 | Success | Canada Layer V1 was merged into `main` through PR #20 after full identity, historical team-scope, and comparison review. | The project now has validated Canadian-born, Toronto Blue Jays, and multi-player comparison datasets available as product inputs. |
 | 2026-09-27 | Product milestone | FastAPI V1 added on `feat/product-api-v1`. | Read-only endpoints now expose player search/detail, Canadian-born and team scopes, named-metric leaderboards, metadata, and 2–4 player comparisons while preserving NorthStar's no-composite-score interpretation. |
 | 2026-09-27 | Data-quality fix | Blue Jays review exposed blank `plate_appearances` for some sub-300-PA hitters because that field came from the qualified offensive-reference table rather than the full PA reconstruction. | Canada/team views now expose `season_plate_appearances` from the complete Statcast PA dataset and use it for season/team presentation, while the qualified outcome field remains available separately. |
