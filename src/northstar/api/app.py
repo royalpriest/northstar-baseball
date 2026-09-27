@@ -5,12 +5,19 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from northstar.api.store import DEFAULT_PROFILE_PATH, ProfileStore
 
 
 API_VERSION = "v1"
 SEASON = 2025
+
+
+class Utf8JSONResponse(JSONResponse):
+    """JSON response with an explicit UTF-8 charset for older HTTP clients."""
+
+    media_type = "application/json; charset=utf-8"
 
 
 def _cors_origins() -> list[str]:
@@ -54,6 +61,7 @@ def create_app(
 ) -> FastAPI:
     service = FastAPI(
         title="NorthStar Baseball API",
+        default_response_class=Utf8JSONResponse,
         version="0.1.0",
         description=(
             "Read-only API for NorthStar hitter profiles, contextual "
