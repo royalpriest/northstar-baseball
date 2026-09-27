@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import unicodedata
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -142,7 +143,13 @@ def _resolve_missing_player_names(
 
 
 def _slug(value: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", value.strip().lower()).strip("-")
+    normalized = unicodedata.normalize("NFKD", value)
+    ascii_value = normalized.encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(
+        r"[^a-z0-9]+",
+        "-",
+        ascii_value.strip().lower(),
+    ).strip("-")
     return slug or "player"
 
 
