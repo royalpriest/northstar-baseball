@@ -1099,3 +1099,31 @@ criterion. It does not create a Canada-specific composite NorthStar score.
 Two to four player profiles can be compared on the same league-relative percentile scale. NorthStar contextual
 axes and established measures remain visually distinct, and the report does not declare a winner or synthesize
 an overall rating.
+
+## Phase 4: read-only product API
+
+The first product service exposes preserved NorthStar outputs rather than rerunning research models on every
+request.
+
+The API reads the enriched canonical hitter profile and provides:
+
+- player search by name or MLBAM ID
+- individual profile lookup
+- Canadian-born filtering
+- 2025 historical team-exposure filtering
+- explicitly named leaderboards
+- two-to-four-player profile comparison
+
+The service inherits the analytical scope rules from the report layer:
+
+1. Selection, Contact, and Damage remain separate contextual diagnostics.
+2. No endpoint calculates a composite NorthStar score.
+3. Canadian scope means MLB birthplace country equals Canada.
+4. Team scope is based on 2025 plate-appearance exposure.
+5. Full-season hitter diagnostics are not relabeled as team-only performance.
+6. Leaderboards always expose the metric used for ordering.
+
+The initial API uses the preserved enriched CSV as a read-only source. PostgreSQL becomes the next storage layer;
+that migration should preserve the endpoint semantics so the frontend is not coupled to the original flat-file
+implementation.
+
