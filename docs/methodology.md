@@ -376,6 +376,55 @@ September is split at September 15. Batters with enough decisions in both halves
 Pearson and Spearman correlations across the two halves are reported. This is a short-horizon reliability
 diagnostic, not proof of a stable season-level skill.
 
+## Phase 2i: cross-fitted nuisance models and weight sensitivity
+
+The robustness audit established that pitch-state V2 remains positive under tighter propensity overlap. The
+next concern is nuisance-model overfitting inside the pre-August training sample.
+
+### Game-grouped cross-fitting
+
+The training period is partitioned with stratified group folds using `game_pk` as the group. Every pitch from
+one game remains in the same fold. For each fold, the swing-propensity model is trained on the other games and
+predicts only the held-out games.
+
+The combined predictions form:
+
+`e_oof(X) = out-of-fold P(swing | X)`
+
+These OOF probabilities, rather than in-sample predictions, determine training common support and stabilized
+inverse-propensity weights.
+
+### Propensity calibration
+
+An isotonic calibrator is fit on the OOF training probabilities and observed swing decisions. A final XGBoost
+propensity model is then trained on the complete pre-August sample. Its August/September probabilities are
+passed through the OOF-fitted calibrator before overlap trimming or doubly robust evaluation.
+
+Calibration is evaluated with ROC AUC, log loss, Brier score, average predicted swing probability, observed
+swing rate, and holdout calibration bins.
+
+### Weight-cap sensitivity
+
+On the calibrated OOF 5%-95% training sample, raw stabilized inverse-propensity weights are computed once.
+Separate swing/take XGBoost transition-value models are then refit under caps:
+
+- 3
+- 5
+- 10
+- 20
+
+For every cap NorthStar records:
+- percentage of weights clipped
+- maximum raw / clipped weight
+- total and action-specific effective sample size
+- August and September factual transition-value metrics
+- one-step model-action advantage
+- game-cluster bootstrap standard error and 95% interval
+- model-selected swing share and action agreement
+
+A credible result should not depend on one arbitrary weight cap. Large shifts in sign or magnitude, or severe
+effective-sample-size collapse, would block progression toward a player metric.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
