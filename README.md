@@ -1,12 +1,12 @@
 # NorthStar Baseball
 
-**NorthStar Baseball** is a context-aware baseball analytics project that studies how individual plate
-appearances change a team's expected scoring opportunities, with a dedicated focus on the Toronto Blue Jays
-and Canadian MLB players.
+**NorthStar Baseball** is a context-aware baseball analytics project that studies hitter decision-making,
+contact, damage, and run creation, with a dedicated focus on the Toronto Blue Jays and Canadian MLB players.
 
-The long-term goal is to develop an explainable machine-learning metric for **Chance Creation Added (CCA)**.
-Before creating a new metric, the project first reproduces established run-expectancy baselines and validates
-the data pipeline.
+The research phase tested whether those components justified a new standalone **Chance Creation Added (CCA)**
+style metric. Repeated construct, reliability, external-season, and future-prediction audits did not support
+collapsing them into a superior universal score. NorthStar therefore preserves the validated quantities as
+transparent contextual diagnostics alongside established baseball measures.
 
 ## Phase 1 question
 
@@ -181,6 +181,8 @@ or a design decision changes because of evidence.
 
 | Date | Type | Event | Outcome / fix |
 | --- | --- | --- | --- |
+| 2026-09-27 | Success | NorthStar Hitter Profile V1 was merged into `main` through PR #19 after representative Aaron Judge and Luis Arráez cards validated opposite player shapes. | The canonical profile now exposes Selection, Contact, and Damage alongside established measures without a composite score. |
+| 2026-09-27 | Design decision | The Canada layer defines its automated player subset using MLB birthplace data rather than inferring nationality. | `birth_country == Canada` is labeled **Canadian-born**; citizenship and national-team eligibility are intentionally not inferred. Team membership is derived separately from 2025 plate appearances. |
 | 2026-09-26 | Error | Initial editable install ran under Python 3.10 even though NorthStar requires Python 3.12+. `pytest` was therefore never installed. | Standardized the local environment on Python 3.13. |
 | 2026-09-26 | Error | The Windows Python launcher listed Python 3.13, but the registered `python.exe` path no longer existed. | Reinstalled Python 3.13 and recreated `.venv`. |
 | 2026-09-26 | Success | NorthStar virtual environment activated correctly with Python 3.13 and the project dependencies installed. | Local development environment became reproducible and isolated. |
@@ -1459,6 +1461,58 @@ python scripts/build_hitter_profiles.py --player 592450
 The player card places the three NorthStar contextual axes beside established measures and explicitly states
 that no composite overall rating is being produced.
 
+## Build the Canada layer
+
+NorthStar adds a Canada-focused identity and team layer on top of the canonical hitter profile.
+
+Run:
+
+```bash
+python scripts/build_canada_layer.py
+```
+
+The workflow:
+
+- resolves profile hitters through the MLB Stats API people endpoint
+- records public birthplace fields and marks `canadian_born` only when `birth_country == Canada`
+- derives each hitter's 2025 batting-team exposure directly from NorthStar's plate-appearance dataset
+- creates a Canadian-born hitter view and RE24/100 PA leaderboard
+- creates a Toronto Blue Jays view for hitters with at least one 2025 Toronto plate appearance
+
+"Canadian-born" is intentionally a birthplace definition, **not a citizenship or nationality claim**.
+
+The Blue Jays table also keeps an important scope distinction: NorthStar diagnostic fields are full-season MLB
+values, while `tor_plate_appearances`, `tor_pa_share`, and team columns describe Toronto exposure. This
+avoids silently presenting a traded player's full-season profile as if every observation occurred with Toronto.
+
+Outputs:
+
+```text
+reports/tables/player_identity_2025.csv
+reports/tables/player_team_context_2025.csv
+reports/tables/hitter_profile_with_canada_2025.csv
+reports/tables/canadian_hitter_profile_2025.csv
+reports/tables/canadian_hitter_leaderboard_2025.csv
+reports/tables/blue_jays_hitter_profile_2025.csv
+```
+
+Identity records are cached in the reports table so repeated local runs do not need to refetch already-resolved
+players. Use `--refresh-identities` when a clean lookup is desired.
+
+## Compare hitter profiles
+
+After building the Canada layer, compare two to four hitters:
+
+```bash
+python scripts/compare_hitter_profiles.py --players 592450 650333
+```
+
+Names can also be supplied when quoted. The report compares NorthStar Selection / Contact / Damage percentiles
+with established measures such as chase avoidance, contact rate, xwOBA on contact, barrel rate, xwOBA, and
+RE24 / 100 PA.
+
+The comparison deliberately does **not** compute a winner, grade, or overall score.
+
 ## Project layout
 
 ```text
@@ -1481,9 +1535,13 @@ northstar-baseball/
 
 ## Metric development principle
 
-CCA is **not defined yet**. The project will first establish RE24 and a calibrated scoring-probability model.
-Only then will a new player metric be formalized, documented, and tested out-of-time. This avoids inventing a
-name first and reverse-engineering a statistic to fit it.
+NorthStar does **not** currently define a composite CCA score. Candidate player metrics must survive
+out-of-time validation, construct reconstruction, reliability checks, and direct incremental-prediction tests
+before any standalone claim is made. The first research cycle showed why: useful contextual diagnostics can be
+highly repeatable without adding meaningful information beyond stronger established measures.
+
+The project therefore keeps Selection, Contact, and Damage separate and presents them as explanatory context
+rather than reverse-engineering a single ranking statistic.
 
 ## Data sources
 
