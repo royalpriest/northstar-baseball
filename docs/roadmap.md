@@ -115,9 +115,11 @@
 - [x] Keep RE/state values, propensity calibration, and action models training-season only
 - [x] Add external state-coverage and propensity-transport diagnostics
 - [x] Add external factual and clustered policy sensitivity across weight caps
-- [ ] Build the complete 2024 baseline dataset
-- [ ] Run 2024 -> 2025 external validation and preserve results
-- [ ] Decide whether transport is strong enough to begin player-metric design
+- [x] Build the complete 2024 baseline dataset
+- [x] Run 2024 -> 2025 external validation and preserve results
+- [x] Confirm complete 2024-state coverage of 2025 external decision states
+- [x] Confirm stable external signal across weight caps 3, 5, 10, and 20
+- [x] Advance to player-metric prototyping while retaining observational caveats
 
 ## M12 — Canada layer
 - [ ] Canadian-born player identity mapping
