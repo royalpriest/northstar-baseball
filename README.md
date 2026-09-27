@@ -108,8 +108,8 @@ run-expectancy baseline.
 ## Validate the player benchmark
 
 NorthStar compares RE24 per 100 plate appearances with established FanGraphs offensive metrics before
-developing CCA. The validation uses the Chadwick player-ID crosswalk to join MLBAM IDs from Statcast to
-FanGraphs IDs, then compares NorthStar RE24 with OPS, wOBA, and wRC+.
+developing CCA. The validation pulls FanGraphs' modern JSON leaderboard directly and joins its MLBAM IDs to the
+Statcast batter IDs already used by NorthStar, then compares RE24 with OPS, wOBA, and wRC+.
 
 Run:
 
