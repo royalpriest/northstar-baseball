@@ -303,6 +303,9 @@ Models compared:
 - XGBoost regression with context
 
 The context models use handedness, inning/score/park context, and prior-date batter/pitcher terminal-event RE24.
+By default, the first expected-value model excludes PAs whose base/out state changed before the terminal pitch;
+those PAs remain in the attribution audit instead of being mixed into a pre-PA prediction target whose terminal
+state was not known at the start of the PA. Use `--include-shifted-pa` only for a sensitivity run.
 As before, the season is split chronologically into pre-August training, August validation, and a September
 holdout.
 
