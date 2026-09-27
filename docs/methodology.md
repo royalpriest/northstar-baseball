@@ -476,6 +476,66 @@ A successful transport result should preserve the broad direction and useful sig
 holdouts without depending on a single cap. A failure is also informative: it would indicate temporal drift or
 that the learned relationships were more season-specific than internal validation suggested.
 
+## Phase 2k: player decision-value prototype
+
+The 2024-trained pitch-state system transported to 2025 with stable propensity discrimination, transition-value
+signal, common support, and weight-cap sensitivity. NorthStar therefore begins player aggregation, while
+keeping the metric explicitly provisional.
+
+For opportunity `X`, let:
+
+- `e(X)` be the transported/calibrated probability of swinging
+- `Q_swing(X)` be modeled one-step transition value if swinging
+- `Q_take(X)` be modeled one-step transition value if taking
+
+The opportunity-conditioned expected action value is:
+
+`Q_expected(X) = e(X) Q_swing(X) + (1 - e(X)) Q_take(X)`
+
+For the hitter's observed action `A`:
+
+`DV(X,A) = Q_A(X) - Q_expected(X)`
+
+The prototype also records:
+
+`Missed(X,A) = max(Q_swing, Q_take) - Q_A`
+
+and:
+
+`Headroom(X) = max(Q_swing, Q_take) - Q_expected`
+
+so:
+
+`DV + Missed = Headroom`
+
+### Player aggregation
+
+For each batter NorthStar reports:
+- eligible pitch decisions
+- discretionary decisions with `0.20 <= e(X) <= 0.80`
+- swing rate and expected swing rate
+- total decision value
+- decision value per 100 eligible pitches
+- missed value per 100 eligible pitches
+- ordinary optimal-choice rate
+- value-weighted optimal-choice rate using `|Q_swing - Q_take|` as the weight
+- discretionary decision value per 100
+- discretionary optimal-choice rates
+
+The value-weighted rate emphasizes choices where the model sees a materially larger consequence difference
+between swinging and taking.
+
+### Reliability gate
+
+The full 2025 external season is split into early and late samples. Players must meet a minimum pitch-decision
+threshold in both halves. Pearson and Spearman reliability are reported for rate metrics rather than totals,
+including decision value per 100, missed value per 100, optimal-choice rate, value-weighted optimal-choice
+rate, and discretionary equivalents.
+
+A leaderboard can be generated for inspection, but NorthStar should not assign a final public metric name
+unless player-level reliability is materially stronger than the short September split-half results and the
+rankings remain interpretable under discretionary-opportunity filtering.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
