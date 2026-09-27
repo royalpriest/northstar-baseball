@@ -1051,8 +1051,51 @@ The profile is explanatory. It is intended to show how hitter choice, contact ex
 conventional outcomes relate to each other. The NorthStar axes remain context-adjusted diagnostics and are not
 presented as replacements for established metrics.
 
-## Phase 3: NorthStar Chance Creation Added (CCA)
+## Phase 3: Canada-focused product layer
 
-CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
-The metric should answer how much a player's plate appearances alter future scoring opportunity relative to
-league/context expectation while avoiding outcome leakage.
+The first metric-research cycle does not justify a single CCA score, so the next phase turns the validated
+hitter analysis into browsable, explicitly scoped views.
+
+### Player identity
+
+NorthStar resolves MLBAM hitter IDs through the MLB Stats API people endpoint and stores:
+
+- full name
+- birth city
+- birth state / province
+- birth country
+
+The automated Canada subset uses the literal rule:
+
+`birth_country == "Canada"`
+
+This is labeled **Canadian-born**. It must not be interpreted as citizenship, nationality, residence, or
+international-team eligibility.
+
+### 2025 team exposure
+
+Team membership is reconstructed from the plate-appearance dataset rather than from a player's current-team
+field. For every hitter, NorthStar counts 2025 plate appearances by `batting_team`, records all represented
+teams, identifies the primary team by PA count, and separately stores Toronto PA count/share.
+
+This matters for traded players because a current roster lookup could describe the wrong team for the historical
+2025 season.
+
+### Toronto Blue Jays view
+
+A hitter appears in the Toronto view when the 2025 PA data contain at least one Toronto batting appearance.
+
+The existing Selection / Contact / Damage diagnostics remain **full-season MLB quantities**. Toronto exposure
+columns are carried beside them so the view never silently implies that full-season values are Toronto-only
+splits.
+
+### Canadian-born leaderboard
+
+The Canada leaderboard uses a named established field, RE24 per 100 PA by default, as its explicit sorting
+criterion. It does not create a Canada-specific composite NorthStar score.
+
+### Player comparison
+
+Two to four player profiles can be compared on the same league-relative percentile scale. NorthStar contextual
+axes and established measures remain visually distinct, and the report does not declare a winner or synthesize
+an overall rating.
