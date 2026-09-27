@@ -915,6 +915,62 @@ NorthStar context adjustment preserves player information not captured by the si
 Associations with RE24, wOBA, and xwOBA are reported only as descriptive external checks and are not used to
 retrofit the component toward offensive outcomes.
 
+## Phase 2t: future-skill incremental audit
+
+The first construct audit revealed an important identification problem.
+
+Both V2 components are defined as an observed hitter result minus a model-based expected opportunity result.
+Residualizing such a metric against the observed conventional result can mechanically leave part of the
+expected-opportunity term. If opportunity quality is itself repeatable by hitter, early/late residual
+correlation can remain high even without a new execution skill.
+
+NorthStar therefore changes the incremental question from:
+
+`Is (NorthStar - conventional reconstruction) repeatable?`
+
+to:
+
+`Does EARLY NorthStar information improve prediction of LATE observed skill beyond EARLY conventional skill?`
+
+### Contact future-prediction test
+
+Target:
+- late-half observed contact rate
+
+Base predictors:
+- early overall contact rate
+- optionally early zone contact, chase contact, and two-strike contact
+
+Augmented predictor:
+- the same conventional set
+- plus early contact above expected per 100 swings
+
+### Damage future-prediction test
+
+Target:
+- late-half observed xwOBA on contact
+
+Base predictors:
+- early xwOBA on contact
+- optionally early average exit velocity, hard-hit rate, barrel rate, and sweet-spot rate
+
+Augmented predictor:
+- the same conventional set
+- plus early damage xwOBA points above expected
+
+For every construct set, both models use the identical complete-case player sample and identical K-fold player
+splits. Standardized Ridge models generate out-of-fold late-skill predictions.
+
+The main statistic is:
+
+`Delta OOF R² = R²(augmented) - R²(conventional only)`
+
+Changes in Pearson, Spearman, MAE, and RMSE are reported alongside it.
+
+This design does not prove causality. It asks a narrower and cleaner question: whether the context-adjusted
+NorthStar component contains player information that helps predict future observed skill after the conventional
+early-season skill measures are already known.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
