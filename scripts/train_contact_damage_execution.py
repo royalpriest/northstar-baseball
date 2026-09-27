@@ -38,6 +38,7 @@ from northstar.models.baselines import (
 from northstar.models.pitch_decision import (
     PITCH_DECISION_CATEGORICAL_FEATURES,
     PITCH_DECISION_NUMERIC_FEATURES,
+    prepare_pitch_decision_model_frame,
 )
 from northstar.validation.crossfit import (
     apply_propensity_calibrator,
@@ -154,7 +155,10 @@ def _load_decision_chunks(
             ) from exc
 
         raw_count += len(chunk)
-        frames.append(build_pitch_decision_frame(chunk))
+        decision_frame = build_pitch_decision_frame(chunk)
+        frames.append(
+            prepare_pitch_decision_model_frame(decision_frame)
+        )
 
         if index == 1 or index % 5 == 0 or index == len(paths):
             print(f"  prepared chunk {index}/{len(paths)}")
