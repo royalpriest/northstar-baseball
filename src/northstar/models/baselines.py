@@ -380,3 +380,40 @@ def make_pitch_xgboost_model(
             ),
         ]
     )
+
+
+def make_pitch_value_xgboost_model(
+    categorical_features: list[str],
+    numeric_features: list[str],
+) -> Pipeline:
+    """Sparse XGBoost regressor for pitch-level action-value modeling."""
+    return Pipeline(
+        steps=[
+            (
+                "preprocess",
+                _make_low_memory_pitch_preprocessor(
+                    categorical_features,
+                    numeric_features,
+                    scale_numeric=False,
+                ),
+            ),
+            (
+                "model",
+                XGBRegressor(
+                    n_estimators=350,
+                    max_depth=4,
+                    learning_rate=0.04,
+                    subsample=0.85,
+                    colsample_bytree=0.85,
+                    min_child_weight=8,
+                    reg_lambda=2.0,
+                    objective="reg:squarederror",
+                    eval_metric="rmse",
+                    tree_method="hist",
+                    max_bin=128,
+                    random_state=42,
+                    n_jobs=-1,
+                ),
+            ),
+        ]
+    )

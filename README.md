@@ -220,6 +220,12 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Success | Pitch-decision V1 completed across **729,619 physical decisions (98.32% of 742,080 cached pitches)**. On the September holdout, XGBoost reached ROC AUC **0.861**, log loss **0.4620**, and Brier **0.1522**, materially outperforming the count+zone baseline at **0.777 / 0.5610 / 0.1900** and logistic at **0.782 / 0.5601 / 0.1895**. | This is NorthStar's first clearly strong out-of-time ML result. Exact pitch geometry, count, movement, and pitch type add substantial information about hitter swing/take behavior beyond a simple count+zone benchmark. |
 | 2026-09-27 | Interpretation note | XGBoost feature importance was led by two-strike count, exact Statcast zone, hitter-perspective horizontal location, normalized vertical location, count state, pitch movement, and pitch type. | The learned ranking is baseball-plausible and supports the decision-model framing, but feature importance is descriptive rather than causal. |
 | 2026-09-27 | Warning | The successful full-season run emitted a `ConvergenceWarning` because sparse logistic regression hit its iteration cap. | The logistic model is only a baseline and the XGBoost result is unaffected. The sparse logistic configuration was relaxed to `tol=1e-3` with a higher iteration cap for a cleaner canonical rerun. |
+| 2026-09-27 | Success | Pitch-decision V1 and its preserved full-season holdout results were merged into `main` through PR #8. | The strong XGBoost swing/take model became the propensity foundation for the first observational decision-value experiment. |
+| 2026-09-27 | Design decision | NorthStar began a counterfactual-style pitch decision-value V1 rather than treating decision surprise as value. | The new experiment estimates separate expected future-PA run values for swing and take, adjusts observed-action training with the swing-propensity model, trims low-overlap opportunities, and uses doubly robust policy estimates as diagnostics. |
+| 2026-09-27 | Methodology caution | Swing/take choices are observational rather than randomized, so modeled action gaps can still reflect unmeasured hitter intent, recognition, and other confounding. | Decision-value V1 is explicitly exploratory. No player metric or causal CCA claim will be made unless overlap, factual prediction, and out-of-time policy diagnostics are credible. |
+| 2026-09-27 | Experiment result | Pitch decision-value V1 retained **89.18%** of training pitches and **88.94%** of September pitches in common support. On the September holdout, XGBoost action-value prediction improved over the count+zone+action baseline: MAE **0.3263 vs 0.3280**, RMSE **0.4604 vs 0.4625**, R² **0.0338 vs 0.0252**, Pearson **0.184 vs 0.159**, and Spearman **0.233 vs 0.163**. | Pitch-level action value contains measurable out-of-time signal, unlike the earlier PA-level expected-RE24 regressions. |
+| 2026-09-27 | Experiment result | The September doubly robust estimates were **-0.02926** for always take, **-0.04653** for always swing, **-0.01968** for observed actions, and **+0.00628** for the model-selected policy. Validation showed the same policy ordering. | The stable direction is encouraging, but the implied improvement over observed decisions is too large to treat literally as a causal run gain. |
+| 2026-09-27 | Methodology limitation | Decision-value V1 uses the remaining value of the entire PA as the return for every pitch. Multiple pitches in the same PA therefore inherit overlapping downstream value, and a counterfactual choice on an early pitch can change whether later pitches even exist. | NorthStar will replace the repeated downstream-return target with a one-step pitch-state transition value whose realized values telescope across the PA. |
 
 ### Logging rule going forward
 
@@ -482,6 +488,64 @@ decision_surprise = actual swing - predicted swing probability
 This is a **behavioral deviation**, not a value metric. A surprising swing is not automatically a good swing.
 The next stage will estimate the expected value of swing versus take for comparable pitch opportunities before
 NorthStar assigns decision value.
+
+## Train pitch decision-value V1
+
+The swing/take model can tell us what hitters usually do, but **surprise is not value**. Decision-value V1 asks
+a harder observational question:
+
+> For this exact pitch opportunity, what future plate-appearance run value is associated with swinging versus taking?
+
+For every physical pitch, NorthStar constructs a training-table run-value return from the current pitch state
+through the end of the plate appearance:
+
+```text
+runs scored from this pitch through PA end
++ training-only RE(after PA)
+- training-only RE(current pitch base/out state)
+```
+
+The run-expectancy table is built from the pre-August training partition only.
+
+The strong XGBoost swing/take model from pitch-decision V1 is reused as a **propensity model**. The value
+experiment then:
+
+- trims pitches with estimated swing probability below 5% or above 95%
+- computes stabilized inverse-propensity weights
+- fits one sparse XGBoost value model on observed swings
+- fits another sparse XGBoost value model on observed takes
+- predicts both action values for every overlap pitch
+- compares against a count + zone + action mean baseline
+- reports doubly robust estimates for always-take, always-swing, and the model-selected policy
+
+Run:
+
+```bash
+python scripts/train_pitch_decision_value.py
+```
+
+Outputs:
+
+```text
+reports/tables/pitch_decision_value_factual_metrics_2025.csv
+reports/tables/pitch_decision_value_policy_estimates_2025.csv
+reports/tables/pitch_decision_value_batter_holdout_2025.csv
+reports/tables/pitch_value_swing_xgboost_importance_2025.csv
+reports/tables/pitch_value_take_xgboost_importance_2025.csv
+reports/figures/pitch_decision_value_holdout_2025.png
+data/processed/pitch_decision_value_test_predictions_2025.parquet
+```
+
+The test predictions include separate `q_take` and `q_swing` estimates plus:
+
+```text
+modeled_action_advantage = modeled value of chosen action - modeled value of alternative action
+```
+
+This is **not yet a causal decision-value statistic**. Swing/take behavior is observational, propensity models
+cannot guarantee that all confounding is measured, and V1 does not yet use cross-fitting. The doubly robust
+policy estimates are diagnostics for whether the research direction is credible, not proof that a recommended
+action would causally add the estimated number of runs.
 
 ## Project layout
 
