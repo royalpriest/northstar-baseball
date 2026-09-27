@@ -536,6 +536,128 @@ A leaderboard can be generated for inspection, but NorthStar should not assign a
 unless player-level reliability is materially stronger than the short September split-half results and the
 rankings remain interpretable under discretionary-opportunity filtering.
 
+## Phase 2l: player construct validation and ranking shrinkage
+
+Full-season player split-half reliability is materially stronger than short-horizon September reliability, so
+NorthStar next tests **construct validity** rather than immediately naming the statistic.
+
+### Independent plate-discipline constructs
+
+Full-season 2025 Statcast pitches are independently aggregated by batter. Physical swing/take descriptions use
+the same transparent event definitions as the pitch-decision pipeline, but no NorthStar Q-value is involved in
+these summaries.
+
+The construct set includes:
+- overall swing rate
+- zone swing rate
+- chase rate on Statcast zones 11-14
+- whiffs per swing
+- contact rate
+- first-pitch swing rate
+- two-strike swing rate
+- two-strike chase rate
+
+Existing player RE24 / Baseball Savant outputs add outcome-oriented references such as RE24 per 100 PA, wOBA,
+and xwOBA.
+
+Pairwise Pearson and Spearman correlations are reported for primary NorthStar player metrics. In addition,
+five-fold player-level out-of-fold Ridge models estimate how much of NorthStar decision value can be explained
+by:
+- plate discipline only
+- outcome value only
+- their combination
+
+The purpose is diagnostic. Very high reconstruction would suggest NorthStar is mostly a repackaging of simpler
+statistics; modest reconstruction alongside stable reliability would support incremental descriptive content.
+
+### League centering
+
+Raw decision value is measured relative to an opportunity-conditioned action mixture and is not mathematically
+forced to average zero across player means. A presentation layer therefore centers the player rate on the
+pitch-weighted league mean:
+
+`Centered DV/100 = 100 * (player mean DV - league mean DV)`
+
+This changes interpretation, not underlying player ordering.
+
+### Sample-aware shrinkage
+
+For each hitter, NorthStar estimates the standard error of mean decision value with game clusters. Let
+`sigma_i²` be the squared cluster standard error for player `i`. A method-of-moments estimate of
+between-player variance `tau²` is:
+
+`tau² = max(Var(player means) - mean(sigma_i²), epsilon)`
+
+The provisional shrinkage factor is:
+
+`lambda_i = tau² / (tau² + sigma_i²)`
+
+and:
+
+`Shrunk_i = league mean + lambda_i * (raw_i - league mean)`
+
+This prevents short or noisy samples from receiving the same ranking certainty as large stable samples.
+Default eligibility requires at least 500 total decisions and 300 discretionary opportunities.
+
+This is an empirical-Bayes-style approximation for ranking stabilization. It does not remove confounding from
+the underlying observational action-value model.
+
+## Phase 2m: incremental player-signal audit
+
+Construct validation indicates that raw NorthStar decision value is largely reconstructable from simple
+plate-discipline summaries. The next question is therefore not whether the raw metric is reliable, but whether
+its **residual beyond ordinary plate discipline** is reliable.
+
+Three construct models are tested:
+- chase rate only
+- overall swing rate + chase rate + two-strike chase rate
+- the complete plate-discipline construct set
+
+For full-season diagnostics, player-level Ridge models are cross-fitted and the out-of-fold residual is:
+
+`Residual_i = NorthStar DV100_i - Predicted DV100_i(constructs)`
+
+For temporal reliability, the season is split at July 1. Early-half residuals are produced out-of-fold. A model
+fit on all early-half players is then transported to late-half plate-discipline summaries, generating late
+residuals without learning the late relationship.
+
+The key diagnostic is the early/late Pearson and Spearman correlation of these residuals. This is stricter than
+correlating raw decision value because it asks whether a player-specific component remains after accounting for
+the simpler behaviors that already explain most of NorthStar's cross-sectional variation.
+
+Residuals are also compared with RE24, wOBA, and xwOBA. These outcome correlations are descriptive and do not
+convert the observational decision-value model into a causal statistic.
+
+## Phase 2n: interpretation of the incremental-signal result
+
+The incremental audit provides a clear stopping rule for the first player prototype.
+
+Raw decision value per 100 is strongly reliable across season halves, but that reliability is mostly reproduced
+by ordinary swing-selection behavior. Chase rate alone explains a large share of the cross-sectional signal
+and leaves a moderately stable residual. Once overall swing tendency and two-strike chase behavior are added,
+the residual early/late reliability falls below 0.20. The full plate-discipline residual is only slightly
+higher, around 0.21.
+
+NorthStar therefore interprets the current quantity as a **context-weighted plate-discipline / selection-value
+component**, not as evidence for a new independent all-purpose hitter metric.
+
+This distinction is intentional:
+
+- the pitch-level transition-value and policy machinery remains useful
+- the player aggregation is repeatable
+- the player aggregation is not sufficiently distinct from established discipline behavior to justify a new
+  standalone name
+- a weak residual should not be amplified or rebranded simply to manufacture novelty
+
+The next player-level research question is a decomposition:
+
+1. **Selection value** — was swing/take the better decision given the pitch/context?
+2. **Execution value** — conditional on choosing to swing, did the hitter convert that opportunity better or
+   worse than expected from pitch/context?
+
+Only after both components are validated separately should NorthStar test whether a combined offensive
+decision profile contains stable, incremental information.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
