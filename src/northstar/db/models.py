@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, JSON, String, Text, func
+from sqlalchemy import Boolean, DateTime, Float, ForeignKeyConstraint, Integer, JSON, String, Text, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -46,12 +46,15 @@ class HitterProfile(Base):
 
 class HitterTeamMembership(Base):
     __tablename__ = "hitter_team_memberships"
-
-    batter: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("hitter_profiles.batter", ondelete="CASCADE"),
-        primary_key=True,
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["batter", "season"],
+            ["hitter_profiles.batter", "hitter_profiles.season"],
+            ondelete="CASCADE",
+        ),
     )
+
+    batter: Mapped[int] = mapped_column(Integer, primary_key=True)
     season: Mapped[int] = mapped_column(Integer, primary_key=True, default=2025)
     team_code: Mapped[str] = mapped_column(String(8), primary_key=True, index=True)
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
