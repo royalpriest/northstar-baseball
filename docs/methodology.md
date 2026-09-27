@@ -291,6 +291,45 @@ These are observational estimates, not randomized causal effects. Unmeasured pit
 and model misspecification can bias both propensity and outcome models. V1 also does not cross-fit nuisance
 models. No causal player-value claim is made at this stage.
 
+## Phase 2g: telescoping pitch-state value
+
+Decision-value V1 used the rest-of-PA return as the outcome for every pitch. Although predictive signal was
+measurable, that formulation duplicates downstream value across sequential decisions.
+
+V2 introduces a training-only decision-state value:
+
+`V(s) = E[runs remaining in PA + RE(after PA) | balls, strikes, base/out state]`
+
+For an observed transition between recognized physical decision opportunities:
+
+`ΔV = runs during step + V(s_next) - V(s_current)`
+
+For the terminal decision of a PA, `V(s_next)` is replaced by the training-only run expectancy of the
+post-PA base/out state.
+
+This target telescopes within a PA. Summing all observed transition values gives total PA runs plus terminal
+RE minus the first state value, eliminating the repeated downstream-return problem from V1.
+
+### Clean one-step sample
+
+If the next recognized decision opportunity has a pitch number more than one greater than the current pitch,
+the transition may span an automatic count change, excluded pitch, or other intervening event. V2 retains such
+rows for the telescoping audit but excludes them from swing/take counterfactual model training.
+
+### Action-value experiment
+
+On the clean one-step sample, V2 retains:
+- the validated XGBoost swing propensity model
+- common-support trimming
+- stabilized inverse-propensity weighting
+- separate XGBoost models for swing and take transition value
+- a count + zone + action empirical baseline
+- doubly robust one-step action estimates
+
+The doubly robust numbers average immediate transition value over the **observed** state distribution. They are
+not full dynamic policy values because an alternative action can change future state occupancy. A future
+sequential model would need explicit transition dynamics or fitted policy evaluation.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
