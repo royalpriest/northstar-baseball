@@ -52,6 +52,7 @@ def build_hitter_profile(
     selection: pd.DataFrame,
     contact: pd.DataFrame,
     damage: pd.DataFrame,
+    discipline: pd.DataFrame | None = None,
     outcomes: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Build the canonical NorthStar hitter-profile table.
@@ -133,6 +134,32 @@ def build_hitter_profile(
         )
     )
     profile = _coalesce_player_names(profile)
+
+    if discipline is not None and not discipline.empty:
+        if "batter" not in discipline.columns:
+            raise ValueError("discipline must contain batter")
+
+        discipline_columns = [
+            column
+            for column in [
+                "batter",
+                "player_name",
+                "statcast_swing_rate",
+                "statcast_zone_swing_rate",
+                "statcast_chase_rate",
+                "statcast_first_pitch_swing_rate",
+                "statcast_two_strike_swing_rate",
+                "statcast_two_strike_chase_rate",
+            ]
+            if column in discipline.columns
+        ]
+        profile = profile.merge(
+            discipline.loc[:, discipline_columns].drop_duplicates("batter"),
+            on="batter",
+            how="left",
+            suffixes=("", "_discipline"),
+        )
+        profile = _coalesce_player_names(profile)
 
     if outcomes is not None and not outcomes.empty:
         reference = outcomes.copy()
@@ -222,6 +249,10 @@ def build_hitter_profile(
             True,
         ),
         "chase_avoidance_percentile": (
+            "statcast_chase_rate",
+            False,
+        ),
+        "chase_contact_percentile": (
             "statcast_chase_contact_rate",
             True,
         ),
@@ -288,8 +319,10 @@ def build_hitter_profile(
             "damage_context_percentile",
             "statcast_contact_rate",
             "contact_rate_percentile",
-            "statcast_chase_contact_rate",
+            "statcast_chase_rate",
             "chase_avoidance_percentile",
+            "statcast_chase_contact_rate",
+            "chase_contact_percentile",
             "statcast_xwoba_on_contact",
             "xwoba_on_contact_percentile",
             "woba",
