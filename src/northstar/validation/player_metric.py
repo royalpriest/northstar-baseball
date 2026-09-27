@@ -547,3 +547,368 @@ def empirical_bayes_player_shrinkage(
             eligible_players=len(summary),
         ),
     )
+
+
+DEFAULT_INCREMENTAL_FEATURE_SETS = {
+    "chase_only": ["statcast_chase_rate"],
+    "swing_chase": [
+        "statcast_swing_rate",
+        "statcast_chase_rate",
+        "statcast_two_strike_chase_rate",
+    ],
+    "plate_discipline": DEFAULT_DISCIPLINE_METRICS,
+}
+
+
+def add_incremental_oof_residuals(
+    frame: pd.DataFrame,
+    target: str = "decision_value_per_100",
+    feature_sets: dict[str, list[str]] | None = None,
+    folds: int = 5,
+    seed: int = 42,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Cross-fit simple construct models and retain player-level residuals.
+
+    Residuals answer: how much of the NorthStar player value is left after
+    subtracting what a simple plate-discipline model would have expected?
+    """
+    if target not in frame.columns:
+        raise ValueError(f"Missing target column: {target}")
+    if folds < 3:
+        raise ValueError("folds must be >= 3")
+
+    feature_sets = feature_sets or DEFAULT_INCREMENTAL_FEATURE_SETS
+
+    residual_frames: list[pd.DataFrame] = []
+    summary_rows: list[dict[str, object]] = []
+
+    identity_columns = [
+        column
+        for column in ["batter", "player_name", target]
+        if column in frame.columns
+    ]
+
+    for label, requested_features in feature_sets.items():
+        features = [
+            column
+            for column in requested_features
+            if column in frame.columns
+        ]
+        if not features:
+            continue
+
+        current = frame.loc[:, identity_columns + features].copy()
+        for column in [target] + features:
+            current[column] = pd.to_numeric(
+                current[column],
+                errors="coerce",
+            )
+        current = current.dropna(subset=[target] + features)
+
+        if len(current) < max(30, folds * 3):
+            continue
+
+        splitter = KFold(
+            n_splits=folds,
+            shuffle=True,
+            random_state=seed,
+        )
+        model = Pipeline(
+            steps=[
+                ("scale", StandardScaler()),
+                ("ridge", Ridge(alpha=1.0)),
+            ]
+        )
+        prediction = cross_val_predict(
+            model,
+            current[features],
+            current[target],
+            cv=splitter,
+        )
+        residual = current[target].to_numpy(dtype="float64") - prediction
+
+        result = current.loc[:, identity_columns].copy()
+        result["construct_set"] = label
+        result["construct_prediction"] = prediction
+        result["incremental_residual"] = residual
+        residual_frames.append(result)
+
+        summary_rows.append(
+            {
+                "target": target,
+                "construct_set": label,
+                "players": len(current),
+                "features": ";".join(features),
+                "oof_r2": float(r2_score(current[target], prediction)),
+                "residual_std": float(np.std(residual, ddof=1)),
+                "residual_mean_abs": float(np.abs(residual).mean()),
+            }
+        )
+
+    residual_table = (
+        pd.concat(residual_frames, ignore_index=True)
+        if residual_frames
+        else pd.DataFrame()
+    )
+    return residual_table, pd.DataFrame(summary_rows)
+
+
+def incremental_half_reliability(
+    half_frame: pd.DataFrame,
+    target: str = "decision_value_per_100",
+    feature_sets: dict[str, list[str]] | None = None,
+    folds: int = 5,
+    seed: int = 42,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Test whether residual player value persists from early to late season.
+
+    Early-half residuals are out-of-fold. A model fit on all early-half
+    players is then applied to late-half constructs. The resulting correlation
+    is a conservative test of whether NorthStar contains repeatable player
+    information beyond standard plate-discipline summaries.
+    """
+    required = {"batter", "season_half", target}
+    missing = required.difference(half_frame.columns)
+    if missing:
+        raise ValueError(
+            f"Half-season construct data is missing: {sorted(missing)}"
+        )
+    if folds < 3:
+        raise ValueError("folds must be >= 3")
+
+    feature_sets = feature_sets or DEFAULT_INCREMENTAL_FEATURE_SETS
+    rows: list[pd.DataFrame] = []
+    reliability_rows: list[dict[str, object]] = []
+
+    raw = half_frame.pivot(
+        index="batter",
+        columns="season_half",
+        values=target,
+    ).dropna()
+    reliability_rows.append(
+        {
+            "target": target,
+            "construct_set": "raw_northstar",
+            "players": len(raw),
+            "pearson_r": (
+                float(raw["early"].corr(raw["late"], method="pearson"))
+                if len(raw) >= 2
+                else np.nan
+            ),
+            "spearman_rho": (
+                float(raw["early"].corr(raw["late"], method="spearman"))
+                if len(raw) >= 2
+                else np.nan
+            ),
+            "early_residual_std": float(raw["early"].std(ddof=1))
+            if len(raw) >= 2
+            else np.nan,
+            "late_residual_std": float(raw["late"].std(ddof=1))
+            if len(raw) >= 2
+            else np.nan,
+            "mean_absolute_half_difference": float(
+                (raw["early"] - raw["late"]).abs().mean()
+            )
+            if len(raw)
+            else np.nan,
+        }
+    )
+
+    for label, requested_features in feature_sets.items():
+        features = [
+            column
+            for column in requested_features
+            if column in half_frame.columns
+        ]
+        if not features:
+            continue
+
+        early = half_frame.loc[
+            half_frame["season_half"].eq("early"),
+            ["batter", target] + features,
+        ].copy()
+        late = half_frame.loc[
+            half_frame["season_half"].eq("late"),
+            ["batter", target] + features,
+        ].copy()
+
+        for current in (early, late):
+            for column in [target] + features:
+                current[column] = pd.to_numeric(
+                    current[column],
+                    errors="coerce",
+                )
+            current.dropna(subset=[target] + features, inplace=True)
+
+        if len(early) < max(30, folds * 3) or late.empty:
+            continue
+
+        splitter = KFold(
+            n_splits=folds,
+            shuffle=True,
+            random_state=seed,
+        )
+        model = Pipeline(
+            steps=[
+                ("scale", StandardScaler()),
+                ("ridge", Ridge(alpha=1.0)),
+            ]
+        )
+
+        early_prediction = cross_val_predict(
+            model,
+            early[features],
+            early[target],
+            cv=splitter,
+        )
+        early["construct_prediction"] = early_prediction
+        early["incremental_residual"] = (
+            early[target].to_numpy(dtype="float64") - early_prediction
+        )
+        early["season_half"] = "early"
+        early["construct_set"] = label
+
+        model.fit(early[features], early[target])
+        late_prediction = model.predict(late[features])
+        late["construct_prediction"] = late_prediction
+        late["incremental_residual"] = (
+            late[target].to_numpy(dtype="float64") - late_prediction
+        )
+        late["season_half"] = "late"
+        late["construct_set"] = label
+
+        rows.extend(
+            [
+                early[
+                    [
+                        "batter",
+                        "season_half",
+                        "construct_set",
+                        target,
+                        "construct_prediction",
+                        "incremental_residual",
+                    ]
+                ],
+                late[
+                    [
+                        "batter",
+                        "season_half",
+                        "construct_set",
+                        target,
+                        "construct_prediction",
+                        "incremental_residual",
+                    ]
+                ],
+            ]
+        )
+
+        pivot = pd.concat([early, late], ignore_index=True).pivot(
+            index="batter",
+            columns="season_half",
+            values="incremental_residual",
+        ).dropna()
+
+        reliability_rows.append(
+            {
+                "target": target,
+                "construct_set": label,
+                "players": len(pivot),
+                "pearson_r": (
+                    float(
+                        pivot["early"].corr(
+                            pivot["late"],
+                            method="pearson",
+                        )
+                    )
+                    if len(pivot) >= 2
+                    else np.nan
+                ),
+                "spearman_rho": (
+                    float(
+                        pivot["early"].corr(
+                            pivot["late"],
+                            method="spearman",
+                        )
+                    )
+                    if len(pivot) >= 2
+                    else np.nan
+                ),
+                "early_residual_std": float(
+                    pivot["early"].std(ddof=1)
+                )
+                if len(pivot) >= 2
+                else np.nan,
+                "late_residual_std": float(
+                    pivot["late"].std(ddof=1)
+                )
+                if len(pivot) >= 2
+                else np.nan,
+                "mean_absolute_half_difference": float(
+                    (pivot["early"] - pivot["late"]).abs().mean()
+                )
+                if len(pivot)
+                else np.nan,
+            }
+        )
+
+    residual_table = (
+        pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
+    )
+    return residual_table, pd.DataFrame(reliability_rows)
+
+
+def residual_outcome_correlations(
+    residuals: pd.DataFrame,
+    construct_data: pd.DataFrame,
+    references: list[str] | None = None,
+    min_pairs: int = 30,
+) -> pd.DataFrame:
+    """Correlate incremental NorthStar residuals with external outcome value."""
+    references = references or DEFAULT_OUTCOME_METRICS
+    if residuals.empty:
+        return pd.DataFrame()
+
+    available = [
+        column
+        for column in ["batter"] + references
+        if column in construct_data.columns
+    ]
+    outcomes = construct_data.loc[:, available].drop_duplicates("batter")
+    merged = residuals.merge(
+        outcomes,
+        on="batter",
+        how="left",
+        validate="many_to_one",
+    )
+
+    rows: list[dict[str, object]] = []
+    for label, group in merged.groupby("construct_set", sort=False):
+        for reference in references:
+            if reference not in group.columns:
+                continue
+            pair = group.loc[
+                :, ["incremental_residual", reference]
+            ].apply(pd.to_numeric, errors="coerce").dropna()
+            if len(pair) < min_pairs:
+                continue
+            rows.append(
+                {
+                    "construct_set": label,
+                    "reference_metric": reference,
+                    "players": len(pair),
+                    "pearson_r": float(
+                        pair["incremental_residual"].corr(
+                            pair[reference],
+                            method="pearson",
+                        )
+                    ),
+                    "spearman_rho": float(
+                        pair["incremental_residual"].corr(
+                            pair[reference],
+                            method="spearman",
+                        )
+                    ),
+                }
+            )
+
+    return pd.DataFrame(rows)
