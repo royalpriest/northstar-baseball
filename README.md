@@ -280,6 +280,9 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Experiment result | The three hitter dimensions are not redundant: selection vs contact Pearson/Spearman **-0.312/-0.302**, selection vs damage **0.067/0.062**, and contact vs damage **-0.461/-0.462**. | Selection, bat-to-ball execution, and damage execution appear to capture meaningfully different aspects of hitter behavior, but construct validation is required before formalizing the profile. |
 | 2026-09-27 | Success | Contact/damage execution V2 and its preserved 2024 → 2025 results were merged into `main` through PR #17. | Both contact and damage now advance to the same incremental-validity standard that prevented the earlier selection prototype from being overclaimed. |
 | 2026-09-27 | Design decision | Contact/damage construct validation tests the residuals against conventional hitter skills before any profile is formalized. | Contact is challenged with raw, zone, chase, and two-strike contact rates; damage is challenged with raw xwOBA on contact, average exit velocity, hard-hit rate, barrel rate, and sweet-spot rate. |
+| 2026-09-27 | Experiment result | Contact construct validation showed very high overlap with conventional contact skill. Raw contact rate reconstructed **84.1%** of full-season contact-above-expected variance and the situational contact set reconstructed **96.1%**. Raw NorthStar split-half reliability was **0.820/0.803** Pearson/Spearman, while the situational-contact residual retained **0.403/0.359**. | Contact execution is mostly conventional contact skill with a smaller repeatable context-adjusted remainder; a stronger future-prediction test is required before claiming incrementality. |
+| 2026-09-27 | Experiment result | Damage construct validation showed raw xwOBA on contact reconstructed **96.5%** of full-season damage-above-expected variance. Raw damage reliability was **0.677/0.645**, and the full-contact-quality residual remained **0.648/0.651**. | This apparently strong residual is not sufficient evidence of novelty because damage is algebraically defined as observed xwOBA minus expected xwOBA; residualizing against observed xwOBA can leave a stable negative expected-opportunity component. |
+| 2026-09-27 | Validation warning | Residual reliability can be misleading for metrics defined as **observed minus expected**. | NorthStar will therefore compare whether EARLY conventional metrics plus the EARLY NorthStar adjustment improve out-of-fold prediction of the LATE observed conventional skill versus EARLY conventional metrics alone. This targets future skill directly and avoids interpreting stable opportunity/context as new player ability. |
 | 2026-09-27 | Error | The first contact-model cross-fit failed in scikit-learn's ColumnTransformer because nullable pandas `Float64` columns (for example `release_speed`) still contained `pd.NA`. | Contact/damage chunk loading now passes every pitch frame through the existing `prepare_pitch_decision_model_frame` normalization step before modeling, converting numeric features to ordinary `float32`, categorical features to strings, and dropping incomplete model rows consistently with the validated pitch-decision pipeline. |
 
 ### Logging rule going forward
@@ -1270,6 +1273,80 @@ reports/figures/damage_execution_incremental_reliability_2025.png
 
 The decision rule is intentionally asymmetric: contact and damage do not have to rise or fall together. A
 component can be retained if it shows meaningful incremental repeatability even if the other component does not.
+
+## Audit future incremental value
+
+Residual reliability is not the final novelty test for an observed-minus-expected metric. For example:
+
+```text
+damage adjustment
+= observed xwOBA on contact - expected xwOBA on contact
+```
+
+If that adjustment is later residualized against observed xwOBA, the remainder can approximate
+`-expected xwOBA`. A stable residual may therefore reflect stable opportunity quality rather than a distinct
+execution skill.
+
+The stronger audit predicts the **future observed conventional skill directly**.
+
+Run:
+
+```bash
+python scripts/audit_future_execution_value.py
+```
+
+For contact:
+
+```text
+Model A
+EARLY conventional contact metrics
+        ↓
+OOF prediction of LATE observed contact rate
+
+Model B
+EARLY conventional contact metrics
++ EARLY NorthStar contact-above-expected
+        ↓
+OOF prediction of LATE observed contact rate
+```
+
+For damage:
+
+```text
+Model A
+EARLY xwOBA/contact-quality metrics
+        ↓
+OOF prediction of LATE observed xwOBA on contact
+
+Model B
+EARLY xwOBA/contact-quality metrics
++ EARLY NorthStar damage-above-expected
+        ↓
+OOF prediction of LATE observed xwOBA on contact
+```
+
+Both models use the **same players and same cross-validation folds**. The primary diagnostic is:
+
+```text
+delta OOF R²
+= augmented OOF R² - conventional-only OOF R²
+```
+
+The workflow also reports paired changes in Pearson, Spearman, MAE, and RMSE.
+
+A positive out-of-fold improvement supports incremental predictive information in the NorthStar adjustment.
+Little or negative improvement means the context-adjusted component may be useful descriptively but does not
+add meaningful information about future hitter skill beyond the conventional metrics already available.
+
+Outputs:
+
+```text
+reports/tables/contact_execution_future_prediction_2025.csv
+reports/tables/damage_execution_future_prediction_2025.csv
+reports/tables/contact_execution_future_predictions_2025.csv
+reports/tables/damage_execution_future_predictions_2025.csv
+reports/figures/execution_future_incremental_value_2025.png
+```
 
 ## Project layout
 
