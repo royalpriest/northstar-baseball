@@ -44,3 +44,9 @@ venv/
 htmlcov/
 build/
 dist/
+
+# Next.js / Node
+node_modules/
+.next/
+out/
+npm-debug.log*
