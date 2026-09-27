@@ -14,8 +14,8 @@ from northstar.features.pitches import (
 from northstar.models.baselines import (
     evaluate_binary_classifier,
     evaluate_probabilities,
-    make_scoring_baseline,
-    make_xgboost_scoring_model,
+    make_pitch_logistic_model,
+    make_pitch_xgboost_model,
 )
 from northstar.models.pitch_decision import (
     PITCH_DECISION_CATEGORICAL_FEATURES,
@@ -162,11 +162,11 @@ def main() -> None:
 
     features = PITCH_DECISION_CATEGORICAL_FEATURES + PITCH_DECISION_NUMERIC_FEATURES
 
-    logistic = make_scoring_baseline(
+    logistic = make_pitch_logistic_model(
         PITCH_DECISION_CATEGORICAL_FEATURES,
         PITCH_DECISION_NUMERIC_FEATURES,
     )
-    xgboost = make_xgboost_scoring_model(
+    xgboost = make_pitch_xgboost_model(
         PITCH_DECISION_CATEGORICAL_FEATURES,
         PITCH_DECISION_NUMERIC_FEATURES,
     )
