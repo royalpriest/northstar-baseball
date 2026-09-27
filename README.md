@@ -65,6 +65,16 @@ python scripts/build_baseline.py --start 2025-03-18 --end 2025-09-28
 The download is deliberately chunked into seven-day Parquet files so interrupted runs can resume without
 starting the season over.
 
+The baseline builder is season-aware. For external validation, build the complete 2024 regular season into a
+separate cache so the existing 2025 files are untouched:
+
+```bash
+python scripts/build_baseline.py --season 2024 --start 2024-03-20 --end 2024-09-30
+```
+
+That command defaults to `data/raw/statcast_2024/` and writes
+`data/processed/plate_appearances_2024.parquet`.
+
 Outputs:
 
 ```text
@@ -237,6 +247,12 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Experiment result | Within the saved 5%-95% holdout, propensity ROC AUC was **0.828**, log loss **0.5108**, Brier **0.1696**, mean predicted swing rate **0.515**, and observed swing rate **0.518**. Early/late September player stability across **310 hitters** was moderate: modeled-action-advantage Pearson/Spearman **0.334/0.299** and optimal-choice-rate **0.374/0.305**. | League-level robustness is strong enough to justify cross-fitted nuisance modeling, but player-level reliability is not yet strong enough for a leaderboard or named metric. |
 | 2026-09-27 | Success | Pitch-state robustness V1 and its preserved sensitivity results were merged into `main` through PR #11. | The positive one-step advantage survived tighter overlap and game-cluster uncertainty, so the next phase attacks nuisance-model estimation rather than adding model complexity. |
 | 2026-09-27 | Design decision | NorthStar started cross-fitted nuisance modeling for pitch-state value. | Swing propensity is now generated out-of-fold with game-grouped folds, calibrated from OOF predictions, and used to fit action-value models under stabilized weight caps of 3, 5, 10, and 20. Effective sample size and clipping rates are reported before interpreting policy sensitivity. |
+| 2026-09-27 | Experiment result | Cross-fitted pitch-state V1 remained stable across stabilized IPW caps **3, 5, 10, and 20**. September model-action advantage ranged only from **+0.02846 to +0.02918**, with all game-cluster bootstrap 95% intervals above zero. OOF propensity folds were stable at ROC AUC **0.861–0.862** and test factual transition-value R² remained about **0.065**. | The result does not depend on in-sample propensity predictions or one arbitrary weight cap. Effective sample size remained substantial, and only **0.033%** of rows were clipped at cap 10. |
+| 2026-09-27 | Success | Cross-fitted nuisance validation and preserved results were merged into `main` through PR #12. | Internal 2025 methodology is now strong enough to stop iterating on the same season and move to external-season transport validation. |
+| 2026-09-27 | Design decision | External-season validation uses **all of 2024 for training** and **all of 2025 as an untouched external season**. | Run expectancy, decision-state values, propensity calibration, overlap weights, and swing/take value models are all learned from 2024 only; 2025 is scored without refitting. |
+| 2026-09-27 | Experiment result | The 2024 → 2025 season-transport test held. The 2024 propensity model scored 2025 at ROC AUC **0.861**, calibrated log loss **0.4608**, and Brier **0.1521**. All **729,387** external decision states had exact 2024 state coverage. | The swing/take opportunity structure transports cleanly across seasons, with only modest average swing-rate drift between training and external data. |
+| 2026-09-27 | Experiment result | External 2025 transition-value prediction remained useful across all weight caps. At cap 10, MAE was **0.1013**, RMSE **0.2404**, R² **0.0653**, Pearson **0.256**, and Spearman **0.548**. Model-action advantage remained nearly unchanged across caps 3/5/10/20 at about **+0.0285 runs per eligible decision**, with every game-cluster bootstrap interval above zero. | The core one-step signal survived full-season temporal transport and weight sensitivity without 2025 refitting. |
+| 2026-09-27 | Interpretation note | The 2024 → 2025 run is a strong model-transport test, but 2025 was used earlier while developing the methodology. | Treat this as external-to-the-fitted-model season validation rather than a pristine never-observed confirmatory dataset. A future untouched season remains valuable for final confirmation. |
 
 ### Logging rule going forward
 
@@ -725,6 +741,68 @@ The canonical local prediction file uses weight cap 10. As before, it stays loca
 Cross-fitting here is aimed at the **training propensity weights**. August and September are already
 chronological holdouts, so their propensity and action-value predictions come from models trained only on the
 pre-August period.
+
+## Validate transport from 2024 to 2025
+
+After the cross-fitted 2025 experiments survived overlap, calibration, clustering, and weight-cap sensitivity,
+NorthStar stops tuning on 2025 and performs a true season-transport test.
+
+First build the 2024 baseline:
+
+```bash
+python scripts/build_baseline.py --season 2024 --start 2024-03-20 --end 2024-09-30
+```
+
+Then run:
+
+```bash
+python scripts/validate_external_season.py
+```
+
+The default experiment is deliberately strict:
+
+```text
+training season: 2024
+external season: 2025
+```
+
+Everything that defines the model is learned from 2024:
+
+- empirical run expectancy
+- count + base/out decision-state values
+- game-grouped OOF swing propensity
+- isotonic propensity calibration
+- common-support training sample
+- stabilized inverse-propensity weights
+- separate swing/take transition-value models
+
+The complete 2025 season is then scored without refitting any of those quantities.
+
+The experiment again refits the 2024 action-value models at stabilized weight caps 3, 5, 10, and 20. On 2025
+it reports propensity transport, exact training-state coverage, factual transition-value prediction, overlap,
+and game-cluster bootstrap intervals for model-action advantage.
+
+Outputs:
+
+```text
+reports/tables/external_season_sample_summary_2024_2025.csv
+reports/tables/external_season_state_coverage_2024_2025.csv
+reports/tables/external_season_propensity_folds_2024_2025.csv
+reports/tables/external_season_propensity_metrics_2024_2025.csv
+reports/tables/external_season_propensity_bins_2024_2025.csv
+reports/tables/external_season_weight_diagnostics_2024_2025.csv
+reports/tables/external_season_factual_metrics_2024_2025.csv
+reports/tables/external_season_policy_sensitivity_2024_2025.csv
+reports/figures/external_season_weight_sensitivity_2024_2025.png
+data/processed/external_season_test_predictions_2024_2025.parquet
+```
+
+The external prediction Parquet remains local.
+
+Passing this test does not make the one-step action contrast causal or a finished player metric. It establishes
+a different property: **transport**. NorthStar must show that relationships learned from one MLB season retain
+useful probability calibration, factual value signal, and action-estimate direction in a later season it did
+not train on.
 
 ## Project layout
 

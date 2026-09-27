@@ -1,0 +1,2 @@
+train_season,external_season,external_rows,exact_state_rows,fallback_state_rows,exact_state_pct,external_unique_states,training_unique_states,unseen_unique_states
+2024,2025,729387,729387,0,100.0,288,288,0

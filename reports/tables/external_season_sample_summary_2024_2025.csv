@@ -1,0 +1,3 @@
+role,season,decision_rows,games,batters,pitchers,observed_swing_rate
+train,2024,721729,2473,971,974,0.4795622733740781
+external,2025,729387,2499,1146,1044,0.47745983956390775
