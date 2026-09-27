@@ -129,6 +129,39 @@ The goal is not for RE24 to perfectly duplicate an existing statistic. A strong 
 sanity check that the pipeline captures real offensive quality; meaningful differences help identify what
 NorthStar may be measuring differently and what the later CCA model needs to explain.
 
+## Train the first ML model
+
+NorthStar's first machine-learning model predicts the probability that at least one run will score from the
+start of a plate appearance before the half-inning ends. It deliberately uses only information known before
+the plate appearance: base state, outs, inning, and top/bottom of the inning.
+
+The season is split chronologically so future games never leak into training:
+
+- training: before August 1, 2025
+- validation: August 2025
+- test: September 2025
+
+Run:
+
+```bash
+python scripts/train_scoring_model.py
+```
+
+The script compares logistic regression against the simpler 24-state empirical probability baseline and
+reports ROC AUC, log loss, and Brier score. It also produces a September holdout calibration curve.
+
+Outputs:
+
+```text
+reports/tables/scoring_probability_model_metrics_2025.csv
+reports/tables/scoring_probability_model_coefficients_2025.csv
+reports/figures/scoring_probability_calibration_2025.png
+data/processed/scoring_probability_test_predictions_2025.parquet
+```
+
+The prediction Parquet file stays local because processed data are Git-ignored. The metrics and calibration
+figure can be committed as reproducible model results.
+
 ## Project layout
 
 ```text
