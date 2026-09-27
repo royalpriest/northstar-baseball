@@ -238,6 +238,59 @@ The out-of-time residual `actual swing - expected swing probability` is stored a
 measures unusual aggressiveness/passivity relative to the opportunity, not quality. A later counterfactual
 value model must estimate swing and take consequences before any decision-value metric is defined.
 
+## Phase 2f: observational pitch decision value
+
+Pitch-decision V1 produced the first strong out-of-time predictive result in NorthStar. The next step separates
+**behavior prediction** from **decision quality**.
+
+### Return target
+
+For each pitch, a training-only run-expectancy table is used to construct a realized return from the current
+pitch state through PA completion:
+
+`Y = runs remaining in PA + RE(after PA) - RE(current pitch base/out state)`
+
+This is a contextual action-value return: the consequence includes the rest of the PA after the current
+swing/take choice rather than only the terminal pitch result.
+
+### Propensity and overlap
+
+The validated XGBoost swing/take model estimates:
+
+`e(X) = P(swing | observed pitch opportunity X)`
+
+V1 restricts the action-value analysis to common support, by default:
+
+`0.05 <= e(X) <= 0.95`
+
+Observed actions receive stabilized inverse-propensity weights before fitting action-specific value models.
+
+### Action-value models
+
+Two XGBoost regressors estimate:
+
+- `Q_take(X) = E[Y | X, take]`
+- `Q_swing(X) = E[Y | X, swing]`
+
+The descriptive action gap is:
+
+`chosen-action advantage = Q(chosen | X) - Q(alternative | X)`
+
+The model-selected policy chooses the larger of `Q_take` and `Q_swing`.
+
+### Evaluation
+
+Out-of-time diagnostics include:
+- factual MAE / RMSE / R² / correlations for observed-action value prediction
+- overlap share
+- doubly robust policy-value estimates for always take, always swing, and model-selected action
+- policy swing share
+- player-level September summaries
+
+These are observational estimates, not randomized causal effects. Unmeasured pitch recognition, hitter intent,
+and model misspecification can bias both propensity and outcome models. V1 also does not cross-fit nuisance
+models. No causal player-value claim is made at this stage.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
