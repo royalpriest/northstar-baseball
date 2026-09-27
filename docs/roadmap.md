@@ -40,27 +40,39 @@
 - [x] Add prior-date terminal-event batter/pitcher context
 - [x] Implement Ridge expected-RE24 baseline
 - [x] Implement XGBoost expected-RE24 model
-- [ ] Rebuild 2025 dataset with terminal-event fields
-- [ ] Run attribution audit and preserve results
-- [ ] Run expected-RE24 holdout evaluation and preserve results
-- [ ] Analyze player-level residual stability
+- [x] Rebuild 2025 dataset with terminal-event fields
+- [x] Run attribution audit and preserve results
+- [x] Run expected-RE24 holdout evaluation and preserve negative result
+- [x] Reject direct regression as the primary path after near-zero holdout R²
+
+## M5 — PA outcome model
+- [x] Define stable terminal-outcome classes
+- [x] Add leakage-safe prior-date batter outcome rates
+- [x] Add leakage-safe prior-date pitcher outcome rates
+- [x] Add class-frequency baseline
+- [x] Add multinomial logistic model
+- [x] Add XGBoost multiclass model
+- [x] Translate outcome probabilities into expected RE24
+- [ ] Run September holdout evaluation and preserve results
+- [ ] Analyze per-class errors and confusion
+- [ ] Decide whether outcome-based expected value is strong enough for player residual analysis
 - [ ] SHAP explanations
 - [ ] Model-card documentation
 
-## M5 — Canada layer
+## M6 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M6 — Product
+## M7 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M7 — Production engineering
+## M8 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
