@@ -1,0 +1,3 @@
+metric,eligible_players,pearson_r,spearman_rho
+mean_modeled_action_advantage,310,0.3339260156579563,0.29916789439922337
+optimal_choice_rate,310,0.3739983844208076,0.30533721474388226
