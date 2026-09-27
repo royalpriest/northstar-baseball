@@ -26,9 +26,6 @@ TAKE_DESCRIPTIONS = {
     "called_strike",
     "pitchout",
     "hit_by_pitch",
-    "intent_ball",
-    "automatic_ball",
-    "automatic_strike",
 }
 
 PITCH_DECISION_REQUIRED_COLUMNS = {
@@ -73,6 +70,8 @@ def classify_pitch_decision(description: object) -> str | None:
         return "swing"
     if normalized in TAKE_DESCRIPTIONS:
         return "take"
+    # Clock violations / automatic balls and strikes are not physical pitch
+    # opportunities, so they are intentionally excluded rather than called takes.
     return None
 
 
