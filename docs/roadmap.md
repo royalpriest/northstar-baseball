@@ -179,24 +179,33 @@
 - [x] Add player contact and damage summaries
 - [x] Add independent early/late reliability tests
 - [x] Add selection / contact / damage profile without combining scores
-- [ ] Run V2 and preserve results
-- [ ] Compare reliable components with established contact-quality metrics
-- [ ] Retain only components that show meaningful reliability and incremental value
+- [x] Run V2 and preserve results
+- [x] Confirm contact residual reliability around 0.82 Pearson
+- [x] Confirm damage residual reliability around 0.68 Pearson
+- [x] Advance both components to construct validation without combining them
 
-## M17 — Canada layer
+## M17 — Contact / damage construct validation
+- [ ] Build conventional contact-skill constructs by hitter
+- [ ] Build conventional quality-of-contact constructs by hitter
+- [ ] Measure full-season construct reconstruction of contact and damage residuals
+- [ ] Measure early/late incremental residual reliability after construct removal
+- [ ] Compare incremental residuals with offensive outcomes
+- [ ] Retain only components that remain repeatable beyond simpler metrics
+
+## M18 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M18 — Product
+## M19 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M19 — Production engineering
+## M20 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
