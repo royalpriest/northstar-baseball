@@ -210,7 +210,7 @@ def main() -> None:
                 "canada_rank",
                 "player_name",
                 "primary_team_2025",
-                "plate_appearances",
+                "season_plate_appearances",
                 args.leaderboard_sort,
                 "selection_context_percentile",
                 "contact_context_percentile",
