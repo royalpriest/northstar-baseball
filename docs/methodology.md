@@ -824,6 +824,40 @@ The decomposition is retained only if the residual player quantities are meaning
 all-in-one execution V1 residual. A strong expected-value reliability with weak residual reliability is treated
 as opportunity stability rather than player skill.
 
+## Phase 2r: interpretation of contact / damage execution V2
+
+The V2 decomposition succeeds where the all-in-one execution residual did not.
+
+### Contact result
+
+The 2024-trained calibrated contact model transports cleanly to 2025 and produces a highly repeatable player
+residual. Contact above expected per 100 swings has stronger early/late reliability than raw observed contact
+rate, while expected-contact opportunity itself is also stable.
+
+This supports the interpretation that the adjustment is not merely injecting noise into ordinary contact rate.
+However, high reliability alone does not establish incremental value; the next phase explicitly asks whether
+zone contact, chase contact, two-strike contact, and whiff/contact summaries can reconstruct the residual.
+
+### Damage result
+
+The pitch-level damage model has low absolute R², which is expected because launch speed and angle are highly
+dependent on hitter execution and are intentionally withheld from the feature set. Despite weak individual-
+batted-ball prediction, the 2025 player residual aggregates to substantially stronger split-half reliability
+than execution V1.
+
+The next phase compares damage above expected with conventional quality-of-contact constructs such as average
+exit velocity, hard-hit rate, sweet-spot rate, and raw xwOBA on contact. A useful NorthStar damage axis should
+retain repeatable information after those simpler constructs explain what they can.
+
+### Three-axis interpretation
+
+Selection, contact execution, and damage execution are deliberately kept separate. Their observed pairwise
+relationships are modest rather than near-duplicates, including a negative contact/damage association that is
+consistent with different hitter approaches.
+
+No combined score is justified yet. The project proceeds to construct and incremental-signal validation for
+contact and damage independently.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
