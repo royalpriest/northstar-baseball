@@ -858,6 +858,160 @@ consistent with different hitter approaches.
 No combined score is justified yet. The project proceeds to construct and incremental-signal validation for
 contact and damage independently.
 
+## Phase 2s: contact / damage construct validation
+
+Reliability is necessary but not sufficient for a new player dimension. V2 therefore applies construct and
+incremental-signal validation independently to contact and damage.
+
+### Contact constructs
+
+Conventional contact skill is summarized from observed swings:
+- overall contact rate
+- zone contact rate
+- chase contact rate
+- two-strike contact rate
+- whiffs per swing
+
+Two nested feature sets are used:
+
+`raw_contact = [overall contact rate]`
+
+`situational_contact = [overall, zone, chase, two-strike contact]`
+
+Five-fold player-level OOF Ridge prediction measures how much of NorthStar contact-above-expected can be
+reconstructed cross-sectionally.
+
+For temporal incremental validity, early-half residuals are OOF. The early-half construct relationship is then
+fit on all eligible early players and transported to late-half constructs. Early/late residual reliability asks
+whether the same hitters continue to outperform conventional contact expectation.
+
+### Damage constructs
+
+Conventional quality of contact is summarized from balls in play:
+- xwOBA on contact
+- average exit velocity
+- hard-hit rate at 95+ mph
+- Statcast barrel rate using launch-speed/angle category 6
+- sweet-spot rate using launch angles 8° through 32°
+
+Three feature sets are tested:
+
+`raw_xwoba_contact`
+
+`batted_ball_quality = [average EV, hard-hit, barrel, sweet-spot]`
+
+`full_contact_quality = [xwOBA contact + batted-ball-quality features]`
+
+The same OOF reconstruction and early-to-late residual reliability design is applied.
+
+### Interpretation
+
+A high raw split-half correlation that collapses after conventional constructs are removed indicates a useful
+context-adjusted presentation of an established skill, not a distinct hitter dimension.
+
+A residual that remains meaningfully repeatable after construct removal provides stronger evidence that the
+NorthStar context adjustment preserves player information not captured by the simpler summary statistics.
+
+Associations with RE24, wOBA, and xwOBA are reported only as descriptive external checks and are not used to
+retrofit the component toward offensive outcomes.
+
+## Phase 2t: future-skill incremental audit
+
+The first construct audit revealed an important identification problem.
+
+Both V2 components are defined as an observed hitter result minus a model-based expected opportunity result.
+Residualizing such a metric against the observed conventional result can mechanically leave part of the
+expected-opportunity term. If opportunity quality is itself repeatable by hitter, early/late residual
+correlation can remain high even without a new execution skill.
+
+NorthStar therefore changes the incremental question from:
+
+`Is (NorthStar - conventional reconstruction) repeatable?`
+
+to:
+
+`Does EARLY NorthStar information improve prediction of LATE observed skill beyond EARLY conventional skill?`
+
+### Contact future-prediction test
+
+Target:
+- late-half observed contact rate
+
+Base predictors:
+- early overall contact rate
+- optionally early zone contact, chase contact, and two-strike contact
+
+Augmented predictor:
+- the same conventional set
+- plus early contact above expected per 100 swings
+
+### Damage future-prediction test
+
+Target:
+- late-half observed xwOBA on contact
+
+Base predictors:
+- early xwOBA on contact
+- optionally early average exit velocity, hard-hit rate, barrel rate, and sweet-spot rate
+
+Augmented predictor:
+- the same conventional set
+- plus early damage xwOBA points above expected
+
+For every construct set, both models use the identical complete-case player sample and identical K-fold player
+splits. Standardized Ridge models generate out-of-fold late-skill predictions.
+
+The main statistic is:
+
+`Delta OOF R² = R²(augmented) - R²(conventional only)`
+
+Changes in Pearson, Spearman, MAE, and RMSE are reported alongside it.
+
+This design does not prove causality. It asks a narrower and cleaner question: whether the context-adjusted
+NorthStar component contains player information that helps predict future observed skill after the conventional
+early-season skill measures are already known.
+
+## Phase 2u: final hitter-metric decision
+
+The direct future-skill audit closes the first NorthStar hitter-metric research cycle.
+
+### Contact conclusion
+
+Early conventional contact skill already contains essentially all of the useful information for predicting
+late observed contact rate. Adding early NorthStar contact-above-expected changes paired out-of-fold R² by
+approximately zero and does not materially improve Pearson, Spearman, MAE, or RMSE.
+
+NorthStar contact remains valuable as an explanatory quantity because it conditions contact on the difficulty
+of the pitches a hitter actually swung at. It should be presented as a contextual diagnostic, not as an
+incrementally predictive standalone skill.
+
+### Damage conclusion
+
+Early NorthStar damage adds modest future-prediction value when the base model contains only average exit
+velocity, hard-hit rate, barrel rate, and sweet-spot rate. That increment disappears when raw xwOBA on contact
+is already available.
+
+This supports a narrower interpretation: NorthStar damage can summarize context adjustment beyond coarse
+batted-ball-quality descriptors, but it does not add incremental future information beyond the stronger
+xwOBA-on-contact construct used in the final comparison.
+
+### Product interpretation
+
+The research does not justify a single CCA-style hitter metric.
+
+NorthStar instead retains three contextual diagnostics:
+- selection / decision context
+- contact above expected
+- damage above expected
+
+These diagnostics are shown beside conventional measures rather than replacing them. The intended use is
+explanatory:
+
+`What part of this hitter's observed profile comes from choices, contact skill, damage skill, and opportunity?`
+
+This is a descriptive analytical framework, not a claim of causal player ability or a superior universal
+ranking statistic.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.

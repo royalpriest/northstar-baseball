@@ -185,27 +185,50 @@
 - [x] Advance both components to construct validation without combining them
 
 ## M17 — Contact / damage construct validation
-- [ ] Build conventional contact-skill constructs by hitter
-- [ ] Build conventional quality-of-contact constructs by hitter
-- [ ] Measure full-season construct reconstruction of contact and damage residuals
-- [ ] Measure early/late incremental residual reliability after construct removal
-- [ ] Compare incremental residuals with offensive outcomes
-- [ ] Retain only components that remain repeatable beyond simpler metrics
+- [x] Build conventional contact-skill constructs by hitter
+- [x] Build conventional quality-of-contact constructs by hitter
+- [x] Add raw and situational contact reconstruction tests
+- [x] Add xwOBA-on-contact and batted-ball-quality reconstruction tests
+- [x] Add early-OOF to late-season residual reliability tests
+- [x] Add incremental residual association checks with RE24 / wOBA / xwOBA
+- [x] Run construct validation and preserve results
+- [x] Identify algebraic residual-risk for observed-minus-expected metrics
+- [x] Defer novelty decision to direct future-skill prediction
 
-## M18 — Canada layer
+## M18 — Future-skill incremental audit
+- [x] Add conventional-only vs conventional-plus-NorthStar paired OOF comparison
+- [x] Predict late observed contact from early contact constructs
+- [x] Predict late xwOBA on contact from early contact-quality constructs
+- [x] Use identical player samples and folds for paired model comparisons
+- [x] Run future-skill audit and preserve results
+- [x] Confirm contact adds effectively zero future predictive information beyond conventional contact
+- [x] Confirm damage adds value beyond coarse batted-ball summaries but not beyond xwOBA on contact
+- [x] Reject standalone novel-stat claims for current selection/contact/damage components
+- [x] Retain all three as transparent contextual diagnostics
+
+## M19 — NorthStar hitter profile
+- [ ] Build canonical player-profile dataset
+- [ ] Join NorthStar diagnostics with established offensive measures
+- [ ] Add percentile / league-relative presentation without implying a single overall score
+- [ ] Add per-player report generation
+- [ ] Add profile visualizations for selection, contact, damage, and conventional outcomes
+- [ ] Document interpretation and limitations for every displayed axis
+- [ ] Preserve research provenance from the validation phases
+
+## M20 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M19 — Product
+## M21 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M20 — Production engineering
+## M22 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
