@@ -23,31 +23,44 @@
 - [x] Initial leakage-safe feature audit implemented
 - [ ] Run the full 2025 model and preserve holdout results
 
-## M3 — Context model
+## M3 — Context scoring model
 - [x] Leakage-safe prior-date batter features implemented
 - [x] Leakage-safe prior-date pitcher features implemented
 - [x] Handedness, score, home/away, and park-proxy context implemented
 - [x] Context logistic-regression model implemented
 - [x] XGBoost context model implemented
-- [ ] Rebuild 2025 PA dataset with retained context fields
-- [ ] Run V2 holdout evaluation and preserve results
+- [x] Rebuild 2025 PA dataset with retained context fields
+- [x] Run V2 holdout evaluation and preserve results
+- [x] Document target limitation: base/out state dominates future-inning scoring probability
+
+## M4 — Expected run value / attribution
+- [x] Retain final-pitch pre-state for terminal-event attribution
+- [x] Compute terminal-event RE24 and within-PA state RE24
+- [x] Add RE24 attribution audit script
+- [x] Add prior-date terminal-event batter/pitcher context
+- [x] Implement Ridge expected-RE24 baseline
+- [x] Implement XGBoost expected-RE24 model
+- [ ] Rebuild 2025 dataset with terminal-event fields
+- [ ] Run attribution audit and preserve results
+- [ ] Run expected-RE24 holdout evaluation and preserve results
+- [ ] Analyze player-level residual stability
 - [ ] SHAP explanations
 - [ ] Model-card documentation
 
-## M4 — Canada layer
+## M5 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M5 — Product
+## M6 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M6 — Production engineering
+## M7 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
