@@ -6,6 +6,7 @@ from sqlalchemy import asc, desc, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from northstar.db.models import HitterProfile, HitterTeamMembership
+from northstar.profiles.comparison import COMPARISON_FIELDS
 
 
 PLAYER_SUMMARY_FIELDS = [
@@ -257,7 +258,14 @@ class DatabaseProfileStore:
                     )
 
                 seen.add(model.batter)
-                records.append(dict(model.profile_json))
+                payload = dict(model.profile_json)
+                records.append(
+                    {
+                        field: payload.get(field)
+                        for field in COMPARISON_FIELDS
+                        if field in payload
+                    }
+                )
 
         return records
 
