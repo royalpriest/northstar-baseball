@@ -223,3 +223,64 @@ def evaluate_regressor(
     y: pd.Series,
 ) -> RegressionMetrics:
     return evaluate_regression_predictions(y, model.predict(x))
+
+
+def make_multiclass_logistic_model(
+    categorical_features: list[str],
+    numeric_features: list[str],
+) -> Pipeline:
+    """Multinomial logistic model for terminal PA outcome probabilities."""
+    return Pipeline(
+        steps=[
+            (
+                "preprocess",
+                _make_regression_preprocessor(
+                    categorical_features,
+                    numeric_features,
+                    scale_numeric=True,
+                ),
+            ),
+            (
+                "model",
+                LogisticRegression(
+                    max_iter=2500,
+                    solver="lbfgs",
+                ),
+            ),
+        ]
+    )
+
+
+def make_xgboost_outcome_model(
+    categorical_features: list[str],
+    numeric_features: list[str],
+) -> Pipeline:
+    """Gradient-boosted multiclass model for terminal PA outcomes."""
+    return Pipeline(
+        steps=[
+            (
+                "preprocess",
+                _make_regression_preprocessor(
+                    categorical_features,
+                    numeric_features,
+                    scale_numeric=False,
+                ),
+            ),
+            (
+                "model",
+                XGBClassifier(
+                    n_estimators=400,
+                    max_depth=4,
+                    learning_rate=0.05,
+                    subsample=0.85,
+                    colsample_bytree=0.85,
+                    min_child_weight=6,
+                    reg_lambda=1.5,
+                    objective="multi:softprob",
+                    eval_metric="mlogloss",
+                    random_state=42,
+                    n_jobs=-1,
+                ),
+            ),
+        ]
+    )

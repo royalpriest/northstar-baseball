@@ -143,6 +143,48 @@ start of the PA. A sensitivity run may include them explicitly.
 The same chronological August validation / September holdout is retained. Player-level residual analysis is
 performed only after the continuous target model is evaluated out-of-time.
 
+## Phase 2d: structured plate-appearance outcome model
+
+The direct expected-terminal-event-RE24 experiment produced essentially zero out-of-time R². NorthStar
+therefore decomposes the target rather than increasing regressor complexity.
+
+Target classes:
+- strikeout
+- walk / HBP
+- single
+- double / triple
+- home run
+- field out
+- sacrifice
+- reach / other terminal event
+
+Pre-PA features retain the existing game/matchup context and add prior-date batter and pitcher rates for each
+outcome family. These expanding rates exclude the current calendar day.
+
+Models:
+- training class-frequency prior
+- multinomial logistic regression
+- XGBoost multiclass classifier
+
+Classification evaluation:
+- multiclass log loss
+- accuracy
+- macro F1
+- top-2 accuracy
+- normalized confusion matrix
+
+A second evaluation translates predicted class probabilities into run value. On the training partition only,
+NorthStar estimates mean terminal-event RE24 for each starting base/out state × outcome-class pair. For each
+future PA:
+
+`expected terminal-event RE24 = Σ P(outcome class) × training mean RE24(state, class)`
+
+Sparse state/class combinations fall back to the training-wide mean for that outcome class, then to the
+overall training mean if required.
+
+This structured value estimate is compared out-of-time using MAE, RMSE, R², Pearson correlation, and Spearman
+correlation. Residuals remain exploratory and are not called CCA unless the model proves stable and useful.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
