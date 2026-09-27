@@ -764,6 +764,66 @@ estimated-wOBA target are **outcomes only** and are never model features.
 Each component must pass external-season model checks and player split-half reliability independently before
 NorthStar considers retaining it as a player axis.
 
+## Phase 2q: contact / damage execution V2
+
+Execution V2 replaces the single realized run-value residual with two conditional tasks that correspond to
+different hitter skills.
+
+### Contact model
+
+Sample:
+- observed physical swings only
+
+Target:
+- 1 for foul/foul-tip/ball-in-play contact
+- 0 for swinging strikes, blocked swinging strikes, swinging pitchouts, and missed bunts
+
+The model uses the existing leakage-safe pitch-opportunity feature set and does not receive the realized pitch
+description. A 2024 game-grouped out-of-fold contact model supplies probabilities for isotonic calibration.
+The final 2024 contact model is transported to 2025 and calibrated using the 2024 OOF calibrator.
+
+Per swing:
+
+`Contact residual = I(contact) - calibrated P(contact | swing, X)`
+
+Player contact execution is the mean residual times 100, interpreted as contact percentage points above or
+below league expectation for the pitches the hitter actually swung at.
+
+### Damage model
+
+Sample:
+- balls put into play
+- valid Statcast `estimated_woba_using_speedangle`
+
+Target:
+- Statcast xwOBA contact quality derived from the realized launch speed / angle
+
+Features:
+- the same pitch/context information available on the incoming pitch
+- no batter identity
+- no exit velocity
+- no launch angle
+- no batted-ball type
+- no realized event
+- no target-derived feature
+
+A 2024 regression model is transported to 2025:
+
+`Damage residual = observed xwOBA contact quality - predicted xwOBA contact quality`
+
+Player damage execution is expressed in xwOBA points:
+
+`1000 * mean(Damage residual)`
+
+### Reliability
+
+Both components are split at July 1, 2025 and evaluated independently. Contact requires at least 150 swings in
+each half by default; damage requires at least 50 target-eligible batted balls per half.
+
+The decomposition is retained only if the residual player quantities are meaningfully more repeatable than the
+all-in-one execution V1 residual. A strong expected-value reliability with weak residual reliability is treated
+as opportunity stability rather than player skill.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
