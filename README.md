@@ -255,6 +255,10 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Interpretation note | The 2024 → 2025 run is a strong model-transport test, but 2025 was used earlier while developing the methodology. | Treat this as external-to-the-fitted-model season validation rather than a pristine never-observed confirmatory dataset. A future untouched season remains valuable for final confirmation. |
 | 2026-09-27 | Success | External-season validation and its preserved 2024 → 2025 results were merged into `main` through PR #13. | NorthStar now has full-season transport evidence strong enough to prototype a player-facing descriptive decision metric. |
 | 2026-09-27 | Design decision | The first player metric prototype is **not** named CCA. | It compares the modeled value of a hitter's observed swing/take choice with an opportunity-conditioned league-like action mixture, reports missed value versus the modeled optimal action, and requires full-season split-half reliability before any public metric name is considered. |
+| 2026-09-27 | Experiment result | The full-season 2025 player prototype passed a meaningful reliability gate across **347 hitters**. Split-half Pearson/Spearman reliability was **0.704/0.690** for decision value per 100, **0.627/0.614** for missed value per 100, **0.699/0.651** for optimal-choice rate, and **0.678/0.652** for value-weighted optimal-choice rate. | Player-level signal is substantially more repeatable over full-season halves than the earlier short September split. |
+| 2026-09-27 | Experiment result | The 20%-80% discretionary-opportunity view also remained repeatable: decision value per 100 Pearson/Spearman **0.656/0.639** and discretionary optimal-choice rate **0.677/0.633**. The per-pitch accounting identity had maximum absolute error only **2.98e-8**. | Repeatability is not driven only by obvious near-deterministic swing/take opportunities, but construct validation is still required before naming a public metric. |
+| 2026-09-27 | Success | The player decision-value prototype and preserved results were merged into `main` through PR #14. | NorthStar now moves from proving repeatability to testing what baseball behavior the player signal actually represents and stabilizing rankings for unequal sample sizes. |
+| 2026-09-27 | Design decision | Player metric validation compares the prototype with independently aggregated Statcast plate discipline plus existing RE24/wOBA/xwOBA references, and adds game-cluster empirical-Bayes-style shrinkage. | The public-facing candidate should be centered on league average, require both total and discretionary opportunity minimums, and avoid treating 500-pitch and 2,000-pitch samples as equally certain. |
 
 ### Logging rule going forward
 
@@ -878,6 +882,78 @@ reports/figures/player_decision_metric_reliability_2025.png
 
 This remains a descriptive, model-based prototype. The Q-functions are observational estimates and the metric
 does not claim that forcing the modeled alternative action would causally change runs by the quoted amount.
+
+## Validate and stabilize the player metric
+
+The player prototype is repeatable enough to justify construct validation, but repeatability alone does not
+tell us what the metric represents. The next workflow asks whether NorthStar is merely repackaging ordinary
+plate discipline or whether it contains a distinct context-adjusted signal.
+
+Run:
+
+```bash
+python scripts/validate_player_decision_metric.py
+```
+
+The workflow uses the cached 2025 Statcast pitch files to build independent full-season hitter summaries for:
+
+- swing rate
+- zone swing rate
+- chase rate
+- whiffs per swing
+- contact rate
+- first-pitch swing rate
+- two-strike swing rate
+- two-strike chase rate
+
+It then joins the existing RE24 / Baseball Savant validation table where available, including:
+
+- RE24 per 100 plate appearances
+- wOBA
+- xwOBA
+
+NorthStar reports both pairwise Pearson/Spearman relationships and player-level out-of-fold Ridge diagnostics
+showing how much of decision value can be reconstructed from simple plate discipline, offensive outcomes, or
+both together.
+
+### Sample-aware ranking prototype
+
+The same workflow creates an explicitly provisional shrunken ranking.
+
+For each hitter, the uncertainty of mean decision value is estimated with a game-cluster robust standard error.
+A method-of-moments between-player variance is then used for normal-normal shrinkage toward the pitch-weighted
+league mean.
+
+The default ranking requires:
+
+```text
+>= 500 eligible decisions
+>= 300 discretionary decisions
+```
+
+The displayed candidate is centered so league-average decision value is zero:
+
+```text
+centered value / 100
+= 100 * (player mean decision value - league mean decision value)
+```
+
+and the shrunken version pulls smaller/noisier samples toward zero more strongly.
+
+Outputs:
+
+```text
+reports/tables/player_metric_construct_dataset_2025.csv
+reports/tables/player_metric_construct_correlations_2025.csv
+reports/tables/player_metric_construct_cv_2025.csv
+reports/tables/player_metric_shrunk_2025.csv
+reports/figures/player_metric_construct_correlations_2025.png
+reports/figures/player_metric_shrunk_2025_top20.png
+```
+
+Shrinkage is a ranking-stability device, not causal correction. The Q-functions remain observational, and the
+normal-normal player model is an approximation rather than a claim that true player ability follows an exact
+Gaussian distribution.
 
 ## Project layout
 
