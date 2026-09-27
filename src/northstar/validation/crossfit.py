@@ -44,6 +44,7 @@ def crossfit_pitch_propensity(
     group_column: str = "game_pk",
     folds: int = 3,
     seed: int = 42,
+    progress: bool = False,
 ) -> CrossFitPropensityResult:
     """Build game-grouped out-of-fold swing propensities.
 
@@ -75,6 +76,12 @@ def crossfit_pitch_propensity(
         splitter.split(frame[features], y, groups=groups),
         start=1,
     ):
+        if progress:
+            print(
+                f"  propensity fold {fold}/{folds}: "
+                f"train {len(train_idx):,}, OOF {len(valid_idx):,}"
+            )
+
         model = make_pitch_xgboost_model(
             categorical_features,
             numeric_features,
