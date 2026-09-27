@@ -225,12 +225,17 @@
 - [x] Add Toronto Blue Jays season view with explicit full-season metric scope
 - [x] Add Canadian-born leaderboard with named sorting metric
 - [x] Add 2-4 player comparison report without an overall score
-- [ ] Run the Canada layer and preserve derived outputs
-- [ ] Review identity coverage / unresolved MLBAM IDs
-- [ ] Review Blue Jays and Canadian-born outputs for historical scope
+- [x] Run the Canada layer and preserve derived outputs
+- [x] Review identity coverage: 404 / 404 canonical hitters resolved
+- [x] Review Blue Jays and Canadian-born outputs for historical scope
 
 ## M21 — Product
-- [ ] FastAPI service
+- [x] Add FastAPI application and health / metadata endpoints
+- [x] Add player search and MLBAM detail endpoints
+- [x] Add Canadian-born and historical team-scope endpoints
+- [x] Add explicit named-metric leaderboard endpoint
+- [x] Add 2-4 player comparison endpoint without an overall winner
+- [ ] Run API test suite and local smoke test
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
