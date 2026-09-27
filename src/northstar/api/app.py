@@ -8,6 +8,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from northstar.api.store import DEFAULT_PROFILE_PATH, ProfileStore
+from northstar.db.database import (
+    create_engine_from_url,
+    create_schema,
+    session_factory,
+)
+from northstar.db.store import DatabaseProfileStore
 
 
 API_VERSION = "v1"
@@ -32,9 +38,33 @@ def _cors_origins() -> list[str]:
     ]
 
 
-def _store(request: Request) -> ProfileStore:
+def _store(
+    request: Request,
+) -> ProfileStore | DatabaseProfileStore:
     current = request.app.state.profile_store
     if current is not None:
+        return current
+
+    database_url = os.getenv("NORTHSTAR_DATABASE_URL")
+    if database_url:
+        try:
+            engine = create_engine_from_url(database_url)
+            create_schema(engine)
+            current = DatabaseProfileStore(
+                session_factory(engine),
+                season=SEASON,
+            )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "NorthStar database backend is unavailable: "
+                    f"{exc}"
+                ),
+            ) from exc
+
+        request.app.state.db_engine = engine
+        request.app.state.profile_store = current
         return current
 
     profile_path = Path(
@@ -69,6 +99,7 @@ def create_app(
         ),
     )
     service.state.profile_store = store
+    service.state.db_engine = None
 
     service.add_middleware(
         CORSMiddleware,
@@ -105,6 +136,11 @@ def create_app(
         return {
             "season": SEASON,
             "players": profile_store.size,
+            "storage_backend": (
+                "postgresql"
+                if isinstance(profile_store, DatabaseProfileStore)
+                else "csv"
+            ),
             "northstar_axes": [
                 "selection_context_percentile",
                 "contact_context_percentile",

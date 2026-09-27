@@ -55,6 +55,7 @@ def test_health_and_meta():
     meta = client.get("/api/v1/meta")
     assert meta.status_code == 200
     assert meta.json()["players"] == 3
+    assert meta.json()["storage_backend"] == "csv"
     assert "composite player score" in meta.json()["scope_notes"]["score"]
 
 
