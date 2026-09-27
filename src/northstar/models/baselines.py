@@ -338,7 +338,6 @@ def make_pitch_logistic_model(
                     max_iter=1200,
                     solver="saga",
                     random_state=42,
-                    n_jobs=-1,
                 ),
             ),
         ]
