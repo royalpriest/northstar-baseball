@@ -95,6 +95,7 @@ def test_attach_canada_context_uses_birth_country_not_name_or_team():
 
     assert bool(alpha["canadian_born"])
     assert not bool(beta["canadian_born"])
+    assert alpha["season_plate_appearances"] == 500
 
 
 def test_canadian_and_blue_jays_views_have_distinct_membership_rules():
@@ -106,6 +107,7 @@ def test_canadian_and_blue_jays_views_have_distinct_membership_rules():
             "canadian_born": [True, False, True],
             "appeared_for_tor": [False, True, True],
             "tor_plate_appearances": [0, 400, 150],
+            "season_plate_appearances": [600, 550, 300],
             "plate_appearances": [600, 550, 300],
             "re24_per_100_pa": [4.0, 3.0, 1.0],
         }
@@ -129,6 +131,7 @@ def test_canadian_leaderboard_uses_named_metric_not_composite_score():
             "batter": [10, 20],
             "birth_country": ["Canada", "Canada"],
             "primary_team_2025": ["TOR", "SEA"],
+            "season_plate_appearances": [600, 500],
             "plate_appearances": [600, 500],
             "re24_per_100_pa": [2.0, 5.0],
             "selection_context_percentile": [80.0, 20.0],
