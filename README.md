@@ -107,9 +107,9 @@ run-expectancy baseline.
 
 ## Validate the player benchmark
 
-NorthStar compares RE24 per 100 plate appearances with established FanGraphs offensive metrics before
-developing CCA. The validation pulls FanGraphs' modern JSON leaderboard directly and joins its MLBAM IDs to the
-Statcast batter IDs already used by NorthStar, then compares RE24 with OPS, wOBA, and wRC+.
+NorthStar compares RE24 per 100 plate appearances with established Baseball Savant outcome and expected
+metrics before developing CCA. The validation uses Statcast batter IDs directly and compares RE24 with actual
+wOBA plus expected contact-quality measures such as xwOBA, xBA, and xSLG.
 
 Run:
 
@@ -122,7 +122,7 @@ Outputs:
 ```text
 reports/tables/player_run_value_validation_2025.csv
 reports/tables/player_run_value_correlations_2025.csv
-reports/figures/re24_vs_wrcplus_2025.png
+reports/figures/re24_vs_xwoba_2025.png
 ```
 
 The goal is not for RE24 to perfectly duplicate an existing statistic. A strong positive relationship is a
