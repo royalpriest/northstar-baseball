@@ -11,10 +11,6 @@ const serverBase =
   process.env.NEXT_PUBLIC_NORTHSTAR_API_URL ??
   "http://127.0.0.1:8000";
 
-export const browserApiBase =
-  process.env.NEXT_PUBLIC_NORTHSTAR_API_URL ??
-  "http://127.0.0.1:8000";
-
 async function request<T>(path: string): Promise<T> {
   const response = await fetch(`${serverBase}${path}`, {
     cache: "no-store",
