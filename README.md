@@ -278,6 +278,8 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Experiment result | Player **contact above expected per 100 swings** showed **0.820/0.803** early/late Pearson/Spearman reliability across **313 hitters**, exceeding raw contact-rate reliability (**0.803/0.800**) while expected-contact opportunity itself remained stable (**0.770/0.737**). | Contact execution is a strong candidate player axis and materially outperforms the all-in-one execution V1 reliability. |
 | 2026-09-27 | Experiment result | Damage execution V2 also improved substantially over execution V1. External XGBoost contact-quality prediction reached R² **0.0312**, Pearson **0.177**, and Spearman **0.144**; player **damage xwOBA points above expected** showed **0.677/0.645** split-half reliability across **319 hitters**. | Pitch-level contact quality remains difficult to predict, but the player residual aggregates into a repeatable hitter-level signal. |
 | 2026-09-27 | Experiment result | The three hitter dimensions are not redundant: selection vs contact Pearson/Spearman **-0.312/-0.302**, selection vs damage **0.067/0.062**, and contact vs damage **-0.461/-0.462**. | Selection, bat-to-ball execution, and damage execution appear to capture meaningfully different aspects of hitter behavior, but construct validation is required before formalizing the profile. |
+| 2026-09-27 | Success | Contact/damage execution V2 and its preserved 2024 → 2025 results were merged into `main` through PR #17. | Both contact and damage now advance to the same incremental-validity standard that prevented the earlier selection prototype from being overclaimed. |
+| 2026-09-27 | Design decision | Contact/damage construct validation tests the residuals against conventional hitter skills before any profile is formalized. | Contact is challenged with raw, zone, chase, and two-strike contact rates; damage is challenged with raw xwOBA on contact, average exit velocity, hard-hit rate, barrel rate, and sweet-spot rate. |
 | 2026-09-27 | Error | The first contact-model cross-fit failed in scikit-learn's ColumnTransformer because nullable pandas `Float64` columns (for example `release_speed`) still contained `pd.NA`. | Contact/damage chunk loading now passes every pitch frame through the existing `prepare_pitch_decision_model_frame` normalization step before modeling, converting numeric features to ordinary `float32`, categorical features to strings, and dropping incomplete model rows consistently with the validated pitch-decision pipeline. |
 
 ### Logging rule going forward
@@ -1178,6 +1180,96 @@ data/processed/damage_execution_test_predictions_2024_2025.parquet
 
 The two components are not combined into a score. Each must first demonstrate meaningful external-season
 prediction quality and player-level repeatability on its own.
+
+## Validate contact and damage beyond conventional metrics
+
+The V2 execution components are repeatable, but NorthStar applies the same novelty test that rejected the first
+selection prototype as a standalone metric.
+
+Run:
+
+```bash
+python scripts/validate_contact_damage_execution.py
+```
+
+No new data download or model retraining is required. The workflow reads the cached 2025 Statcast season plus
+the already-preserved contact/damage execution tables.
+
+### Contact challenge set
+
+NorthStar independently aggregates:
+
+```text
+overall contact rate
+zone contact rate
+chase contact rate
+two-strike contact rate
+whiffs per swing
+```
+
+The main incremental tests are:
+
+```text
+raw_contact
+situational_contact
+```
+
+For each construct set, a player-level five-fold OOF Ridge model tries to reconstruct
+`contact_above_expected_per_100_swings`.
+
+The stricter temporal test learns the contact/construct relationship from the early half and transports it to
+the late half. The early and late **residuals** are then correlated player by player.
+
+### Damage challenge set
+
+NorthStar independently aggregates:
+
+```text
+raw xwOBA on contact
+average exit velocity
+hard-hit rate (>= 95 mph)
+barrel rate (Statcast launch_speed_angle == 6)
+sweet-spot rate (8°-32° launch angle)
+```
+
+The main incremental tests are:
+
+```text
+raw_xwoba_contact
+batted_ball_quality
+full_contact_quality
+```
+
+Again, the key test is whether early/late **damage residuals** remain repeatable after these conventional
+quality-of-contact summaries explain what they can.
+
+Both residual families are also compared descriptively with RE24/100 PA, wOBA, and xwOBA.
+
+Outputs:
+
+```text
+reports/tables/contact_execution_construct_dataset_2025.csv
+reports/tables/damage_execution_construct_dataset_2025.csv
+reports/tables/contact_execution_construct_correlations_2025.csv
+reports/tables/damage_execution_construct_correlations_2025.csv
+reports/tables/contact_execution_incremental_residuals_2025.csv
+reports/tables/damage_execution_incremental_residuals_2025.csv
+reports/tables/contact_execution_incremental_summary_2025.csv
+reports/tables/damage_execution_incremental_summary_2025.csv
+reports/tables/contact_execution_incremental_half_dataset_2025.csv
+reports/tables/damage_execution_incremental_half_dataset_2025.csv
+reports/tables/contact_execution_incremental_half_residuals_2025.csv
+reports/tables/damage_execution_incremental_half_residuals_2025.csv
+reports/tables/contact_execution_incremental_reliability_2025.csv
+reports/tables/damage_execution_incremental_reliability_2025.csv
+reports/tables/contact_execution_incremental_outcome_correlations_2025.csv
+reports/tables/damage_execution_incremental_outcome_correlations_2025.csv
+reports/figures/contact_execution_incremental_reliability_2025.png
+reports/figures/damage_execution_incremental_reliability_2025.png
+```
+
+The decision rule is intentionally asymmetric: contact and damage do not have to rise or fall together. A
+component can be retained if it shows meaningful incremental repeatability even if the other component does not.
 
 ## Project layout
 
