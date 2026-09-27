@@ -536,6 +536,72 @@ A leaderboard can be generated for inspection, but NorthStar should not assign a
 unless player-level reliability is materially stronger than the short September split-half results and the
 rankings remain interpretable under discretionary-opportunity filtering.
 
+## Phase 2l: player construct validation and ranking shrinkage
+
+Full-season player split-half reliability is materially stronger than short-horizon September reliability, so
+NorthStar next tests **construct validity** rather than immediately naming the statistic.
+
+### Independent plate-discipline constructs
+
+Full-season 2025 Statcast pitches are independently aggregated by batter. Physical swing/take descriptions use
+the same transparent event definitions as the pitch-decision pipeline, but no NorthStar Q-value is involved in
+these summaries.
+
+The construct set includes:
+- overall swing rate
+- zone swing rate
+- chase rate on Statcast zones 11-14
+- whiffs per swing
+- contact rate
+- first-pitch swing rate
+- two-strike swing rate
+- two-strike chase rate
+
+Existing player RE24 / Baseball Savant outputs add outcome-oriented references such as RE24 per 100 PA, wOBA,
+and xwOBA.
+
+Pairwise Pearson and Spearman correlations are reported for primary NorthStar player metrics. In addition,
+five-fold player-level out-of-fold Ridge models estimate how much of NorthStar decision value can be explained
+by:
+- plate discipline only
+- outcome value only
+- their combination
+
+The purpose is diagnostic. Very high reconstruction would suggest NorthStar is mostly a repackaging of simpler
+statistics; modest reconstruction alongside stable reliability would support incremental descriptive content.
+
+### League centering
+
+Raw decision value is measured relative to an opportunity-conditioned action mixture and is not mathematically
+forced to average zero across player means. A presentation layer therefore centers the player rate on the
+pitch-weighted league mean:
+
+`Centered DV/100 = 100 * (player mean DV - league mean DV)`
+
+This changes interpretation, not underlying player ordering.
+
+### Sample-aware shrinkage
+
+For each hitter, NorthStar estimates the standard error of mean decision value with game clusters. Let
+`sigma_i²` be the squared cluster standard error for player `i`. A method-of-moments estimate of
+between-player variance `tau²` is:
+
+`tau² = max(Var(player means) - mean(sigma_i²), epsilon)`
+
+The provisional shrinkage factor is:
+
+`lambda_i = tau² / (tau² + sigma_i²)`
+
+and:
+
+`Shrunk_i = league mean + lambda_i * (raw_i - league mean)`
+
+This prevents short or noisy samples from receiving the same ranking certainty as large stable samples.
+Default eligibility requires at least 500 total decisions and 300 discretionary opportunities.
+
+This is an empirical-Bayes-style approximation for ranking stabilization. It does not remove confounding from
+the underlying observational action-value model.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
