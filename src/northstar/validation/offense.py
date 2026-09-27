@@ -5,16 +5,23 @@ from collections.abc import Iterable
 import pandas as pd
 
 
-DEFAULT_REFERENCE_METRICS = ("OPS", "wOBA", "wRC+")
+DEFAULT_REFERENCE_METRICS = (
+    "woba",
+    "est_woba",
+    "ba",
+    "est_ba",
+    "slg",
+    "est_slg",
+)
 
 
 def merge_with_reference_stats(
     leaderboard: pd.DataFrame,
     reference_stats: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Join NorthStar MLBAM batter IDs directly to FanGraphs season metrics."""
+    """Join NorthStar MLBAM batter IDs to Baseball Savant expected statistics."""
     required_leaderboard = {"batter", "re24_total", "re24_per_100_pa"}
-    required_reference = {"xMLBAMID", "Name", "PA"}
+    required_reference = {"player_id", "pa"}
 
     missing = required_leaderboard.difference(leaderboard.columns)
     if missing:
@@ -30,19 +37,18 @@ def merge_with_reference_stats(
     board["batter"] = board["batter"].astype("int64")
 
     reference = reference_stats.copy()
-    reference["batter"] = pd.to_numeric(reference["xMLBAMID"], errors="coerce")
-    reference = reference.dropna(subset=["batter"])
+    reference["batter"] = pd.to_numeric(reference["player_id"], errors="coerce")
+    reference["pa"] = pd.to_numeric(reference["pa"], errors="coerce")
+    reference = reference.dropna(subset=["batter", "pa"])
     reference["batter"] = reference["batter"].astype("int64")
     reference = reference.drop_duplicates("batter")
 
-    merged = board.merge(
+    return board.merge(
         reference,
         on="batter",
         how="inner",
-        suffixes=("", "_fg"),
-    )
-
-    return merged.reset_index(drop=True)
+        suffixes=("", "_savant"),
+    ).reset_index(drop=True)
 
 
 def build_correlation_summary(
