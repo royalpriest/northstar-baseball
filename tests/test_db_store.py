@@ -10,6 +10,7 @@ from northstar.db.database import (
 from northstar.db.load import replace_hitter_profiles
 from northstar.db.models import HitterProfile, HitterTeamMembership
 from northstar.db.store import DatabaseProfileStore
+from northstar.profiles.comparison import COMPARISON_FIELDS
 
 
 def _profile() -> pd.DataFrame:
@@ -99,6 +100,8 @@ def test_database_store_returns_unicode_profile_and_comparison():
 
     comparison = store.compare([10, "Luis Arráez"])
     assert [item["batter"] for item in comparison] == [10, 30]
+    assert all(set(item).issubset(COMPARISON_FIELDS) for item in comparison)
+    assert "complete_three_axis_profile" not in comparison[0]
 
 
 def test_database_store_leaderboard_preserves_named_metric_scope():
