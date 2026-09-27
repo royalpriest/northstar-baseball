@@ -1012,6 +1012,45 @@ explanatory:
 This is a descriptive analytical framework, not a claim of causal player ability or a superior universal
 ranking statistic.
 
+## Phase 2v: canonical hitter-profile presentation
+
+The product layer preserves the research conclusions rather than hiding them behind a new composite statistic.
+
+The canonical hitter profile joins three NorthStar contextual diagnostics:
+
+- sample-aware selection context value
+- contact above expected per 100 swings
+- damage xwOBA points above expected
+
+with established baseball measures:
+
+- swing and chase behavior
+- raw and situational contact
+- xwOBA on contact
+- exit velocity, hard-hit rate, barrel rate, sweet-spot rate
+- wOBA, xwOBA, and RE24 / 100 PA
+
+### Percentiles
+
+Percentiles are calculated independently for each available measure across the 2025 profile sample.
+
+Higher percentile means a higher value for that displayed quantity, except chase avoidance, where lower raw
+chase rate maps to a higher chase-avoidance percentile.
+
+No weighted average, composite grade, tier, or overall NorthStar player score is calculated.
+
+### Missingness
+
+Selection, contact, damage, and outcome tables have different eligibility thresholds. The profile uses an outer
+join and explicitly marks whether a hitter has all three NorthStar axes. Missing values remain missing rather
+than being imputed solely for presentation.
+
+### Interpretation
+
+The profile is explanatory. It is intended to show how hitter choice, contact execution, damage execution, and
+conventional outcomes relate to each other. The NorthStar axes remain context-adjusted diagnostics and are not
+presented as replacements for established metrics.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
