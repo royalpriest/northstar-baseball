@@ -858,6 +858,63 @@ consistent with different hitter approaches.
 No combined score is justified yet. The project proceeds to construct and incremental-signal validation for
 contact and damage independently.
 
+## Phase 2s: contact / damage construct validation
+
+Reliability is necessary but not sufficient for a new player dimension. V2 therefore applies construct and
+incremental-signal validation independently to contact and damage.
+
+### Contact constructs
+
+Conventional contact skill is summarized from observed swings:
+- overall contact rate
+- zone contact rate
+- chase contact rate
+- two-strike contact rate
+- whiffs per swing
+
+Two nested feature sets are used:
+
+`raw_contact = [overall contact rate]`
+
+`situational_contact = [overall, zone, chase, two-strike contact]`
+
+Five-fold player-level OOF Ridge prediction measures how much of NorthStar contact-above-expected can be
+reconstructed cross-sectionally.
+
+For temporal incremental validity, early-half residuals are OOF. The early-half construct relationship is then
+fit on all eligible early players and transported to late-half constructs. Early/late residual reliability asks
+whether the same hitters continue to outperform conventional contact expectation.
+
+### Damage constructs
+
+Conventional quality of contact is summarized from balls in play:
+- xwOBA on contact
+- average exit velocity
+- hard-hit rate at 95+ mph
+- Statcast barrel rate using launch-speed/angle category 6
+- sweet-spot rate using launch angles 8° through 32°
+
+Three feature sets are tested:
+
+`raw_xwoba_contact`
+
+`batted_ball_quality = [average EV, hard-hit, barrel, sweet-spot]`
+
+`full_contact_quality = [xwOBA contact + batted-ball-quality features]`
+
+The same OOF reconstruction and early-to-late residual reliability design is applied.
+
+### Interpretation
+
+A high raw split-half correlation that collapses after conventional constructs are removed indicates a useful
+context-adjusted presentation of an established skill, not a distinct hitter dimension.
+
+A residual that remains meaningfully repeatable after construct removal provides stronger evidence that the
+NorthStar context adjustment preserves player information not captured by the simpler summary statistics.
+
+Associations with RE24, wOBA, and xwOBA are reported only as descriptive external checks and are not used to
+retrofit the component toward offensive outcomes.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
