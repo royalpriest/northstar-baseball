@@ -181,6 +181,10 @@ or a design decision changes because of evidence.
 
 | Date | Type | Event | Outcome / fix |
 | --- | --- | --- | --- |
+| 2026-09-27 | Parity fix | PostgreSQL smoke tests confirmed metadata, player search, Toronto team filtering, and Canadian RE24 leaderboard parity, but the SQL-backed `/api/v1/compare` response exposed the entire stored profile JSON instead of the smaller comparison-field contract used by the CSV backend. | SQL comparison responses now filter through the shared `COMPARISON_FIELDS` contract, with a regression test preventing backend-specific extra fields. |
+| 2026-09-27 | Success | PostgreSQL Product Store V1 passed its first real local integration run. Docker Compose started `postgres:17-alpine` healthy on port 5432, the canonical 2025 profile loader inserted **404 profiles**, and FastAPI `/api/v1/meta` returned `storage_backend: postgresql` with **404 players**. | This confirms the application is reading NorthStar profiles from PostgreSQL rather than the CSV fallback. |
+| 2026-09-27 | Success | FastAPI V1 was merged into `main` through PR #21 after **117 tests**, Uvicorn runtime checks, live Judge search, Judge/Arráez comparison, and UTF-8 response hardening. | NorthStar now has a stable read-only application API over the validated profile dataset. |
+| 2026-09-27 | Product milestone | PostgreSQL Product Store V1 started on `feat/product-db-v1`. | Added SQLAlchemy models, normalized team membership, transactional season loading, a SQL-backed profile-store implementation, local PostgreSQL Compose service, and API backend selection through `NORTHSTAR_DATABASE_URL`. |
 | 2026-09-27 | Runtime fix | Live Judge search and Judge/Arráez comparison endpoints returned the expected records, but Windows PowerShell rendered the accented name as `Luis ArrÃ¡ez` even though the stored profile uses `Luis Arráez`. | API JSON responses now explicitly declare `charset=utf-8`, and the test suite includes an accented-name round-trip assertion so browser/CLI clients receive unambiguous UTF-8 metadata. |
 | 2026-09-27 | Success | Live API data smoke tests passed for player search and two-player comparison. Judge search returned MLBAM 592450 with the expected 2025 profile; comparison returned Judge and Arráez plus the no-winner/no-composite interpretation. | FastAPI V1 is functionally ready to preserve after the UTF-8 response hardening check. |
 | 2026-09-27 | Success | FastAPI V1 passed **116/116 tests with no warning summary**, started successfully under Uvicorn, and returned HTTP **200** from `/health` with service `northstar-baseball-api`, API version `v1`, season `2025`. | Automated and runtime smoke tests now agree. Added a small `/` discovery endpoint so opening the API base URL returns service/docs links instead of the previously observed harmless 404. |
@@ -1579,6 +1583,55 @@ The API returns the same validated product semantics as the report layer:
 - team filters use 2025 plate-appearance exposure
 - player diagnostics are full-season MLB values unless a future endpoint explicitly says otherwise
 - comparison endpoints return profiles without declaring a winner
+
+## Run the PostgreSQL profile store
+
+NorthStar can now serve the same API contract from PostgreSQL instead of reading the canonical CSV directly.
+
+The local development database is defined in `compose.yaml`.
+
+Start it:
+
+```bash
+docker compose up -d postgres
+```
+
+Load the canonical enriched profile:
+
+```bash
+python scripts/load_profiles_to_db.py
+```
+
+The loader replaces one season transactionally and creates:
+
+```text
+hitter_profiles
+    one canonical JSON-backed profile per MLBAM hitter / season
+    plus materialized fields used by search and leaderboards
+
+hitter_team_memberships
+    normalized hitter / season / team rows used for historical team filtering
+```
+
+The default development connection is:
+
+```text
+postgresql+psycopg://northstar:northstar@localhost:5432/northstar
+```
+
+Set `NORTHSTAR_DATABASE_URL` before starting FastAPI to switch the service from the CSV store to the SQL store:
+
+```powershell
+$env:NORTHSTAR_DATABASE_URL="postgresql+psycopg://northstar:northstar@localhost:5432/northstar"
+python -m uvicorn northstar.api.app:app --reload
+```
+
+If `NORTHSTAR_DATABASE_URL` is absent, the API intentionally keeps the CSV-backed store as a fallback. Both
+backends implement the same player/search/team/leaderboard/comparison semantics.
+
+The first SQL schema keeps frequently queried product fields as typed columns while retaining the complete
+canonical profile in JSON. This lets the product migrate away from flat files without discarding validated
+research fields that are not yet first-class UI columns.
 
 Configuration:
 

@@ -1127,3 +1127,44 @@ The initial API uses the preserved enriched CSV as a read-only source. PostgreSQ
 that migration should preserve the endpoint semantics so the frontend is not coupled to the original flat-file
 implementation.
 
+
+## Phase 5: PostgreSQL product store
+
+The product API initially read the canonical enriched CSV directly. PostgreSQL V1 changes persistence without
+changing the analytical meaning of any endpoint.
+
+### Storage strategy
+
+`hitter_profiles` stores one row per MLBAM hitter and season. Frequently queried product fields are
+materialized as typed columns for filtering and ordering, while the full canonical profile is preserved as JSON.
+
+This hybrid representation is deliberate:
+
+- validated research fields are not lost merely because the UI does not query them yet
+- common search and leaderboard operations do not need to deserialize every JSON document
+- schema evolution can promote additional fields to typed columns later
+
+`hitter_team_memberships` stores normalized hitter / season / team membership rows. Team filters therefore do
+not depend on substring matching against the semicolon-delimited report field.
+
+### Loading semantics
+
+The canonical profile remains the authoritative derived artifact. Loading a season deletes and replaces that
+season inside one transaction, making repeated development loads deterministic and idempotent.
+
+The SQL layer does not retrain models or recompute diagnostics.
+
+### API parity
+
+When `NORTHSTAR_DATABASE_URL` is configured, FastAPI constructs a SQL-backed store. Without it, the CSV store
+remains available as a development fallback.
+
+Both stores preserve the same rules:
+
+- no composite NorthStar score
+- Canadian-born scope is birthplace-based
+- team scope is historical 2025 exposure
+- NorthStar diagnostic values remain full-season MLB values
+- leaderboards state their ordering metric
+- comparisons do not declare a winner
+
