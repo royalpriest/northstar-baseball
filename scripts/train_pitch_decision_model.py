@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.calibration import calibration_curve
 
-from northstar.data.statcast import read_statcast
 from northstar.features.pitches import (
     PITCH_DECISION_REQUIRED_COLUMNS,
     build_pitch_decision_frame,
@@ -108,6 +107,31 @@ def _save_calibration(
     plt.close(fig)
 
 
+def _load_pitch_decision_chunks(
+    raw_paths: list[Path],
+    projected_columns: list[str],
+) -> tuple[pd.DataFrame, int]:
+    """Project and transform one cached chunk at a time to keep peak RAM low."""
+    decision_frames: list[pd.DataFrame] = []
+    raw_pitch_count = 0
+
+    for index, path in enumerate(raw_paths, start=1):
+        raw_chunk = pd.read_parquet(path, columns=projected_columns)
+        raw_pitch_count += len(raw_chunk)
+        decision_frames.append(build_pitch_decision_frame(raw_chunk))
+
+        if index == 1 or index % 5 == 0 or index == len(raw_paths):
+            print(f"  prepared chunk {index}/{len(raw_paths)}")
+
+    if not decision_frames:
+        raise FileNotFoundError("No readable Statcast chunks were found.")
+
+    return (
+        pd.concat(decision_frames, ignore_index=True, copy=False),
+        raw_pitch_count,
+    )
+
+
 def main() -> None:
     args = parse_args()
 
@@ -122,11 +146,13 @@ def main() -> None:
 
     projected_columns = sorted(PITCH_DECISION_REQUIRED_COLUMNS)
     print(
-        f"Reading {len(raw_paths)} cached Statcast chunks " 
+        f"Reading {len(raw_paths)} cached Statcast chunks "
         f"with {len(projected_columns)} projected columns..."
     )
-    pitches = read_statcast(raw_paths, columns=projected_columns)
-    decision_frame = build_pitch_decision_frame(pitches)
+    decision_frame, raw_pitch_count = _load_pitch_decision_chunks(
+        raw_paths,
+        projected_columns,
+    )
     frame = prepare_pitch_decision_model_frame(decision_frame)
     split = chronological_pitch_split(
         frame,
@@ -254,11 +280,11 @@ def main() -> None:
         args.calibration_bins,
     )
 
-    recognized_share = len(frame) / len(pitches) if len(pitches) else 0.0
+    recognized_share = len(frame) / raw_pitch_count if raw_pitch_count else 0.0
 
     print()
     print("NorthStar pitch-decision model V1")
-    print(f"Raw pitches read:       {len(pitches):,}")
+    print(f"Raw pitches read:       {raw_pitch_count:,}")
     print(f"Physical decisions kept:{len(frame):,} ({recognized_share:.2%})")
     print(
         f"Train:      {len(split.train):,} pitches "
