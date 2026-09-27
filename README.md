@@ -1405,6 +1405,58 @@ The product direction is therefore a **NorthStar Hitter Profile**: show establis
 context-adjusted diagnostics together, with clear labels separating conventional skill, opportunity/context,
 and NorthStar explanatory adjustments.
 
+## Build the NorthStar Hitter Profile
+
+The validated hitter research now feeds a product-facing profile rather than a single invented score.
+
+Run:
+
+```bash
+python scripts/build_hitter_profiles.py
+```
+
+This creates a canonical 2025 table joining:
+
+```text
+NorthStar selection context
+NorthStar contact-above-expected context
+NorthStar damage-above-expected context
+
+conventional swing / chase / contact measures
+xwOBA on contact
+exit velocity / hard-hit / barrel measures
+wOBA / xwOBA
+RE24 / 100 PA
+sample sizes and uncertainty fields
+```
+
+The profile deliberately has **no overall score**.
+
+Each axis receives its own league-relative percentile so users can compare dimensions without collapsing them
+into one ranking. The percentiles describe position within the available 2025 profile sample; they are not
+claims that NorthStar has discovered new independent predictive skills.
+
+Output:
+
+```text
+reports/tables/hitter_profile_2025.csv
+```
+
+To generate an individual profile card:
+
+```bash
+python scripts/build_hitter_profiles.py --player "Aaron Judge"
+```
+
+or use an MLBAM ID:
+
+```bash
+python scripts/build_hitter_profiles.py --player 592450
+```
+
+The player card places the three NorthStar contextual axes beside established measures and explicitly states
+that no composite overall rating is being produced.
+
 ## Project layout
 
 ```text
