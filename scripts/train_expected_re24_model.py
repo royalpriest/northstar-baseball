@@ -40,6 +40,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--validation-start", default="2025-08-01")
     parser.add_argument("--test-start", default="2025-09-01")
     parser.add_argument("--bins", type=int, default=10)
+    parser.add_argument(
+        "--include-shifted-pa",
+        action="store_true",
+        help="Include PAs with within-PA state changes in the expected-value model.",
+    )
     return parser.parse_args()
 
 
@@ -170,7 +175,10 @@ def main() -> None:
 
     plate_appearances = pd.read_parquet(args.input)
     contextual = add_backward_looking_terminal_context(plate_appearances)
-    frame = prepare_expected_re24_frame(contextual)
+    frame = prepare_expected_re24_frame(
+        contextual,
+        clean_attribution_only=not args.include_shifted_pa,
+    )
     split = chronological_run_value_split(
         frame,
         validation_start=args.validation_start,
@@ -266,6 +274,10 @@ def main() -> None:
 
     print()
     print("NorthStar expected terminal-event RE24 model")
+    print(
+        "Attribution sample: "
+        + ("all terminal-event PAs" if args.include_shifted_pa else "clean PAs only")
+    )
     print(
         f"Train:      {len(split.train):,} PA "
         f"({split.train['game_date'].min().date()} to "
