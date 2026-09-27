@@ -157,26 +157,41 @@
 - [x] Retain the validated quantity as a selection / plate-discipline component
 
 ## M15 — Selection / execution decomposition
-- [ ] Define a swing-execution target conditional on pitch quality and context
-- [ ] Build chronological / external-season execution models
-- [ ] Validate player-level execution reliability independently of selection
-- [ ] Test whether execution adds incremental information beyond xwOBA / contact quality
-- [ ] Build a two-axis player profile before considering any combined metric
+- [x] Define swing execution as actual minus expected one-step swing value
+- [x] Exclude batter identity and post-swing/contact leakage from execution features
+- [x] Add 2024 -> 2025 external-season swing-execution model
+- [x] Add empirical count/zone/pitch-type execution baseline
+- [x] Add player execution value per 100 swings
+- [x] Add early/late 2025 execution reliability test
+- [x] Add a separate selection / execution two-axis profile
+- [x] Run execution model and preserve results
+- [x] Confirm execution-value reliability is only about 0.25
+- [x] Reject all-in-one swing-value residual as a stable standalone execution axis
+- [x] Preserve selection/execution V1 as an informative mixed/negative result
 
-## M16 — Canada layer
+## M16 — Contact / damage execution V2
+- [ ] Define contact execution among observed swings
+- [ ] Define damage execution among balls in play
+- [ ] Train 2024 contact and damage expectation models
+- [ ] Evaluate both models on the full 2025 external season
+- [ ] Measure player split-half reliability independently for contact and damage
+- [ ] Compare the two components with selection and established contact-quality metrics
+- [ ] Retain only components that show meaningful reliability and incremental value
+
+## M17 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M17 — Product
+## M18 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M18 — Production engineering
+## M19 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion

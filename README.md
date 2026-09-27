@@ -266,6 +266,12 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Experiment result | The incremental player-signal audit showed that **chase rate alone** leaves a moderately repeatable residual (early/late Pearson/Spearman **0.497/0.489**), but adding swing rate and two-strike chase collapses residual reliability to **0.178/0.168**. The full plate-discipline residual is only **0.211/0.205**. | Most of the raw ~0.70 split-half reliability belongs to repeatable plate-discipline behavior rather than a distinct NorthStar player trait. |
 | 2026-09-27 | Experiment result | Full-season OOF reconstruction reached **R² 0.646** with chase rate alone and **0.818–0.820** with swing/chase or the full discipline set. Residual associations with RE24, wOBA, and xwOBA remained small; the full-discipline residual correlated only **0.190/0.166** with RE24, **0.187/0.154** with wOBA, and **0.222/0.200** with xwOBA (Pearson/Spearman). | The remaining residual is neither strongly repeatable nor strongly tied to offensive outcomes. |
 | 2026-09-27 | Methodology decision | NorthStar will **not** promote the current raw player prototype as a novel standalone metric and will not name it CCA. | The validated signal is retained as a context-weighted **decision/plate-discipline component**. The next research phase separates *selection* (swing/take quality) from *execution* (what the hitter does after choosing to swing) instead of forcing novelty from a weak residual. |
+| 2026-09-27 | Success | Player construct validation, incremental-signal auditing, and preserved outputs were merged into `main` through PR #15. | The project keeps the validated selection signal but explicitly rejects standalone-novelty claims unsupported by the residual tests. |
+| 2026-09-27 | Design decision | Swing execution V1 is defined as **actual one-step transition value minus league-expected swing transition value**, conditional on the pitch and game context. | The execution model is trained on all clean 2024 swings, uses no batter identity and no post-swing/contact variables, and is evaluated on 2025 swings without refitting. This separates *how well the hitter executed a swing* from *whether swinging was the right choice*. |
+| 2026-09-27 | Experiment result | Swing execution V1 improved external 2025 one-step prediction over the count/zone/pitch-type baseline, but absolute predictive signal remained weak: XGBoost R² **0.0207**, Pearson **0.144**, Spearman **0.125** versus baseline R² **0.0041**. | Incoming pitch/context alone explains only a small share of realized one-step swing value, so the residual remains highly outcome-noisy. |
+| 2026-09-27 | Experiment result | Player execution value per 100 swings had only **0.248/0.255** early/late Pearson/Spearman reliability across **313 hitters**. Positive-execution rate was more stable at **0.464/0.463**, while expected swing opportunity value itself was **0.555/0.538** reliable. | Hitters receive repeatably different swing opportunities, but the all-in-one realized-value residual is not stable enough to retain as a standalone execution axis. |
+| 2026-09-27 | Experiment result | Selection and execution V1 were distinct cross-sectionally (Pearson **-0.141**, Spearman **-0.119** across **384 players**). | Distinctness is useful, but low execution reliability blocks a two-axis public profile from this formulation. |
+| 2026-09-27 | Methodology decision | NorthStar will preserve swing execution V1 as an informative mixed/negative result and decompose execution further. | V2 separates **contact execution** (contact made vs expected on an observed swing) from **damage execution** (contact quality above expected conditional on a batted ball) instead of tuning the noisy all-in-one run-value residual. |
 
 ### Logging rule going forward
 
@@ -1010,6 +1016,77 @@ reports/tables/player_metric_incremental_reliability_2025.csv
 reports/tables/player_metric_incremental_outcome_correlations_2025.csv
 reports/figures/player_metric_incremental_reliability_2025.png
 ```
+
+## Train the swing-execution component
+
+NorthStar now treats hitter behavior as two separate descriptive axes:
+
+```text
+selection
+= was swing/take the better choice?
+
+execution
+= given that the hitter swung, how much value did the swing create
+  above or below league expectation for that pitch/context?
+```
+
+The selection component is the already-validated context-weighted plate-discipline signal.
+
+Execution V1 is deliberately trained without hitter identity or any post-swing variables such as exit velocity,
+launch angle, batted-ball type, or realized event. The model only sees the pitch and pre-/at-pitch context that
+was available when the swing occurred.
+
+Run:
+
+```bash
+python scripts/train_swing_execution_model.py
+```
+
+The default experiment again uses strict season transport:
+
+```text
+train expected swing execution: 2024
+evaluate player execution:      2025
+```
+
+The target is the same telescoping one-step transition value used by pitch-state V2. On observed swing rows:
+
+```text
+swing execution value
+= actual one-step transition value
+- expected swing transition value from the 2024 league model
+```
+
+A positive residual means the hitter converted that swing better than the league model expected from pitch
+location, movement, velocity, count, handedness, base/out state, inning, and score context. A negative residual
+means worse conversion.
+
+The workflow reports:
+
+- count/zone/pitch-type empirical baseline versus XGBoost
+- full 2025 external swing-value prediction metrics
+- player execution value per 100 swings
+- early/late 2025 split-half reliability
+- a **two-axis selection/execution profile** without combining the axes into one score
+
+Outputs:
+
+```text
+reports/tables/swing_execution_model_metrics_2024_2025.csv
+reports/tables/player_swing_execution_2025.csv
+reports/tables/player_swing_execution_half_splits_2025.csv
+reports/tables/player_swing_execution_reliability_2025.csv
+reports/tables/selection_execution_profile_2025.csv
+reports/figures/player_swing_execution_reliability_2025.png
+reports/figures/selection_execution_profile_2025.png
+data/processed/swing_execution_test_predictions_2024_2025.parquet
+```
+
+The prediction Parquet remains local.
+
+Execution V1 is still observational. In particular, the pitch itself is conditioned on because the question is
+how well a hitter converted the swing that occurred; the model does not claim that the same swing outcome would
+have occurred under a different action or pitch sequence.
 
 ## Project layout
 
