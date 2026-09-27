@@ -52,7 +52,7 @@ def test_build_correlation_summary_detects_positive_relationship():
 
     assert set(summary["reference_metric"]) == {"OPS", "wOBA", "wRC+"}
     assert (summary["pearson_r"] > 0.95).all()
-    assert (summary["spearman_rho"] == pytest.approx(1.0)).all()
+    assert all(value == pytest.approx(1.0) for value in summary["spearman_rho"])
 
 
 def test_validation_rejects_missing_required_columns():
