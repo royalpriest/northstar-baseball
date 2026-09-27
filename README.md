@@ -253,6 +253,8 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Experiment result | The 2024 → 2025 season-transport test held. The 2024 propensity model scored 2025 at ROC AUC **0.861**, calibrated log loss **0.4608**, and Brier **0.1521**. All **729,387** external decision states had exact 2024 state coverage. | The swing/take opportunity structure transports cleanly across seasons, with only modest average swing-rate drift between training and external data. |
 | 2026-09-27 | Experiment result | External 2025 transition-value prediction remained useful across all weight caps. At cap 10, MAE was **0.1013**, RMSE **0.2404**, R² **0.0653**, Pearson **0.256**, and Spearman **0.548**. Model-action advantage remained nearly unchanged across caps 3/5/10/20 at about **+0.0285 runs per eligible decision**, with every game-cluster bootstrap interval above zero. | The core one-step signal survived full-season temporal transport and weight sensitivity without 2025 refitting. |
 | 2026-09-27 | Interpretation note | The 2024 → 2025 run is a strong model-transport test, but 2025 was used earlier while developing the methodology. | Treat this as external-to-the-fitted-model season validation rather than a pristine never-observed confirmatory dataset. A future untouched season remains valuable for final confirmation. |
+| 2026-09-27 | Success | External-season validation and its preserved 2024 → 2025 results were merged into `main` through PR #13. | NorthStar now has full-season transport evidence strong enough to prototype a player-facing descriptive decision metric. |
+| 2026-09-27 | Design decision | The first player metric prototype is **not** named CCA. | It compares the modeled value of a hitter's observed swing/take choice with an opportunity-conditioned league-like action mixture, reports missed value versus the modeled optimal action, and requires full-season split-half reliability before any public metric name is considered. |
 
 ### Logging rule going forward
 
@@ -803,6 +805,79 @@ Passing this test does not make the one-step action contrast causal or a finishe
 a different property: **transport**. NorthStar must show that relationships learned from one MLB season retain
 useful probability calibration, factual value signal, and action-estimate direction in a later season it did
 not train on.
+
+## Build the player decision-value prototype
+
+After 2024-trained models transported successfully to the full 2025 season, NorthStar can finally test whether
+the pitch-level signal aggregates into a repeatable hitter-level quantity.
+
+The prototype intentionally does **not** use the name CCA yet.
+
+Run:
+
+```bash
+python scripts/build_player_decision_metric.py
+```
+
+The default input is the canonical cap-10 external-season prediction file:
+
+```text
+data/processed/external_season_test_predictions_2024_2025.parquet
+```
+
+For each eligible pitch opportunity, NorthStar defines an opportunity-conditioned expected action value:
+
+```text
+expected action value
+= P(swing | opportunity) * Q_swing
++ P(take | opportunity) * Q_take
+```
+
+The hitter's descriptive decision value is:
+
+```text
+decision value vs expected
+= Q(chosen action) - expected action value
+```
+
+The same pitch also records:
+
+```text
+missed decision value
+= max(Q_take, Q_swing) - Q(chosen action)
+
+opportunity headroom
+= max(Q_take, Q_swing) - expected action value
+```
+
+which gives the accounting identity:
+
+```text
+decision value vs expected + missed decision value = opportunity headroom
+```
+
+The leaderboard reports total and per-100 decision value, missed value, ordinary optimal-choice rate, and a
+**value-weighted optimal-choice rate** where decisions with a larger modeled swing/take value gap count more.
+
+A second view restricts the sample to 20%-80% calibrated swing propensity. These are called
+**discretionary opportunities** because neither swing nor take was near-deterministic under the transported
+2024 propensity model.
+
+The default leaderboard requires 500 eligible decisions. Reliability is tested by splitting the 2025 season
+at July 1 and requiring at least 200 decisions in both halves.
+
+Outputs:
+
+```text
+reports/tables/player_decision_metric_prototype_2025.csv
+reports/tables/player_decision_metric_half_splits_2025.csv
+reports/tables/player_decision_metric_reliability_2025.csv
+reports/figures/player_decision_metric_prototype_2025_top20.png
+reports/figures/player_decision_metric_reliability_2025.png
+```
+
+This remains a descriptive, model-based prototype. The Q-functions are observational estimates and the metric
+does not claim that forcing the modeled alternative action would causally change runs by the quoted amount.
 
 ## Project layout
 
