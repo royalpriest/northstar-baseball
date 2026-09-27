@@ -1,3 +1,4 @@
+import pytest
 import pandas as pd
 
 from northstar.metrics.run_expectancy import add_re24, build_run_expectancy_table
@@ -95,6 +96,6 @@ def test_terminal_event_re24_excludes_earlier_state_change():
 
     enriched = add_re24(pa, expectancy)
 
-    assert enriched.loc[0, "re24"] == 1.2
-    assert enriched.loc[0, "terminal_event_re24"] == 1.0
-    assert enriched.loc[0, "within_pa_state_re24"] == 0.2
+    assert enriched.loc[0, "re24"] == pytest.approx(1.2)
+    assert enriched.loc[0, "terminal_event_re24"] == pytest.approx(1.0)
+    assert enriched.loc[0, "within_pa_state_re24"] == pytest.approx(0.2)
