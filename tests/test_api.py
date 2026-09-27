@@ -147,3 +147,17 @@ def test_compare_returns_two_to_four_profiles_without_winner():
         params={"player": "10"},
     )
     assert invalid.status_code == 422
+
+
+def test_json_responses_preserve_unicode_names():
+    profile = _profile().copy()
+    profile.loc[profile["batter"].eq(30), "player_name"] = "Luis Arráez"
+    client = TestClient(
+        create_app(store=ProfileStore(profile))
+    )
+
+    response = client.get("/api/v1/players/30")
+
+    assert response.status_code == 200
+    assert response.json()["player_name"] == "Luis Arráez"
+    assert "charset=utf-8" in response.headers["content-type"].lower()
