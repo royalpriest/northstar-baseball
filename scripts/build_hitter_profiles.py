@@ -6,6 +6,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from pybaseball import playerid_reverse_lookup
 
 from northstar.profiles.hitter import (
     build_hitter_profile,
@@ -54,6 +55,89 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--top", type=int, default=10)
     return parser.parse_args()
+
+
+def _resolve_missing_player_names(
+    profile: pd.DataFrame,
+) -> pd.DataFrame:
+    """Fill missing profile names from MLBAM IDs when possible."""
+    out = profile.copy()
+    if "player_name" not in out.columns:
+        out["player_name"] = pd.NA
+
+    missing_mask = (
+        out["player_name"].isna()
+        | out["player_name"].astype("string").str.strip().eq("")
+    )
+    missing_ids = (
+        pd.to_numeric(
+            out.loc[missing_mask, "batter"],
+            errors="coerce",
+        )
+        .dropna()
+        .astype("int64")
+        .unique()
+        .tolist()
+    )
+
+    if missing_ids:
+        try:
+            lookup = playerid_reverse_lookup(
+                missing_ids,
+                key_type="mlbam",
+            )
+            required = {"key_mlbam", "name_first", "name_last"}
+            if required.issubset(lookup.columns):
+                names = lookup.loc[
+                    :,
+                    ["key_mlbam", "name_first", "name_last"],
+                ].copy()
+                names["batter"] = pd.to_numeric(
+                    names["key_mlbam"],
+                    errors="coerce",
+                )
+                names = names.dropna(subset=["batter"])
+                names["batter"] = names["batter"].astype("int64")
+                names["resolved_name"] = (
+                    names["name_first"]
+                    .fillna("")
+                    .astype(str)
+                    .str.strip()
+                    + " "
+                    + names["name_last"]
+                    .fillna("")
+                    .astype(str)
+                    .str.strip()
+                ).str.strip().str.title()
+
+                name_map = (
+                    names.loc[
+                        names["resolved_name"].ne(""),
+                        ["batter", "resolved_name"],
+                    ]
+                    .drop_duplicates("batter")
+                    .set_index("batter")["resolved_name"]
+                    .to_dict()
+                )
+                out.loc[missing_mask, "player_name"] = (
+                    out.loc[missing_mask, "batter"].map(name_map)
+                )
+        except Exception as exc:
+            print(
+                "Warning: fallback player-name lookup failed: "
+                f"{exc}"
+            )
+
+    unresolved = (
+        out["player_name"].isna()
+        | out["player_name"].astype("string").str.strip().eq("")
+    )
+    out.loc[unresolved, "player_name"] = out.loc[
+        unresolved,
+        "batter",
+    ].map(lambda value: f"MLBAM {int(value)}")
+
+    return out
 
 
 def _slug(value: str) -> str:
@@ -247,6 +331,7 @@ def main() -> None:
         discipline=pd.read_csv(args.discipline),
         outcomes=pd.read_csv(args.outcomes),
     )
+    profile = _resolve_missing_player_names(profile)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     profile.to_csv(args.output, index=False)
