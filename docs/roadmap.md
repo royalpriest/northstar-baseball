@@ -200,25 +200,35 @@
 - [x] Predict late observed contact from early contact constructs
 - [x] Predict late xwOBA on contact from early contact-quality constructs
 - [x] Use identical player samples and folds for paired model comparisons
-- [ ] Run future-skill audit and preserve results
-- [ ] Decide whether contact adds future predictive information
-- [ ] Decide whether damage adds future predictive information
-- [ ] Formalize only components that survive the direct predictive test
+- [x] Run future-skill audit and preserve results
+- [x] Confirm contact adds effectively zero future predictive information beyond conventional contact
+- [x] Confirm damage adds value beyond coarse batted-ball summaries but not beyond xwOBA on contact
+- [x] Reject standalone novel-stat claims for current selection/contact/damage components
+- [x] Retain all three as transparent contextual diagnostics
 
-## M19 — Canada layer
+## M19 — NorthStar hitter profile
+- [ ] Build canonical player-profile dataset
+- [ ] Join NorthStar diagnostics with established offensive measures
+- [ ] Add percentile / league-relative presentation without implying a single overall score
+- [ ] Add per-player report generation
+- [ ] Add profile visualizations for selection, contact, damage, and conventional outcomes
+- [ ] Document interpretation and limitations for every displayed axis
+- [ ] Preserve research provenance from the validation phases
+
+## M20 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M20 — Product
+## M21 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M21 — Production engineering
+## M22 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
