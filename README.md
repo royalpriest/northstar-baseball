@@ -226,6 +226,9 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Experiment result | Pitch decision-value V1 retained **89.18%** of training pitches and **88.94%** of September pitches in common support. On the September holdout, XGBoost action-value prediction improved over the count+zone+action baseline: MAE **0.3263 vs 0.3280**, RMSE **0.4604 vs 0.4625**, R² **0.0338 vs 0.0252**, Pearson **0.184 vs 0.159**, and Spearman **0.233 vs 0.163**. | Pitch-level action value contains measurable out-of-time signal, unlike the earlier PA-level expected-RE24 regressions. |
 | 2026-09-27 | Experiment result | The September doubly robust estimates were **-0.02926** for always take, **-0.04653** for always swing, **-0.01968** for observed actions, and **+0.00628** for the model-selected policy. Validation showed the same policy ordering. | The stable direction is encouraging, but the implied improvement over observed decisions is too large to treat literally as a causal run gain. |
 | 2026-09-27 | Methodology limitation | Decision-value V1 uses the remaining value of the entire PA as the return for every pitch. Multiple pitches in the same PA therefore inherit overlapping downstream value, and a counterfactual choice on an early pitch can change whether later pitches even exist. | NorthStar will replace the repeated downstream-return target with a one-step pitch-state transition value whose realized values telescope across the PA. |
+| 2026-09-27 | Success | Pitch decision-value V1 and its preserved results were merged into `main` through PR #9. | The measurable action-value signal is retained as evidence, while the overlapping-return formulation remains documented as a methodological limitation rather than being promoted to a player metric. |
+| 2026-09-27 | Design decision | Pitch-state value V2 replaces the repeated PA-end return with a one-step decision-opportunity transition: `runs during step + V(next state) - V(current state)`. | State values are fit on pre-August training data using count + base/out state. The transition values telescope across each PA, so downstream PA value is not repeatedly assigned to every pitch. |
+| 2026-09-27 | Methodology safeguard | V2 flags gaps where the next recognized physical decision is not the immediately following pitch number. | Those gaps stay in the telescoping audit but are excluded from counterfactual swing/take model fitting, reducing attribution of intervening events to the previous batter decision. |
 
 ### Logging rule going forward
 
@@ -546,6 +549,81 @@ This is **not yet a causal decision-value statistic**. Swing/take behavior is ob
 cannot guarantee that all confounding is measured, and V1 does not yet use cross-fitting. The doubly robust
 policy estimates are diagnostics for whether the research direction is credible, not proof that a recommended
 action would causally add the estimated number of runs.
+
+## Train pitch-state value V2
+
+Decision-value V1 showed measurable signal, but its target reused the rest of the plate appearance for every
+pitch. V2 replaces that overlapping return with a **one-step decision-opportunity transition value**.
+
+NorthStar first fits a training-only value table for discrete decision states:
+
+```text
+balls-strikes + base/out state -> expected future PA value
+```
+
+where future PA value is:
+
+```text
+runs remaining in PA + RE(after PA)
+```
+
+For each recognized swing/take opportunity:
+
+```text
+transition value
+= runs before the next decision opportunity
++ V(next decision state)
+- V(current decision state)
+```
+
+If the PA ends, `V(next)` is simply the training-only run expectancy of the post-PA base/out state.
+
+The key property is **telescoping**. Summing observed transition values through one PA collapses to:
+
+```text
+runs scored
++ terminal run expectancy
+- value of the first decision state
+```
+
+so the same downstream PA outcome is no longer copied onto every pitch.
+
+V2 also records pitch-number gaps. A non-terminal transition is used for counterfactual swing/take training only
+when the next recognized decision is the immediately following pitch number. Gapped transitions remain in the
+telescoping audit but are excluded from the action-value model.
+
+The observational swing/take machinery remains conservative:
+
+- XGBoost swing propensity model
+- 5%–95% common-support trimming
+- stabilized inverse-propensity weights
+- separate XGBoost swing and take transition-value models
+- one-step doubly robust action estimates on the observed state distribution
+
+Run:
+
+```bash
+python scripts/train_pitch_state_value.py
+```
+
+Outputs:
+
+```text
+reports/tables/pitch_decision_state_values_2025.csv
+reports/tables/pitch_state_telescoping_audit_2025.csv
+reports/tables/pitch_state_value_factual_metrics_2025.csv
+reports/tables/pitch_state_value_one_step_policy_2025.csv
+reports/tables/pitch_state_value_batter_holdout_2025.csv
+reports/tables/pitch_state_value_swing_importance_2025.csv
+reports/tables/pitch_state_value_take_importance_2025.csv
+reports/figures/pitch_state_value_advantage_2025.png
+data/processed/pitch_state_value_test_predictions_2025.parquet
+```
+
+The one-step policy table is **not a full sequential policy evaluation**. It compares actions over the state
+distribution that actually occurred; it does not simulate how changing an early decision would alter the
+distribution of later pitch states. That requires a later transition/dynamics model or fitted policy
+evaluation.
 
 ## Project layout
 
