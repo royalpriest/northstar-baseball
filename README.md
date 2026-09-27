@@ -211,6 +211,9 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Experiment result | Translating PA outcome probabilities back into terminal-event RE24 still produced negligible September holdout signal. XGBoost implied-value R² was only **0.0026** with Pearson **0.061**. | The structured outcome model improves event probabilities, but current state × coarse-outcome values still do not explain enough within-outcome run-value variation to support CCA residuals. |
 | 2026-09-27 | Warning | scikit-learn emitted `y_prob values do not sum to one` during multiclass top-k evaluation. | The model outputs were valid probability-like scores, but rows are now explicitly normalized before classification metrics and expected-value translation to remove floating-point / alignment drift and silence the warning. |
 | 2026-09-27 | Interpretation note | XGBoost feature importance remained led by base/out state, but batter prior strikeout, field-out, and home-run rates plus pitcher prior strikeout rate entered the top features. | Player history is contributing real classification signal, but importance magnitudes should still be interpreted cautiously because overall multiclass performance remains modest. |
+| 2026-09-27 | Success | PA-outcome V1 and its preserved holdout results were merged into `main` through PR #7. | The structured outcome model remains useful for probability modeling, but its implied RE24 still was not strong enough to justify CCA residuals. |
+| 2026-09-27 | Design decision | NorthStar moved from whole-PA outcome prediction to pitch-level opportunity and batter decision modeling. | Exact pitch location, movement, velocity, count, handedness, and game state are now treated as the opportunity presented to the hitter; post-contact information remains excluded from the decision model. |
+| 2026-09-27 | Success | A first pitch-level swing/take model pipeline was implemented on `feat/pitch-decision-v1`. | It compares a count+zone swing-rate baseline with logistic regression and XGBoost, uses the cached raw Statcast pitch files directly, and preserves out-of-time decision probabilities for later decision-value work. |
 
 ### Logging rule going forward
 
@@ -407,6 +410,72 @@ data/processed/pa_outcome_test_predictions_2025.parquet
 Classification is evaluated with multiclass log loss, accuracy, macro F1, and top-2 accuracy. The implied
 expected-RE24 predictions are separately evaluated with MAE, RMSE, R², Pearson correlation, and Spearman
 correlation. The prediction Parquet stays local.
+
+## Train the pitch-decision model V1
+
+The PA-level experiments showed that exact run value is too noisy to predict before a plate appearance begins.
+The next stage moves inside the PA and conditions on the **actual pitch opportunity presented to the hitter**.
+
+NorthStar classifies each physical pitch as:
+
+```text
+swing
+take
+```
+
+Clock violations / automatic balls and strikes are excluded because no physical pitch opportunity was
+presented. Bunt attempts, fouls, whiffs, and balls put in play count as swings.
+
+V1 uses only information available as the pitch arrives:
+
+- balls / strikes
+- pitch type
+- release velocity
+- horizontal / vertical movement
+- exact plate location
+- location normalized to the hitter's strike-zone height
+- batter / pitcher handedness
+- runner / out state
+- inning, home/away, and score differential
+
+Horizontal location and movement are mirrored for left-handed hitters so the model can learn a common
+hitter-perspective inside/outside geometry.
+
+This is intentionally **not a pre-pitch forecast**. Plate location is allowed because the model asks how a
+hitter responds to the pitch that was actually presented. Post-contact variables such as exit velocity,
+launch angle, and terminal event are not used.
+
+Models compared:
+
+- empirical count + Statcast-zone swing-rate baseline
+- logistic regression
+- XGBoost
+
+Run directly from the cached raw Statcast chunks:
+
+```bash
+python scripts/train_pitch_decision_model.py
+```
+
+Outputs:
+
+```text
+reports/tables/pitch_decision_model_metrics_2025.csv
+reports/tables/pitch_decision_xgboost_feature_importance_2025.csv
+reports/tables/pitch_decision_batter_holdout_2025.csv
+reports/figures/pitch_decision_calibration_2025.png
+data/processed/pitch_decision_test_predictions_2025.parquet
+```
+
+The local predictions include:
+
+```text
+decision_surprise = actual swing - predicted swing probability
+```
+
+This is a **behavioral deviation**, not a value metric. A surprising swing is not automatically a good swing.
+The next stage will estimate the expected value of swing versus take for comparable pitch opportunities before
+NorthStar assigns decision value.
 
 ## Project layout
 
