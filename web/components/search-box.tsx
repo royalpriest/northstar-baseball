@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { browserApiBase } from "@/lib/api";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { browserApiBase } from "@/lib/browser-config";
 import type { PlayerListResponse, PlayerSummary } from "@/lib/types";
 
 type Props = {
@@ -17,7 +17,19 @@ export function SearchBox({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PlayerSummary[]>([]);
   const [loading, setLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const normalized = useMemo(() => query.trim(), [query]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   useEffect(() => {
     if (normalized.length < 2) {
@@ -61,13 +73,14 @@ export function SearchBox({
       <form className="search-box" onSubmit={submit}>
         <span className="search-box__icon" aria-hidden="true">⌕</span>
         <input
+          ref={inputRef}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={placeholder}
           aria-label={placeholder}
           autoComplete="off"
         />
-        <kbd>⌘ K</kbd>
+        <kbd>Ctrl K</kbd>
       </form>
 
       {normalized.length >= 2 ? (
