@@ -284,6 +284,12 @@ def build_execution_half_reliability(
             values=metric,
         ).dropna()
 
+        can_correlate = (
+            len(pivot) >= 2
+            and pivot["early"].nunique(dropna=True) >= 2
+            and pivot["late"].nunique(dropna=True) >= 2
+        )
+
         reliability_rows.append(
             {
                 "metric": metric,
@@ -295,7 +301,7 @@ def build_execution_half_reliability(
                             method="pearson",
                         )
                     )
-                    if len(pivot) >= 2
+                    if can_correlate
                     else np.nan
                 ),
                 "spearman_rho": (
@@ -305,7 +311,7 @@ def build_execution_half_reliability(
                             method="spearman",
                         )
                     )
-                    if len(pivot) >= 2
+                    if can_correlate
                     else np.nan
                 ),
                 "early_mean": (

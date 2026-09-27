@@ -272,6 +272,13 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Experiment result | Player execution value per 100 swings had only **0.248/0.255** early/late Pearson/Spearman reliability across **313 hitters**. Positive-execution rate was more stable at **0.464/0.463**, while expected swing opportunity value itself was **0.555/0.538** reliable. | Hitters receive repeatably different swing opportunities, but the all-in-one realized-value residual is not stable enough to retain as a standalone execution axis. |
 | 2026-09-27 | Experiment result | Selection and execution V1 were distinct cross-sectionally (Pearson **-0.141**, Spearman **-0.119** across **384 players**). | Distinctness is useful, but low execution reliability blocks a two-axis public profile from this formulation. |
 | 2026-09-27 | Methodology decision | NorthStar will preserve swing execution V1 as an informative mixed/negative result and decompose execution further. | V2 separates **contact execution** (contact made vs expected on an observed swing) from **damage execution** (contact quality above expected conditional on a batted ball) instead of tuning the noisy all-in-one run-value residual. |
+| 2026-09-27 | Success | Selection/execution V1 and its preserved external-season results were merged into `main` through PR #16. | The project keeps the negative reliability result visible and advances to a cleaner execution decomposition instead of tuning toward a preferred answer. |
+| 2026-09-27 | Design decision | Contact/damage execution V2 uses separate 2024-trained models transported to 2025. | Contact is calibrated probability residual on observed swings; damage is Statcast xwOBA-on-contact residual on balls in play. Neither model uses batter identity or post-outcome variables as features. |
+| 2026-09-27 | Experiment result | Contact execution V2 transported strongly from 2024 to 2025. The calibrated contact model reached ROC AUC **0.774**, log loss **0.4390**, and Brier **0.1388** versus the empirical baseline at **0.733 / 0.4974 / 0.1523**. | The incoming-pitch/context model has useful discrimination and calibration for whether a swing produces contact. |
+| 2026-09-27 | Experiment result | Player **contact above expected per 100 swings** showed **0.820/0.803** early/late Pearson/Spearman reliability across **313 hitters**, exceeding raw contact-rate reliability (**0.803/0.800**) while expected-contact opportunity itself remained stable (**0.770/0.737**). | Contact execution is a strong candidate player axis and materially outperforms the all-in-one execution V1 reliability. |
+| 2026-09-27 | Experiment result | Damage execution V2 also improved substantially over execution V1. External XGBoost contact-quality prediction reached R² **0.0312**, Pearson **0.177**, and Spearman **0.144**; player **damage xwOBA points above expected** showed **0.677/0.645** split-half reliability across **319 hitters**. | Pitch-level contact quality remains difficult to predict, but the player residual aggregates into a repeatable hitter-level signal. |
+| 2026-09-27 | Experiment result | The three hitter dimensions are not redundant: selection vs contact Pearson/Spearman **-0.312/-0.302**, selection vs damage **0.067/0.062**, and contact vs damage **-0.461/-0.462**. | Selection, bat-to-ball execution, and damage execution appear to capture meaningfully different aspects of hitter behavior, but construct validation is required before formalizing the profile. |
+| 2026-09-27 | Error | The first contact-model cross-fit failed in scikit-learn's ColumnTransformer because nullable pandas `Float64` columns (for example `release_speed`) still contained `pd.NA`. | Contact/damage chunk loading now passes every pitch frame through the existing `prepare_pitch_decision_model_frame` normalization step before modeling, converting numeric features to ordinary `float32`, categorical features to strings, and dropping incomplete model rows consistently with the validated pitch-decision pipeline. |
 
 ### Logging rule going forward
 
@@ -1087,6 +1094,90 @@ The prediction Parquet remains local.
 Execution V1 is still observational. In particular, the pitch itself is conditioned on because the question is
 how well a hitter converted the swing that occurred; the model does not claim that the same swing outcome would
 have occurred under a different action or pitch sequence.
+
+## Train contact / damage execution V2
+
+Swing-execution V1 was too noisy at the player level, so NorthStar decomposes execution into two narrower
+questions instead of trying to tune the same run-value residual.
+
+Run:
+
+```bash
+python scripts/train_contact_damage_execution.py
+```
+
+The experiment again trains on 2024 and evaluates the complete 2025 season without refitting on 2025.
+
+### Contact execution
+
+Among observed swings:
+
+```text
+contact execution residual
+= I(contact)
+- calibrated P(contact | swing, pitch/context)
+```
+
+The 2024 contact model is cross-fitted by game to fit an isotonic calibrator, then refit on all 2024 swings and
+transported to 2025. Player output is expressed as **contact above expected per 100 swings**.
+
+### Damage execution
+
+Among balls put into play with a valid Statcast `estimated_woba_using_speedangle` target:
+
+```text
+damage execution residual
+= observed xwOBA contact quality
+- expected xwOBA contact quality from pitch/context
+```
+
+The player output is reported in **xwOBA points above expected**:
+
+```text
+1000 * mean(damage residual)
+```
+
+A value of +20 therefore means roughly +.020 xwOBA contact quality above the 2024-trained league expectation
+for the batted-ball opportunities the hitter produced.
+
+Neither model uses batter identity. The contact model never uses the realized pitch description as a feature,
+and the damage model never uses exit velocity, launch angle, batted-ball type, or the xwOBA target as features.
+
+The workflow separately reports:
+
+- empirical count/zone/pitch-type baseline versus XGBoost
+- external 2025 contact probability metrics
+- external 2025 damage regression metrics
+- player contact split-half reliability
+- player damage split-half reliability
+- pairwise relationships among selection, contact execution, and damage execution
+
+Outputs:
+
+```text
+reports/tables/contact_execution_model_metrics_2024_2025.csv
+reports/tables/damage_execution_model_metrics_2024_2025.csv
+reports/tables/player_contact_execution_2025.csv
+reports/tables/player_damage_execution_2025.csv
+reports/tables/player_contact_execution_half_splits_2025.csv
+reports/tables/player_damage_execution_half_splits_2025.csv
+reports/tables/player_contact_execution_reliability_2025.csv
+reports/tables/player_damage_execution_reliability_2025.csv
+reports/tables/selection_contact_damage_profile_2025.csv
+reports/figures/player_contact_execution_reliability_2025.png
+reports/figures/player_damage_execution_reliability_2025.png
+reports/figures/selection_contact_damage_profile_2025.png
+```
+
+Local prediction artifacts remain Git-ignored:
+
+```text
+data/processed/contact_execution_test_predictions_2024_2025.parquet
+data/processed/damage_execution_test_predictions_2024_2025.parquet
+```
+
+The two components are not combined into a score. Each must first demonstrate meaningful external-season
+prediction quality and player-level repeatability on its own.
 
 ## Project layout
 

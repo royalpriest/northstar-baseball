@@ -170,28 +170,42 @@
 - [x] Preserve selection/execution V1 as an informative mixed/negative result
 
 ## M16 — Contact / damage execution V2
-- [ ] Define contact execution among observed swings
-- [ ] Define damage execution among balls in play
-- [ ] Train 2024 contact and damage expectation models
-- [ ] Evaluate both models on the full 2025 external season
-- [ ] Measure player split-half reliability independently for contact and damage
-- [ ] Compare the two components with selection and established contact-quality metrics
-- [ ] Retain only components that show meaningful reliability and incremental value
+- [x] Define contact execution among observed swings
+- [x] Define damage execution among balls in play
+- [x] Add game-grouped OOF contact calibration
+- [x] Add 2024 -> 2025 external contact expectation model
+- [x] Add 2024 -> 2025 external damage expectation model
+- [x] Add empirical count/zone/pitch-type baselines
+- [x] Add player contact and damage summaries
+- [x] Add independent early/late reliability tests
+- [x] Add selection / contact / damage profile without combining scores
+- [x] Run V2 and preserve results
+- [x] Confirm contact residual reliability around 0.82 Pearson
+- [x] Confirm damage residual reliability around 0.68 Pearson
+- [x] Advance both components to construct validation without combining them
 
-## M17 — Canada layer
+## M17 — Contact / damage construct validation
+- [ ] Build conventional contact-skill constructs by hitter
+- [ ] Build conventional quality-of-contact constructs by hitter
+- [ ] Measure full-season construct reconstruction of contact and damage residuals
+- [ ] Measure early/late incremental residual reliability after construct removal
+- [ ] Compare incremental residuals with offensive outcomes
+- [ ] Retain only components that remain repeatable beyond simpler metrics
+
+## M18 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M18 — Product
+## M19 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M19 — Production engineering
+## M20 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
