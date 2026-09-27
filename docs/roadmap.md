@@ -9,11 +9,11 @@
 - [x] Unit tests for state reconstruction and RE24
 
 ## M1 — 2025 baseline dataset
-- [ ] Download full 2025 regular season
-- [ ] Data-quality report
-- [ ] Validate 24 base/out states
-- [ ] Compare RE24 values with established public references
-- [ ] Produce league RE24 visualization
+- [x] Download full 2025 regular season
+- [x] Data-quality and state-validation workflow
+- [x] Validate all 24 base/out states
+- [x] Validate player RE24 against established Baseball Savant offensive measures
+- [x] Produce league RE24 visualization
 
 ## M2 — First ML model
 - [x] Time-based train/validation/test split implemented
@@ -21,7 +21,7 @@
 - [x] Calibration curve output implemented
 - [x] Brier score / log loss / ROC AUC reporting implemented
 - [x] Initial leakage-safe feature audit implemented
-- [ ] Run the full 2025 model and preserve holdout results
+- [x] Run the full 2025 model and preserve holdout results
 
 ## M3 — Context scoring model
 - [x] Leakage-safe prior-date batter features implemented
@@ -213,16 +213,21 @@
 - [x] Add optional per-player profile-card generation
 - [x] Preserve sample sizes and three-axis completeness flags
 - [x] Document interpretation and limitations for every displayed axis
-- [ ] Run profile builder and preserve canonical table
-- [ ] Review profile-card readability with representative hitter types
-- [ ] Add additional profile visualizations only where they improve interpretation
-- [ ] Preserve research provenance from the validation phases
+- [x] Run profile builder and preserve canonical table
+- [x] Review profile-card readability with representative Aaron Judge / Luis Arráez profiles
+- [x] Preserve representative profile visualizations
+- [x] Preserve research provenance from the validation phases
 
 ## M20 — Canada layer
-- [ ] Canadian-born player identity mapping
-- [ ] Toronto Blue Jays view
-- [ ] Canadian player leaderboard
-- [ ] Player comparison report
+- [x] Add MLBAM identity lookup and birthplace normalization
+- [x] Define automated Canadian-born mapping without inferring citizenship
+- [x] Derive 2025 player-team exposure from plate appearances
+- [x] Add Toronto Blue Jays season view with explicit full-season metric scope
+- [x] Add Canadian-born leaderboard with named sorting metric
+- [x] Add 2-4 player comparison report without an overall score
+- [ ] Run the Canada layer and preserve derived outputs
+- [ ] Review identity coverage / unresolved MLBAM IDs
+- [ ] Review Blue Jays and Canadian-born outputs for historical scope
 
 ## M21 — Product
 - [ ] FastAPI service
