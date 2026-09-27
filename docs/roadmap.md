@@ -121,20 +121,31 @@
 - [x] Confirm stable external signal across weight caps 3, 5, 10, and 20
 - [x] Advance to player-metric prototyping while retaining observational caveats
 
-## M12 — Canada layer
+## M12 — Player decision-value prototype
+- [x] Define opportunity-conditioned expected action value
+- [x] Add chosen-action decision value and missed-value accounting
+- [x] Add value-weighted optimal-choice rate
+- [x] Add 20%-80% discretionary-opportunity view
+- [x] Add full-season player leaderboard workflow
+- [x] Add early/late 2025 split-half reliability analysis
+- [ ] Run the player prototype and preserve results
+- [ ] Decide whether reliability supports a named NorthStar metric
+- [ ] If stable, compare against established plate-discipline / offensive metrics before naming CCA
+
+## M13 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M13 — Product
+## M14 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M14 — Production engineering
+## M15 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
