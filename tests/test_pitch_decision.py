@@ -7,6 +7,7 @@ from northstar.features.pitches import (
 )
 from northstar.models.pitch_decision import (
     chronological_pitch_split,
+    prepare_pitch_decision_model_frame,
     decision_surprise,
     fit_count_zone_swing_baseline,
     predict_count_zone_swing_baseline,
@@ -102,3 +103,16 @@ def test_decision_surprise_is_behavioral_residual():
         pd.Series([0.7, 0.2]),
     )
     assert surprise.tolist() == pytest.approx([0.3, -0.2])
+
+
+
+def test_model_frame_drops_incomplete_pitch_features():
+    raw = _sample_raw_pitches()
+    raw.loc[0, "plate_x"] = None
+
+    decision = build_pitch_decision_frame(raw)
+    model_frame = prepare_pitch_decision_model_frame(decision)
+
+    assert len(model_frame) == 2
+    assert model_frame["release_speed"].dtype.name == "float32"
+    assert model_frame["pitch_type"].dtype == object
