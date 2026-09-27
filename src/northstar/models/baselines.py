@@ -335,7 +335,8 @@ def make_pitch_logistic_model(
             (
                 "model",
                 LogisticRegression(
-                    max_iter=1200,
+                    max_iter=2500,
+                    tol=1e-3,
                     solver="saga",
                     random_state=42,
                 ),
