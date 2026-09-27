@@ -602,6 +602,32 @@ Default eligibility requires at least 500 total decisions and 300 discretionary 
 This is an empirical-Bayes-style approximation for ranking stabilization. It does not remove confounding from
 the underlying observational action-value model.
 
+## Phase 2m: incremental player-signal audit
+
+Construct validation indicates that raw NorthStar decision value is largely reconstructable from simple
+plate-discipline summaries. The next question is therefore not whether the raw metric is reliable, but whether
+its **residual beyond ordinary plate discipline** is reliable.
+
+Three construct models are tested:
+- chase rate only
+- overall swing rate + chase rate + two-strike chase rate
+- the complete plate-discipline construct set
+
+For full-season diagnostics, player-level Ridge models are cross-fitted and the out-of-fold residual is:
+
+`Residual_i = NorthStar DV100_i - Predicted DV100_i(constructs)`
+
+For temporal reliability, the season is split at July 1. Early-half residuals are produced out-of-fold. A model
+fit on all early-half players is then transported to late-half plate-discipline summaries, generating late
+residuals without learning the late relationship.
+
+The key diagnostic is the early/late Pearson and Spearman correlation of these residuals. This is stricter than
+correlating raw decision value because it asks whether a player-specific component remains after accounting for
+the simpler behaviors that already explain most of NorthStar's cross-sectional variation.
+
+Residuals are also compared with RE24, wOBA, and xwOBA. These outcome correlations are descriptive and do not
+convert the observational decision-value model into a causal statistic.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
