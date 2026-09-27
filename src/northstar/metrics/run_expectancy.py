@@ -52,7 +52,13 @@ def build_run_expectancy_table(
 
 
 def add_re24(plate_appearances: pd.DataFrame, expectancy: pd.DataFrame) -> pd.DataFrame:
-    """Attach empirical Run Expectancy Added (RE24) to each plate appearance."""
+    """Attach traditional and terminal-event RE24 values.
+
+    re24 preserves the whole-PA calculation from first-pitch state to the
+    next PA state. When terminal-event fields are present, terminal_event_re24
+    starts from the state immediately before the final PA-ending pitch so state
+    changes on earlier pitches are not credited to the batter's terminal event.
+    """
     mapping = expectancy.set_index("base_out_state_before")["expected_runs"].to_dict()
     out = plate_appearances.copy()
     out["re_before"] = out["base_out_state_before"].map(mapping)
@@ -61,4 +67,20 @@ def add_re24(plate_appearances: pd.DataFrame, expectancy: pd.DataFrame) -> pd.Da
     out.loc[out["outs_after"].eq(3), "re_after"] = 0.0
 
     out["re24"] = out["runs_scored_on_pa"] + out["re_after"] - out["re_before"]
+
+    terminal_required = {
+        "action_base_out_state_before",
+        "runs_scored_on_terminal_event",
+    }
+    if terminal_required.issubset(out.columns):
+        out["terminal_event_re_before"] = out[
+            "action_base_out_state_before"
+        ].map(mapping)
+        out["terminal_event_re24"] = (
+            out["runs_scored_on_terminal_event"]
+            + out["re_after"]
+            - out["terminal_event_re_before"]
+        )
+        out["within_pa_state_re24"] = out["re24"] - out["terminal_event_re24"]
+
     return out
