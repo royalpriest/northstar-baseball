@@ -32,14 +32,14 @@ DEFAULT_CONSTRUCT_TARGETS = [
 ]
 
 DEFAULT_DISCIPLINE_METRICS = [
-    "swing_rate",
-    "zone_swing_rate",
-    "chase_rate",
-    "whiff_per_swing",
-    "contact_rate",
-    "first_pitch_swing_rate",
-    "two_strike_swing_rate",
-    "two_strike_chase_rate",
+    "statcast_swing_rate",
+    "statcast_zone_swing_rate",
+    "statcast_chase_rate",
+    "statcast_whiff_per_swing",
+    "statcast_contact_rate",
+    "statcast_first_pitch_swing_rate",
+    "statcast_two_strike_swing_rate",
+    "statcast_two_strike_chase_rate",
 ]
 
 DEFAULT_OUTCOME_METRICS = [
@@ -175,12 +175,20 @@ def merge_player_construct_data(
     if "batter" not in plate_discipline.columns:
         raise ValueError("plate_discipline must contain batter")
 
+    discipline = plate_discipline.copy()
+    discipline = discipline.rename(
+        columns={
+            column: f"statcast_{column}"
+            for column in discipline.columns
+            if column != "batter"
+        }
+    )
+
     merged = player_metric.merge(
-        plate_discipline,
+        discipline,
         on="batter",
         how="left",
         validate="one_to_one",
-        suffixes=("", "_discipline"),
     )
 
     if outcome_reference is not None and not outcome_reference.empty:
