@@ -128,24 +128,37 @@
 - [x] Add 20%-80% discretionary-opportunity view
 - [x] Add full-season player leaderboard workflow
 - [x] Add early/late 2025 split-half reliability analysis
-- [ ] Run the player prototype and preserve results
-- [ ] Decide whether reliability supports a named NorthStar metric
-- [ ] If stable, compare against established plate-discipline / offensive metrics before naming CCA
+- [x] Run the player prototype and preserve results
+- [x] Confirm full-season split-half reliability around 0.70 for primary DV/100
+- [x] Confirm discretionary DV/100 reliability remains above 0.65 Pearson
+- [x] Advance to construct validation without naming CCA
 
-## M13 — Canada layer
+## M13 — Player metric construct validation
+- [x] Add independent Statcast plate-discipline summaries
+- [x] Join RE24 / wOBA / xwOBA reference outputs
+- [x] Add pairwise construct-correlation diagnostics
+- [x] Add out-of-fold construct reconstruction tests
+- [x] Add league centering
+- [x] Add game-cluster sample-aware shrinkage
+- [x] Require minimum total and discretionary opportunities
+- [ ] Run construct validation and preserve results
+- [ ] Determine whether NorthStar adds information beyond simpler discipline metrics
+- [ ] Decide whether a public metric name is justified
+
+## M14 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M14 — Product
+## M15 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M15 — Production engineering
+## M16 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
