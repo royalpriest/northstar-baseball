@@ -61,8 +61,22 @@ def download_statcast(pull: StatcastPull, overwrite: bool = False) -> list[Path]
     return paths
 
 
-def read_statcast(paths: list[Path]) -> pd.DataFrame:
+def read_statcast(
+    paths: list[Path],
+    columns: list[str] | None = None,
+) -> pd.DataFrame:
+    """Read cached Statcast chunks, optionally projecting only needed columns.
+
+    Column projection happens inside the Parquet reader, which avoids loading the
+    entire wide Statcast schema into memory when a downstream task only needs a
+    subset of fields.
+    """
     existing = [path for path in paths if path.exists()]
     if not existing:
         raise FileNotFoundError("No Statcast Parquet files were found.")
-    return pd.concat((pd.read_parquet(path) for path in existing), ignore_index=True)
+
+    frames = [
+        pd.read_parquet(path, columns=columns)
+        for path in existing
+    ]
+    return pd.concat(frames, ignore_index=True, copy=False)
