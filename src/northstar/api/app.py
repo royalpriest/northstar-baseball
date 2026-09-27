@@ -70,6 +70,18 @@ def create_app(
         allow_headers=["*"],
     )
 
+    @service.get("/")
+    def root() -> dict[str, object]:
+        return {
+            "service": "NorthStar Baseball API",
+            "api_version": API_VERSION,
+            "season": SEASON,
+            "health": "/health",
+            "docs": "/docs",
+            "openapi": "/openapi.json",
+            "api": f"/api/{API_VERSION}",
+        }
+
     @service.get("/health")
     def health() -> dict[str, object]:
         return {
