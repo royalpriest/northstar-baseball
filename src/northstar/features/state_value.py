@@ -218,6 +218,7 @@ def attach_decision_transition_values(
         )
     ]
 
+    out["next_pitch_number"] = grouped["pitch_number"].shift(-1)
     out["next_balls"] = grouped["balls"].shift(-1)
     out["next_strikes"] = grouped["strikes"].shift(-1)
     out["next_base_out_state"] = grouped[
@@ -226,6 +227,14 @@ def attach_decision_transition_values(
     out["next_bat_score"] = grouped["bat_score"].shift(-1)
 
     out["has_next_decision"] = grouped.cumcount(ascending=False).gt(0)
+    pitch_gap = pd.to_numeric(out["next_pitch_number"], errors="coerce") - pd.to_numeric(
+        out["pitch_number"], errors="coerce"
+    )
+    out["decision_pitch_gap"] = pitch_gap
+    out["clean_one_step_transition"] = (
+        ~out["has_next_decision"]
+        | pitch_gap.eq(1)
+    )
 
     next_state_values: list[float] = []
     interval_runs: list[float] = []
