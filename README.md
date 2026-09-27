@@ -181,6 +181,7 @@ or a design decision changes because of evidence.
 
 | Date | Type | Event | Outcome / fix |
 | --- | --- | --- | --- |
+| 2026-09-27 | Product milestone | Next.js Web UI V1 started on `feat/web-ui-v1`. | Added a responsive dark NorthStar interface with live API-backed landing page, hitter search, individual player profiles, Canadian-born and Toronto views, and an interactive 2-4 player comparison workbench. Visual design keeps contextual diagnostics distinct from established metrics and avoids an overall score. |
 | 2026-09-27 | Parity fix | PostgreSQL smoke tests confirmed metadata, player search, Toronto team filtering, and Canadian RE24 leaderboard parity, but the SQL-backed `/api/v1/compare` response exposed the entire stored profile JSON instead of the smaller comparison-field contract used by the CSV backend. | SQL comparison responses now filter through the shared `COMPARISON_FIELDS` contract, with a regression test preventing backend-specific extra fields. |
 | 2026-09-27 | Success | PostgreSQL Product Store V1 passed its first real local integration run. Docker Compose started `postgres:17-alpine` healthy on port 5432, the canonical 2025 profile loader inserted **404 profiles**, and FastAPI `/api/v1/meta` returned `storage_backend: postgresql` with **404 players**. | This confirms the application is reading NorthStar profiles from PostgreSQL rather than the CSV fallback. |
 | 2026-09-27 | Success | FastAPI V1 was merged into `main` through PR #21 after **117 tests**, Uvicorn runtime checks, live Judge search, Judge/Arráez comparison, and UTF-8 response hardening. | NorthStar now has a stable read-only application API over the validated profile dataset. |
@@ -1633,6 +1634,47 @@ The first SQL schema keeps frequently queried product fields as typed columns wh
 canonical profile in JSON. This lets the product migrate away from flat files without discarding validated
 research fields that are not yet first-class UI columns.
 
+## Run the Next.js interface
+
+The first NorthStar web client lives in `web/` and consumes the FastAPI service.
+
+It includes:
+
+- a dark, data-forward landing page with live 2025 dataset status
+- global hitter search by name or MLBAM ID
+- individual hitter profile pages
+- separate Selection / Contact / Damage context presentation
+- established wOBA, xwOBA, chase, contact, barrel, and RE24 context
+- Canadian-born player view
+- Toronto Blue Jays 2025 exposure view
+- interactive 2-4 hitter comparison
+- responsive desktop/mobile layouts
+- explicit product language preserving NorthStar's no-composite-score interpretation
+
+Run the API first, then in a second terminal:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Open:
+
+```text
+http://localhost:3000
+```
+
+Local frontend environment variables are documented in `web/.env.example`:
+
+```text
+NORTHSTAR_API_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_NORTHSTAR_API_URL=http://127.0.0.1:8000
+```
+
+The first variable is used by Next.js server-rendered pages. The public URL is used only by interactive browser
+features such as live player search and the comparison workbench.
+
 Configuration:
 
 ```text
@@ -1656,6 +1698,7 @@ northstar-baseball/
 ├── notebooks/
 ├── reports/
 ├── scripts/
+├── web/                  # Next.js product interface
 ├── src/northstar/
 │   ├── data/
 │   ├── features/
