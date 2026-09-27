@@ -78,6 +78,71 @@ Models compared:
 
 The same August validation / September test design is retained so V2 can be compared directly with V1.
 
+## Phase 2c: attribution audit and expected terminal-event RE24
+
+The scoring-probability V2 experiment showed that base/out state overwhelmingly drives the target
+`P(at least one run scores before the half-inning ends)`. Richer player context improved ROC AUC only
+slightly and did not improve holdout log loss or Brier score over the empirical 24-state baseline.
+
+NorthStar therefore changes the next target to the run value of the current PA-ending event.
+
+### Attribution refinement
+
+Traditional whole-PA RE24 is still retained as a benchmark:
+
+`RE24 = runs during PA + RE(next PA state) - RE(first-pitch state)`
+
+A second quantity begins immediately before the terminal PA-ending pitch:
+
+`terminal-event RE24 = runs on terminal event + RE(next PA state) - RE(final-pitch pre-state)`
+
+Their difference is:
+
+`within-PA state RE24 = whole-PA RE24 - terminal-event RE24`
+
+This difference measures run-expectancy movement that happened before the terminal pitch. It is useful for
+auditing steals, wild pitches, balks, caught stealing, and other within-PA state changes that should not be
+automatically credited to the batter's terminal event.
+
+Terminal-event RE24 is a stricter attribution target, not a claim of perfect causal batter value. The terminal
+play itself can still include baserunning, fielding, and defensive effects.
+
+### Expected run-value model
+
+Target:
+
+`terminal_event_re24`
+
+Pre-PA features:
+- starting base state and outs
+- inning and top/bottom
+- score differential
+- home/away indicator and home-team park proxy
+- batter/pitcher handedness
+- batter prior-date terminal-event RE24 rate
+- pitcher prior-date terminal-event RE24 allowed rate
+- positive-value rates and prior-opportunity counts
+
+Models:
+- training-only base/out-state mean
+- Ridge regression
+- XGBoost regression
+
+Evaluation:
+- MAE
+- RMSE
+- R²
+- Pearson correlation
+- Spearman rank correlation
+- binned predicted-vs-observed holdout plot
+
+The first model fit excludes PAs with non-zero `within_pa_state_re24` by default. Those observations are still
+preserved in the attribution audit, but their terminal event begins from a state that was not known at the
+start of the PA. A sensitivity run may include them explicitly.
+
+The same chronological August validation / September holdout is retained. Player-level residual analysis is
+performed only after the continuous target model is evaluated out-of-time.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.

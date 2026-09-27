@@ -193,6 +193,17 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Experiment result | Logistic V1 produced test ROC AUC **0.709**, log loss **0.5082**, and Brier **0.1667**. The 24-state baseline produced ROC AUC **0.707**, log loss **0.5071**, and Brier **0.1663**. | The ML model slightly improved ranking discrimination but did **not** beat the simpler baseline on probability quality. This establishes that base/out state is already a strong benchmark and motivates richer pre-PA batter/pitcher/context features for V2. |
 | 2026-09-27 | Success | First scoring-probability ML work was merged into `main` through PR #4. | The leakage-safe V1 model and its holdout evaluation became the official baseline for richer models. |
 | 2026-09-27 | Design decision | Context V2 was designed around only information available before the PA: handedness, score state, home/park context, and prior-date batter/pitcher RE24 history. | Same-day player outcomes are excluded from rolling history to avoid ambiguous doubleheader ordering and future leakage. |
+| 2026-09-27 | Experiment result | Context V2 completed on the September holdout. Logistic Context V2 reached ROC AUC **0.711**, log loss **0.5076**, and Brier **0.1665** versus the 24-state baseline at **0.707 / 0.5071 / 0.1663**. XGBoost Context V2 reached **0.709 / 0.5089 / 0.1669**. | Context improved ranking slightly, but neither V2 model beat the simple state baseline on probability quality. XGBoost feature importance was dominated by base state and outs, so the project stopped optimizing this target and pivoted toward player-action run value. |
+| 2026-09-27 | Success | Context-model V2 and its preserved holdout results were merged into `main` through PR #5. | V2 became the documented evidence for changing the ML target rather than blindly increasing model complexity. |
+| 2026-09-27 | Design decision | Traditional whole-PA RE24 can include steals, wild pitches, balks, caught stealing, or runs that occur before the terminal PA-ending pitch. | NorthStar now retains the final-pitch pre-state and computes a separate **terminal-event RE24** so earlier within-PA state changes can be audited instead of automatically credited to the batter's terminal event. |
+| 2026-09-27 | Development error | While adding regression metrics, a code edit initially inserted literal `\\n` escapes into a Python import statement. | The malformed import was detected during repository inspection and corrected before the local model run. The error remains logged because it affected development history. |
+| 2026-09-27 | Success | Terminal-event attribution, the attribution audit, prior-date terminal-event player context, and Ridge/XGBoost expected-RE24 training pipelines were implemented on `feat/expected-re24-v1`. | The next local step is to rebuild the cached 2025 processed dataset, quantify how many PAs are affected by within-PA state movement, and only then evaluate expected run value on the September holdout. |
+| 2026-09-27 | Success | The 2025 processed dataset was rebuilt with terminal-event attribution fields while preserving **190,987 plate appearances** and the established RE24 state table. | Cached Statcast data were successfully reused; the attribution audit could now compare first-pitch and final-pitch pre-states across the full season. |
+| 2026-09-27 | Experiment result | The RE24 attribution audit found **5,917 of 190,987 PAs (3.0981%)** had a non-zero within-PA state shift. Total absolute RE24 moved by **1,393.0269 runs**, with a net whole-PA-minus-terminal-event shift of **+657.7306 runs**. **334 PAs** contained runs before the terminal event, totaling **338 runs**. | The attribution problem is material rather than theoretical. Most PAs are unaffected, so the first expected-RE24 model will use the clean subset by default while preserving shifted PAs for sensitivity analysis. |
+| 2026-09-27 | Interpretation note | The largest audit groups by terminal PA result were field outs, strikeouts, walks, singles, and doubles. | These labels describe how the PA eventually ended; they do **not** identify the earlier runner event that caused the state shift. High-volume outcomes can accumulate large total attribution shifts simply because they occur often. |
+| 2026-09-27 | Experiment result | The clean-attribution expected-RE24 regression produced essentially no useful September holdout signal. State mean: MAE **0.3596**, RMSE **0.4855**, R² **0.0000**. Ridge context: **0.3601 / 0.4852 / 0.0009**. XGBoost context: **0.3643 / 0.4855 / ~0.0000**. | Directly regressing terminal-event RE24 is too noisy with the current pre-PA feature set. The project will not promote residuals from this model to CCA and will instead model discrete PA outcome probabilities before translating them into expected run value. |
+| 2026-09-27 | Interpretation note | XGBoost's top expected-RE24 features included several park indicators, handedness, and base/out terms despite near-zero holdout R². | Feature importance from a model with almost no predictive power is not treated as substantive baseball evidence. |
+| 2026-09-27 | Git workflow error | The local expected-RE24 results commit was rejected on push because the remote branch had newer implementation/documentation commits. | Rebased the local result commit onto `origin/feat/expected-re24-v1` with `git pull --rebase`, then pushed successfully without force-pushing. |
 
 ### Logging rule going forward
 
@@ -243,6 +254,89 @@ data/processed/context_model_test_predictions_2025.parquet
 
 The processed prediction file remains local. Model metrics, importance tables, and the calibration figure can
 be committed after the holdout results are reviewed.
+
+## Audit attribution and train expected RE24
+
+The scoring-probability experiments showed that runners and outs dominate the probability that somebody scores
+later in the inning. NorthStar therefore changes the next research target from *future inning scoring* to the
+run value of the current plate appearance's terminal event.
+
+Traditional whole-PA RE24 starts at the first pitch. That can accidentally include state changes that happen
+before the PA-ending pitch, such as a stolen base, wild pitch, balk, caught stealing, or a run scoring during
+the at-bat. The current pipeline now retains two separate states:
+
+- `base_out_state_before`: state at the first pitch of the PA
+- `action_base_out_state_before`: state immediately before the final PA-ending pitch
+
+From those states NorthStar calculates:
+
+```text
+traditional RE24
+terminal-event RE24
+within-PA state RE24 = traditional RE24 - terminal-event RE24
+```
+
+This does not claim perfect batter attribution; events on the terminal pitch itself can still involve
+baserunners and fielding. It is a stricter benchmark that removes state changes known to have happened before
+the terminal event.
+
+The processed plate-appearance file must be rebuilt once so it contains the new terminal-event fields. The
+cached Statcast Parquet chunks are reused:
+
+```bash
+python scripts/build_baseline.py --start 2025-03-18 --end 2025-09-28
+```
+
+Audit how much traditional RE24 changes under the stricter attribution rule:
+
+```bash
+python scripts/audit_re24_attribution.py
+```
+
+Then train the first expected-run-value models:
+
+```bash
+python scripts/train_expected_re24_model.py
+```
+
+The model asks:
+
+> Given only information known before the plate appearance, how much terminal-event RE24 should we expect?
+
+Models compared:
+
+- starting base/out-state mean
+- Ridge regression with context
+- XGBoost regression with context
+
+The context models use handedness, inning/score/park context, and prior-date batter/pitcher terminal-event RE24.
+By default, the first expected-value model excludes PAs whose base/out state changed before the terminal pitch;
+those PAs remain in the attribution audit instead of being mixed into a pre-PA prediction target whose terminal
+state was not known at the start of the PA. Use `--include-shifted-pa` only for a sensitivity run.
+As before, the season is split chronologically into pre-August training, August validation, and a September
+holdout.
+
+Outputs:
+
+```text
+reports/tables/re24_attribution_audit_2025.csv
+reports/tables/re24_attribution_by_event_2025.csv
+reports/figures/re24_attribution_difference_2025.png
+
+reports/tables/expected_re24_model_metrics_2025.csv
+reports/tables/expected_re24_ridge_coefficients_2025.csv
+reports/tables/expected_re24_xgboost_feature_importance_2025.csv
+reports/figures/expected_re24_holdout_calibration_2025.png
+data/processed/expected_re24_test_predictions_2025.parquet
+```
+
+The local prediction file also contains exploratory residuals:
+
+```text
+actual terminal-event RE24 - expected terminal-event RE24
+```
+
+Those residuals are **not yet called CCA**. They first need stability, attribution, and player-level validation.
 
 ## Project layout
 

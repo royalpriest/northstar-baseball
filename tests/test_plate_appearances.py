@@ -64,6 +64,8 @@ def test_pa_uses_first_pitch_for_start_state_and_last_pitch_for_result():
     first_pa = pa.iloc[0]
 
     assert first_pa["base_state_before"] == "100"
+    assert first_pa["action_base_state_before"] == "010"
+    assert first_pa["action_base_out_state_before"] == "0_010"
     assert first_pa["events"] == "double"
     assert first_pa["runs_scored_on_pa"] == 1
     assert first_pa["base_state_after"] == "010"
