@@ -11,6 +11,7 @@ from northstar.features.outcomes import (
 from northstar.models.pa_outcome import (
     expected_re24_from_outcome_probabilities,
     fit_class_prior,
+    normalize_probability_rows,
     fit_outcome_run_value_table,
     prepare_outcome_frame,
     repeat_class_prior,
@@ -135,3 +136,16 @@ def test_prepare_outcome_frame_filters_shifted_pa():
 
     assert clean.empty
     assert len(all_pa) == 1
+
+
+
+def test_probability_rows_are_normalized():
+    probabilities = np.zeros((2, len(OUTCOME_CLASSES)), dtype=float)
+    probabilities[0, 0] = 0.4
+    probabilities[0, 1] = 0.5999999
+    probabilities[1, 0] = 0.2
+    probabilities[1, 1] = 0.2
+
+    normalized = normalize_probability_rows(probabilities)
+
+    assert normalized.sum(axis=1).tolist() == pytest.approx([1.0, 1.0])
