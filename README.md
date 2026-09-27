@@ -214,6 +214,7 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Success | PA-outcome V1 and its preserved holdout results were merged into `main` through PR #7. | The structured outcome model remains useful for probability modeling, but its implied RE24 still was not strong enough to justify CCA residuals. |
 | 2026-09-27 | Design decision | NorthStar moved from whole-PA outcome prediction to pitch-level opportunity and batter decision modeling. | Exact pitch location, movement, velocity, count, handedness, and game state are now treated as the opportunity presented to the hitter; post-contact information remains excluded from the decision model. |
 | 2026-09-27 | Success | A first pitch-level swing/take model pipeline was implemented on `feat/pitch-decision-v1`. | It compares a count+zone swing-rate baseline with logistic regression and XGBoost, uses the cached raw Statcast pitch files directly, and preserves out-of-time decision probabilities for later decision-value work. |
+| 2026-09-27 | Runtime error | The first full-season pitch-decision run raised `numpy._core._exceptions._ArrayMemoryError` while pandas tried to copy/consolidate the full wide Statcast DataFrame (~740k pitches) during swing/take filtering. | Updated the Parquet reader to project only the pitch-decision columns before concatenation, substantially reducing memory pressure instead of requiring a larger machine. |
 
 ### Logging rule going forward
 
