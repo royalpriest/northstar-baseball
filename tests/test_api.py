@@ -43,6 +43,11 @@ def _client() -> TestClient:
 def test_health_and_meta():
     client = _client()
 
+    root = client.get("/")
+    assert root.status_code == 200
+    assert root.json()["docs"] == "/docs"
+    assert root.json()["api"] == "/api/v1"
+
     health = client.get("/health")
     assert health.status_code == 200
     assert health.json()["status"] == "ok"
