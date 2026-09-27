@@ -51,6 +51,33 @@ Later context models will add batter/pitcher quality, handedness, park, score di
 pre-PA information. No post-PA features (event result, current-PA exit velocity, post-play base state, etc.)
 may be used in a pre-PA prediction model.
 
+## Phase 2b: context model V2
+
+V2 asks whether player and matchup context adds predictive information beyond the 24-state baseline and the
+minimal logistic V1 model.
+
+Additional pre-PA fields:
+- batter handedness
+- pitcher handedness
+- batting-team score differential
+- home/away batting indicator
+- home team as a park proxy
+- batter prior RE24 per PA and positive-RE24 rate
+- pitcher prior RE24 allowed per batter faced and positive-RE24-allowed rate
+- log-transformed prior opportunity counts for both batter and pitcher
+
+Player-history features are calculated at the date level and only use dates strictly before the current game.
+This intentionally gives up same-day updates in exchange for a clear no-leakage guarantee when exact game-time
+ordering is unavailable.
+
+Models compared:
+- 24-state empirical scoring probability
+- logistic V1
+- logistic context V2
+- XGBoost context V2
+
+The same August validation / September test design is retained so V2 can be compared directly with V1.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
