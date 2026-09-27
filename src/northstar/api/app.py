@@ -136,6 +136,11 @@ def create_app(
         return {
             "season": SEASON,
             "players": profile_store.size,
+            "storage_backend": (
+                "postgresql"
+                if isinstance(profile_store, DatabaseProfileStore)
+                else "csv"
+            ),
             "northstar_axes": [
                 "selection_context_percentile",
                 "contact_context_percentile",
