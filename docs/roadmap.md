@@ -73,25 +73,36 @@
 - [x] Add separate swing/take XGBoost value models
 - [x] Add count+zone+action value baseline
 - [x] Add doubly robust policy-value diagnostics
-- [ ] Run September holdout evaluation and preserve results
-- [ ] Audit overlap and extreme propensity regions
-- [ ] Add cross-fitting / sensitivity analysis if V1 is promising
-- [ ] Validate player-level stability before naming a metric
+- [x] Run September holdout evaluation and preserve results
+- [x] Document overlapping downstream-return limitation
+- [x] Reject direct summation of V1 pitch advantages as a player metric
 
-## M8 — Canada layer
+## M8 — Telescoping pitch-state value
+- [x] Fit training-only count + base/out state values
+- [x] Build one-step decision-opportunity transition target
+- [x] Add within-PA telescoping audit
+- [x] Exclude non-terminal pitch-number gaps from counterfactual fitting
+- [x] Add propensity-weighted swing/take transition-value models
+- [x] Add one-step doubly robust action diagnostics
+- [ ] Run September holdout evaluation and preserve results
+- [ ] Audit clean-transition retention and state-table sparsity
+- [ ] Add cross-fitting if one-step results are promising
+- [ ] Build explicit sequential transition/policy evaluation before naming a metric
+
+## M9 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M9 — Product
+## M10 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M10 — Production engineering
+## M11 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
