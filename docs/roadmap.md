@@ -84,25 +84,35 @@
 - [x] Exclude non-terminal pitch-number gaps from counterfactual fitting
 - [x] Add propensity-weighted swing/take transition-value models
 - [x] Add one-step doubly robust action diagnostics
-- [ ] Run September holdout evaluation and preserve results
-- [ ] Audit clean-transition retention and state-table sparsity
-- [ ] Add cross-fitting if one-step results are promising
-- [ ] Build explicit sequential transition/policy evaluation before naming a metric
+- [x] Run September holdout evaluation and preserve results
+- [x] Verify zero telescoping error and 99.97% clean-transition retention
+- [x] Preserve stable validation/test action-estimate ordering
 
-## M9 — Canada layer
+## M9 — Pitch-state robustness
+- [x] Add tighter overlap-window sensitivity
+- [x] Add game-cluster bootstrap confidence intervals
+- [x] Add propensity calibration recheck on saved holdout
+- [x] Add count/zone subgroup stability audit
+- [x] Add early/late September batter stability audit
+- [x] Run robustness audit and preserve results
+- [x] Confirm positive advantage under 5%-95%, 10%-90%, and 20%-80% overlap
+- [x] Add game-cluster bootstrap uncertainty and player split-half stability
+- [x] Decide that cross-fitted nuisance models and weight-clipping refits are necessary before sequential policy evaluation
+
+## M10 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M10 — Product
+## M11 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M11 — Production engineering
+## M12 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion

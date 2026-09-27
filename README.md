@@ -229,6 +229,12 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Success | Pitch decision-value V1 and its preserved results were merged into `main` through PR #9. | The measurable action-value signal is retained as evidence, while the overlapping-return formulation remains documented as a methodological limitation rather than being promoted to a player metric. |
 | 2026-09-27 | Design decision | Pitch-state value V2 replaces the repeated PA-end return with a one-step decision-opportunity transition: `runs during step + V(next state) - V(current state)`. | State values are fit on pre-August training data using count + base/out state. The transition values telescope across each PA, so downstream PA value is not repeatedly assigned to every pitch. |
 | 2026-09-27 | Methodology safeguard | V2 flags gaps where the next recognized physical decision is not the immediately following pitch number. | Those gaps stay in the telescoping audit but are excluded from counterfactual swing/take model fitting, reducing attribution of intervening events to the previous batter decision. |
+| 2026-09-27 | Experiment result | Pitch-state V2 completed with **zero telescoping error** across train, validation, and test. It retained **99.97%** of clean train transitions and **88.73%** of September pitches in 5%-95% common support. On the September holdout, XGBoost transition value improved over the count+zone baseline: MAE **0.1040 vs 0.1077**, RMSE **0.2452 vs 0.2474**, R² **0.0626 vs 0.0454**, Pearson **0.250 vs 0.213**, and Spearman **0.537 vs 0.503**. | The one-step state-transition formulation preserved predictive signal while fixing the repeated downstream-return problem. |
+| 2026-09-27 | Experiment result | September one-step doubly robust estimates were **-0.01546** for always take, **-0.03389** for always swing, **-0.00623** for observed actions, and **+0.02121** for the model-selected action. Validation showed the same ordering. | The direction is stable, but the implied gain is still treated as observational and requires overlap, clustering, subgroup, and player-stability sensitivity checks before any metric is named. |
+| 2026-09-27 | Success | Pitch-state value V2 and its preserved holdout results were merged into `main` through PR #10. | The next phase is robustness auditing rather than immediately increasing model complexity. |
+| 2026-09-27 | Design decision | NorthStar added a dedicated robustness phase for pitch-state V2. | The audit tightens propensity-overlap windows, uses game-cluster bootstrap uncertainty, checks count/zone subgroup stability, rechecks propensity calibration on the saved holdout, and measures early-vs-late September batter stability. |
+| 2026-09-27 | Experiment result | Pitch-state robustness V1 preserved a positive model-action advantage under progressively tighter common support: **+0.02744** at 5%-95% (95% game-cluster bootstrap CI **0.02605 to 0.02879**), **+0.03017** at 10%-90% (**0.02864 to 0.03170**), and **+0.03464** at 20%-80% (**0.03277 to 0.03627**). | The result did not collapse when easy near-deterministic swing/take opportunities were removed; the estimate strengthened on more ambiguous opportunities. |
+| 2026-09-27 | Experiment result | Within the saved 5%-95% holdout, propensity ROC AUC was **0.828**, log loss **0.5108**, Brier **0.1696**, mean predicted swing rate **0.515**, and observed swing rate **0.518**. Early/late September player stability across **310 hitters** was moderate: modeled-action-advantage Pearson/Spearman **0.334/0.299** and optimal-choice-rate **0.374/0.305**. | League-level robustness is strong enough to justify cross-fitted nuisance modeling, but player-level reliability is not yet strong enough for a leaderboard or named metric. |
 
 ### Logging rule going forward
 
@@ -624,6 +630,53 @@ The one-step policy table is **not a full sequential policy evaluation**. It com
 distribution that actually occurred; it does not simulate how changing an early decision would alter the
 distribution of later pitch states. That requires a later transition/dynamics model or fitted policy
 evaluation.
+
+## Audit pitch-state robustness
+
+Pitch-state V2 produced a cleaner target and useful out-of-time signal, but NorthStar does not promote a player
+metric from one holdout run. The next phase stress-tests the saved September predictions without refitting the
+main model.
+
+Run:
+
+```bash
+python scripts/audit_pitch_state_robustness.py
+```
+
+The audit uses the local V2 prediction file:
+
+```text
+data/processed/pitch_state_value_test_predictions_2025.parquet
+```
+
+and performs four checks:
+
+- overlap sensitivity at 5%-95%, 10%-90%, and 20%-80% swing propensity
+- game-cluster bootstrap uncertainty for model-action advantage versus observed decisions
+- descriptive stability by count and Statcast zone
+- early-vs-late September batter stability for modeled action advantage and optimal-choice rate
+
+Propensity calibration is also rechecked on the saved 5%-95% overlap sample.
+
+Outputs:
+
+```text
+reports/tables/pitch_state_robustness_overlap_2025.csv
+reports/tables/pitch_state_robustness_propensity_2025.csv
+reports/tables/pitch_state_robustness_propensity_bins_2025.csv
+reports/tables/pitch_state_robustness_subgroups_2025.csv
+reports/tables/pitch_state_robustness_player_stability_2025.csv
+reports/tables/pitch_state_robustness_player_summary_2025.csv
+reports/figures/pitch_state_robustness_overlap_2025.png
+```
+
+The cluster bootstrap resamples entire games rather than individual pitches, so its uncertainty estimate better
+respects within-game dependence. It is still conditional on the fitted nuisance models and does not replace a
+full causal sensitivity analysis.
+
+Tighter overlap windows do **not** retrain the action-value models; they ask whether the saved holdout conclusion
+persists when analysis is restricted to increasingly ambiguous swing/take opportunities. If the estimated
+advantage changes sign or collapses under tighter overlap, NorthStar should not proceed to a player metric.
 
 ## Project layout
 
