@@ -8,7 +8,10 @@ import pandas as pd
 from sklearn.calibration import calibration_curve
 
 from northstar.data.statcast import read_statcast
-from northstar.features.pitches import build_pitch_decision_frame
+from northstar.features.pitches import (
+    PITCH_DECISION_REQUIRED_COLUMNS,
+    build_pitch_decision_frame,
+)
 from northstar.models.baselines import (
     evaluate_binary_classifier,
     evaluate_probabilities,
@@ -117,8 +120,12 @@ def main() -> None:
             f"No cached Statcast Parquet files found under {args.raw_dir}."
         )
 
-    print(f"Reading {len(raw_paths)} cached Statcast chunks...")
-    pitches = read_statcast(raw_paths)
+    projected_columns = sorted(PITCH_DECISION_REQUIRED_COLUMNS)
+    print(
+        f"Reading {len(raw_paths)} cached Statcast chunks " 
+        f"with {len(projected_columns)} projected columns..."
+    )
+    pitches = read_statcast(raw_paths, columns=projected_columns)
     decision_frame = build_pitch_decision_frame(pitches)
     frame = prepare_pitch_decision_model_frame(decision_frame)
     split = chronological_pitch_split(
