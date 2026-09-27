@@ -185,11 +185,15 @@
 - [x] Advance both components to construct validation without combining them
 
 ## M17 — Contact / damage construct validation
-- [ ] Build conventional contact-skill constructs by hitter
-- [ ] Build conventional quality-of-contact constructs by hitter
-- [ ] Measure full-season construct reconstruction of contact and damage residuals
-- [ ] Measure early/late incremental residual reliability after construct removal
-- [ ] Compare incremental residuals with offensive outcomes
+- [x] Build conventional contact-skill constructs by hitter
+- [x] Build conventional quality-of-contact constructs by hitter
+- [x] Add raw and situational contact reconstruction tests
+- [x] Add xwOBA-on-contact and batted-ball-quality reconstruction tests
+- [x] Add early-OOF to late-season residual reliability tests
+- [x] Add incremental residual association checks with RE24 / wOBA / xwOBA
+- [ ] Run construct validation and preserve results
+- [ ] Decide whether contact remains incremental beyond situational contact skill
+- [ ] Decide whether damage remains incremental beyond contact-quality metrics
 - [ ] Retain only components that remain repeatable beyond simpler metrics
 
 ## M18 — Canada layer
