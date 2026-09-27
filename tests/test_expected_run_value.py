@@ -44,6 +44,7 @@ def _sample_frame() -> pd.DataFrame:
                 "0_100",
             ],
             "terminal_event_re24": [0.2, -0.1, 0.4, 0.8, -0.2, 0.3],
+            "within_pa_state_re24": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         }
     )
 
@@ -76,3 +77,15 @@ def test_prepare_expected_re24_requires_terminal_attribution_fields():
     incomplete = _sample_frame().drop(columns=["terminal_event_re24"])
     with pytest.raises(ValueError, match="Expected-RE24 columns are missing"):
         prepare_expected_re24_frame(incomplete)
+
+
+
+def test_prepare_expected_re24_filters_shifted_pa_by_default():
+    sample = _sample_frame()
+    sample.loc[0, "within_pa_state_re24"] = 0.25
+
+    clean = prepare_expected_re24_frame(sample)
+    all_pa = prepare_expected_re24_frame(sample, clean_attribution_only=False)
+
+    assert len(clean) == len(sample) - 1
+    assert len(all_pa) == len(sample)
