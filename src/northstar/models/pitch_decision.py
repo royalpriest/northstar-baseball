@@ -57,11 +57,26 @@ def prepare_pitch_decision_model_frame(frame: pd.DataFrame) -> pd.DataFrame:
     out[PITCH_DECISION_TARGET] = pd.to_numeric(
         out[PITCH_DECISION_TARGET], errors="coerce"
     )
+    required_model_columns = (
+        PITCH_DECISION_CATEGORICAL_FEATURES
+        + PITCH_DECISION_NUMERIC_FEATURES
+        + ["game_date", PITCH_DECISION_TARGET]
+    )
+
     out = out.loc[
         out["game_date"].notna()
         & out[PITCH_DECISION_TARGET].isin([0, 1])
-    ].copy()
-    out[PITCH_DECISION_TARGET] = out[PITCH_DECISION_TARGET].astype("int64")
+    ].dropna(subset=required_model_columns).copy()
+
+    out[PITCH_DECISION_TARGET] = out[PITCH_DECISION_TARGET].astype("int8")
+
+    for column in PITCH_DECISION_CATEGORICAL_FEATURES:
+        out[column] = out[column].astype(str)
+
+    for column in PITCH_DECISION_NUMERIC_FEATURES:
+        out[column] = pd.to_numeric(out[column], errors="coerce").astype("float32")
+
+    out = out.dropna(subset=PITCH_DECISION_NUMERIC_FEATURES).copy()
     return out.reset_index(drop=True)
 
 
