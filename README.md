@@ -181,6 +181,7 @@ or a design decision changes because of evidence.
 
 | Date | Type | Event | Outcome / fix |
 | --- | --- | --- | --- |
+| 2026-09-27 | Success | FastAPI V1 passed **116/116 tests with no warning summary**, started successfully under Uvicorn, and returned HTTP **200** from `/health` with service `northstar-baseball-api`, API version `v1`, season `2025`. | Automated and runtime smoke tests now agree. Added a small `/` discovery endpoint so opening the API base URL returns service/docs links instead of the previously observed harmless 404. |
 | 2026-09-27 | Warning | FastAPI tests passed **116/116**, but Starlette emitted a deprecation warning because `starlette.testclient` now prefers the successor package `httpx2`. An initial attempted fix incorrectly required nonexistent `httpx>=2` releases. | Corrected the dev dependency to `httpx2>=2,<3`; reinstall the dev environment and rerun pytest to confirm a warning-free suite. |
 | 2026-09-27 | Success | Canada Layer V1 was merged into `main` through PR #20 after full identity, historical team-scope, and comparison review. | The project now has validated Canadian-born, Toronto Blue Jays, and multi-player comparison datasets available as product inputs. |
 | 2026-09-27 | Product milestone | FastAPI V1 added on `feat/product-api-v1`. | Read-only endpoints now expose player search/detail, Canadian-born and team scopes, named-metric leaderboards, metadata, and 2–4 player comparisons while preserving NorthStar's no-composite-score interpretation. |
