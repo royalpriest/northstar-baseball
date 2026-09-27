@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { browserApiBase } from "@/lib/api";
+import { browserApiBase } from "@/lib/browser-config";
 import { decimal, percentile, signed } from "@/lib/format";
 import type { CompareResponse, PlayerProfile } from "@/lib/types";
 
