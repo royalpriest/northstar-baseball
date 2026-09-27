@@ -20,6 +20,14 @@ CORE_COLUMNS = {
     "events",
 }
 
+OPTIONAL_CONTEXT_COLUMNS = {
+    "stand",
+    "p_throws",
+    "home_team",
+    "away_team",
+    "fld_score",
+}
+
 
 def _validate_columns(frame: pd.DataFrame) -> None:
     missing = CORE_COLUMNS.difference(frame.columns)
@@ -37,6 +45,14 @@ def _base_state(row: pd.Series) -> str:
     )
 
 
+def _add_optional_context(first: pd.DataFrame, start_cols: list[str]) -> list[str]:
+    """Include context fields when the Statcast payload provides them."""
+    for column in sorted(OPTIONAL_CONTEXT_COLUMNS):
+        if column in first.columns:
+            start_cols.append(column)
+    return start_cols
+
+
 def build_plate_appearances(pitches: pd.DataFrame) -> pd.DataFrame:
     """Collapse pitch-level Statcast rows into plate appearances.
 
@@ -44,6 +60,9 @@ def build_plate_appearances(pitches: pd.DataFrame) -> pd.DataFrame:
     the PA result and post-play score. Using the final pitch's pre-pitch state as
     the PA start would be wrong when steals, wild pitches, or other movement occur
     during the plate appearance.
+
+    Optional pre-PA context fields (handedness, teams, fielding score) are retained
+    when present so later models can use information that was known before the PA.
     """
     _validate_columns(pitches)
     if pitches.empty:
@@ -73,10 +92,15 @@ def build_plate_appearances(pitches: pd.DataFrame) -> pd.DataFrame:
         "batter",
         "pitcher",
     ]
+    start_cols = _add_optional_context(first, start_cols)
+
     end_cols = ["game_pk", "at_bat_number", "post_bat_score", "events"]
 
     pa = first[start_cols].merge(
-        last[end_cols], on=["game_pk", "at_bat_number"], how="inner", validate="one_to_one"
+        last[end_cols],
+        on=["game_pk", "at_bat_number"],
+        how="inner",
+        validate="one_to_one",
     )
 
     pa = pa.rename(
@@ -84,17 +108,41 @@ def build_plate_appearances(pitches: pd.DataFrame) -> pd.DataFrame:
             "outs_when_up": "outs_before",
             "bat_score": "bat_score_before",
             "post_bat_score": "bat_score_after",
+            "stand": "batter_hand",
+            "p_throws": "pitcher_hand",
+            "fld_score": "field_score_before",
         }
     )
 
-    for column in ["outs_before", "bat_score_before", "bat_score_after", "inning"]:
-        pa[column] = pd.to_numeric(pa[column], errors="coerce")
+    for column in [
+        "outs_before",
+        "bat_score_before",
+        "bat_score_after",
+        "field_score_before",
+        "inning",
+    ]:
+        if column in pa.columns:
+            pa[column] = pd.to_numeric(pa[column], errors="coerce")
 
     pa["base_state_before"] = pa.apply(_base_state, axis=1)
     pa["base_out_state_before"] = (
         pa["outs_before"].astype("Int64").astype(str) + "_" + pa["base_state_before"]
     )
-    pa["runs_scored_on_pa"] = (pa["bat_score_after"] - pa["bat_score_before"]).clip(lower=0)
+    pa["runs_scored_on_pa"] = (
+        pa["bat_score_after"] - pa["bat_score_before"]
+    ).clip(lower=0)
+
+    if "field_score_before" in pa.columns:
+        pa["score_diff_before"] = (
+            pa["bat_score_before"] - pa["field_score_before"]
+        )
+
+    if {"home_team", "away_team"}.issubset(pa.columns):
+        is_top = pa["inning_topbot"].astype(str).str.lower().eq("top")
+        pa["batting_team"] = pa["home_team"].where(~is_top, pa["away_team"])
+        pa["fielding_team"] = pa["away_team"].where(~is_top, pa["home_team"])
+        pa["is_home_batting"] = (~is_top).astype(int)
+        pa["park_team"] = pa["home_team"]
 
     half_cols = ["game_pk", "inning", "inning_topbot"]
     inning_final = (
@@ -103,7 +151,9 @@ def build_plate_appearances(pitches: pd.DataFrame) -> pd.DataFrame:
         .rename("inning_final_bat_score")
     )
     pa["inning_final_bat_score"] = inning_final
-    pa["runs_to_end"] = (pa["inning_final_bat_score"] - pa["bat_score_before"]).clip(lower=0)
+    pa["runs_to_end"] = (
+        pa["inning_final_bat_score"] - pa["bat_score_before"]
+    ).clip(lower=0)
 
     pa = pa.sort_values(half_cols + ["at_bat_number"]).reset_index(drop=True)
     grouped = pa.groupby(half_cols, sort=False, dropna=False)
@@ -113,9 +163,13 @@ def build_plate_appearances(pitches: pd.DataFrame) -> pd.DataFrame:
     is_last_pa = grouped.cumcount(ascending=False).eq(0)
     pa.loc[is_last_pa, "outs_after"] = 3
     pa.loc[is_last_pa, "base_state_after"] = "000"
-    pa["outs_after"] = pd.to_numeric(pa["outs_after"], errors="coerce").astype("Int64")
+    pa["outs_after"] = pd.to_numeric(
+        pa["outs_after"], errors="coerce"
+    ).astype("Int64")
     pa["base_out_state_after"] = (
-        pa["outs_after"].astype(str) + "_" + pa["base_state_after"].fillna("000")
+        pa["outs_after"].astype(str)
+        + "_"
+        + pa["base_state_after"].fillna("000")
     )
 
     return pa
