@@ -1,0 +1,112 @@
+# NorthStar Baseball
+
+**NorthStar Baseball** is a context-aware baseball analytics project that studies how individual plate
+appearances change a team's expected scoring opportunities, with a dedicated focus on the Toronto Blue Jays
+and Canadian MLB players.
+
+The long-term goal is to develop an explainable machine-learning metric for **Chance Creation Added (CCA)**.
+Before creating a new metric, the project first reproduces established run-expectancy baselines and validates
+the data pipeline.
+
+## Phase 1 question
+
+> From a given base/out state, how many runs should a team expect to score before the half-inning ends?
+
+The first pipeline converts pitch-level Statcast data into plate appearances, reconstructs pre/post states,
+builds an empirical RE24 table, and calculates Run Expectancy Added for each plate appearance.
+
+## Why this structure?
+
+Statcast data are pitch-level. A plate appearance may contain runner movement before the final pitch, so using
+the final pitch's base state as the PA's starting state can introduce errors. NorthStar explicitly separates
+first-pitch state from final-pitch outcome.
+
+## Stack
+
+- Python 3.12+
+- pandas + Polars
+- DuckDB + Parquet
+- pybaseball / Baseball Savant
+- scikit-learn
+- XGBoost
+- SHAP
+- matplotlib
+- pytest + Ruff
+
+Later phases add FastAPI, PostgreSQL, Next.js/TypeScript, and Datadog.
+
+## Setup
+
+```bash
+python -m venv .venv
+
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+
+python -m pip install --upgrade pip
+pip install -e ".[dev]"
+```
+
+## Run tests
+
+```bash
+pytest
+```
+
+## Build the 2025 baseline
+
+The 2025 MLB regular season opened with the Tokyo Series on March 18 and concluded September 28, so the
+starter command includes the full regular-season date range.
+
+```bash
+python scripts/build_baseline.py --start 2025-03-18 --end 2025-09-28
+```
+
+The download is deliberately chunked into seven-day Parquet files so interrupted runs can resume without
+starting the season over.
+
+Outputs:
+
+```text
+data/processed/plate_appearances_2025.parquet
+data/processed/run_expectancy_2025.csv
+data/processed/scoring_probability_2025.csv
+```
+
+Raw and processed data are intentionally Git-ignored. The future public repository should distribute code,
+methodology, small reproducible samples, and derived results where licensing/terms permit rather than blindly
+committing the entire raw dataset.
+
+## Project layout
+
+```text
+northstar-baseball/
+├── data/
+│   ├── raw/
+│   ├── interim/
+│   └── processed/
+├── docs/
+├── notebooks/
+├── reports/
+├── scripts/
+├── src/northstar/
+│   ├── data/
+│   ├── features/
+│   ├── metrics/
+│   └── models/
+└── tests/
+```
+
+## Metric development principle
+
+CCA is **not defined yet**. The project will first establish RE24 and a calibrated scoring-probability model.
+Only then will a new player metric be formalized, documented, and tested out-of-time. This avoids inventing a
+name first and reverse-engineering a statistic to fit it.
+
+## Data sources
+
+- MLB Baseball Savant / Statcast
+- pybaseball as a Python retrieval interface
+- Retrosheet is planned for historical validation and complementary play-by-play coverage
+
+See `docs/methodology.md` and `docs/roadmap.md`.
