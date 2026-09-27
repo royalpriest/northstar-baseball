@@ -170,12 +170,17 @@
 - [x] Preserve selection/execution V1 as an informative mixed/negative result
 
 ## M16 — Contact / damage execution V2
-- [ ] Define contact execution among observed swings
-- [ ] Define damage execution among balls in play
-- [ ] Train 2024 contact and damage expectation models
-- [ ] Evaluate both models on the full 2025 external season
-- [ ] Measure player split-half reliability independently for contact and damage
-- [ ] Compare the two components with selection and established contact-quality metrics
+- [x] Define contact execution among observed swings
+- [x] Define damage execution among balls in play
+- [x] Add game-grouped OOF contact calibration
+- [x] Add 2024 -> 2025 external contact expectation model
+- [x] Add 2024 -> 2025 external damage expectation model
+- [x] Add empirical count/zone/pitch-type baselines
+- [x] Add player contact and damage summaries
+- [x] Add independent early/late reliability tests
+- [x] Add selection / contact / damage profile without combining scores
+- [ ] Run V2 and preserve results
+- [ ] Compare reliable components with established contact-quality metrics
 - [ ] Retain only components that show meaningful reliability and incremental value
 
 ## M17 — Canada layer
