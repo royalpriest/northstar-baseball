@@ -4,7 +4,6 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-from sklearn.compose import TransformedTargetRegressor
 from sklearn.linear_model import Ridge
 from sklearn.metrics import r2_score
 from sklearn.model_selection import KFold, cross_val_predict
@@ -56,10 +55,6 @@ class ShrinkageSummary:
     between_player_variance: float
     eligible_players: int
 
-
-def _safe_rate(numerator: pd.Series, denominator: pd.Series) -> pd.Series:
-    result = numerator.astype("float64") / denominator.replace(0, np.nan)
-    return result.astype("float64")
 
 
 def build_plate_discipline_summary(
