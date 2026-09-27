@@ -5,8 +5,8 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from pybaseball import batting_stats, playerid_reverse_lookup
 
+from northstar.data.fangraphs import fetch_fangraphs_batting
 from northstar.validation.offense import (
     DEFAULT_REFERENCE_METRICS,
     build_correlation_summary,
@@ -87,28 +87,15 @@ def main() -> None:
         )
 
     leaderboard = pd.read_csv(args.input)
-    batter_ids = (
-        pd.to_numeric(leaderboard["batter"], errors="coerce")
-        .dropna()
-        .astype(int)
-        .unique()
-        .tolist()
-    )
 
-    print(f"Looking up cross-source IDs for {len(batter_ids)} hitters...")
-    lookup = playerid_reverse_lookup(batter_ids, key_type="mlbam")
-
-    print(f"Downloading {args.season} FanGraphs batting stats...")
-    reference = batting_stats(
-        args.season,
-        args.season,
-        qual=args.min_pa,
-        ind=1,
+    print(f"Downloading {args.season} FanGraphs batting stats from the modern API...")
+    reference = fetch_fangraphs_batting(
+        season=args.season,
+        min_pa=args.min_pa,
     )
 
     merged = merge_with_reference_stats(
         leaderboard=leaderboard,
-        player_lookup=lookup,
         reference_stats=reference,
     )
 
