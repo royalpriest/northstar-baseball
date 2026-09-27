@@ -235,6 +235,8 @@ or a design decision changes because of evidence.
 | 2026-09-27 | Design decision | NorthStar added a dedicated robustness phase for pitch-state V2. | The audit tightens propensity-overlap windows, uses game-cluster bootstrap uncertainty, checks count/zone subgroup stability, rechecks propensity calibration on the saved holdout, and measures early-vs-late September batter stability. |
 | 2026-09-27 | Experiment result | Pitch-state robustness V1 preserved a positive model-action advantage under progressively tighter common support: **+0.02744** at 5%-95% (95% game-cluster bootstrap CI **0.02605 to 0.02879**), **+0.03017** at 10%-90% (**0.02864 to 0.03170**), and **+0.03464** at 20%-80% (**0.03277 to 0.03627**). | The result did not collapse when easy near-deterministic swing/take opportunities were removed; the estimate strengthened on more ambiguous opportunities. |
 | 2026-09-27 | Experiment result | Within the saved 5%-95% holdout, propensity ROC AUC was **0.828**, log loss **0.5108**, Brier **0.1696**, mean predicted swing rate **0.515**, and observed swing rate **0.518**. Early/late September player stability across **310 hitters** was moderate: modeled-action-advantage Pearson/Spearman **0.334/0.299** and optimal-choice-rate **0.374/0.305**. | League-level robustness is strong enough to justify cross-fitted nuisance modeling, but player-level reliability is not yet strong enough for a leaderboard or named metric. |
+| 2026-09-27 | Success | Pitch-state robustness V1 and its preserved sensitivity results were merged into `main` through PR #11. | The positive one-step advantage survived tighter overlap and game-cluster uncertainty, so the next phase attacks nuisance-model estimation rather than adding model complexity. |
+| 2026-09-27 | Design decision | NorthStar started cross-fitted nuisance modeling for pitch-state value. | Swing propensity is now generated out-of-fold with game-grouped folds, calibrated from OOF predictions, and used to fit action-value models under stabilized weight caps of 3, 5, 10, and 20. Effective sample size and clipping rates are reported before interpreting policy sensitivity. |
 
 ### Logging rule going forward
 
@@ -677,6 +679,52 @@ full causal sensitivity analysis.
 Tighter overlap windows do **not** retrain the action-value models; they ask whether the saved holdout conclusion
 persists when analysis is restricted to increasingly ambiguous swing/take opportunities. If the estimated
 advantage changes sign or collapses under tighter overlap, NorthStar should not proceed to a player metric.
+
+## Cross-fit pitch-state nuisance models
+
+The robustness audit showed that pitch-state V2 survives tighter common support and game-cluster uncertainty.
+The next phase targets a subtler source of optimism: nuisance models trained on the same observations used to
+construct training weights.
+
+Run:
+
+```bash
+python scripts/train_pitch_state_crossfit.py
+```
+
+The workflow:
+
+- rebuilds the clean pre-August pitch-state training sample from cached Statcast
+- creates **game-grouped out-of-fold** XGBoost swing propensities
+- fits an isotonic calibrator using only those OOF predictions
+- fits one final propensity model on all pre-August data for August/September scoring
+- applies the OOF calibrator to validation/test probabilities
+- restricts analysis to calibrated 5%-95% common support
+- refits separate swing/take transition-value models at stabilized IPW caps **3, 5, 10, and 20**
+- reports weight clipping, effective sample size, factual transition prediction, and game-cluster bootstrap
+  intervals for model-action advantage
+
+Default cross-fitting uses three folds because each fold trains a full-season pitch XGBoost model. Increase with
+`--folds 5` for a heavier sensitivity run.
+
+Outputs:
+
+```text
+reports/tables/pitch_state_crossfit_fold_metrics_2025.csv
+reports/tables/pitch_state_crossfit_propensity_metrics_2025.csv
+reports/tables/pitch_state_crossfit_propensity_bins_2025.csv
+reports/tables/pitch_state_crossfit_weight_diagnostics_2025.csv
+reports/tables/pitch_state_crossfit_factual_metrics_2025.csv
+reports/tables/pitch_state_crossfit_policy_sensitivity_2025.csv
+reports/figures/pitch_state_crossfit_weight_sensitivity_2025.png
+data/processed/pitch_state_crossfit_test_predictions_2025.parquet
+```
+
+The canonical local prediction file uses weight cap 10. As before, it stays local.
+
+Cross-fitting here is aimed at the **training propensity weights**. August and September are already
+chronological holdouts, so their propensity and action-value predictions come from models trained only on the
+pre-August period.
 
 ## Project layout
 
