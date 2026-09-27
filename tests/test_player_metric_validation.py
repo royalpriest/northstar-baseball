@@ -7,6 +7,9 @@ from northstar.validation.player_metric import (
     construct_correlation_summary,
     empirical_bayes_player_shrinkage,
     merge_player_construct_data,
+    add_incremental_oof_residuals,
+    incremental_half_reliability,
+    residual_outcome_correlations,
 )
 
 
@@ -148,3 +151,96 @@ def test_empirical_bayes_shrinkage_centers_and_shrinks():
     assert abs(top["shrunk_centered_per_100"]) <= abs(
         top["raw_centered_per_100"]
     ) + 1e-12
+
+
+
+def test_incremental_oof_residuals_remove_simple_construct_signal():
+    players = 60
+    chase = np.linspace(0.1, 0.5, players)
+    frame = pd.DataFrame(
+        {
+            "batter": np.arange(players),
+            "decision_value_per_100": 2.0 - 4.0 * chase,
+            "statcast_chase_rate": chase,
+        }
+    )
+
+    residuals, summary = add_incremental_oof_residuals(
+        frame,
+        feature_sets={"chase_only": ["statcast_chase_rate"]},
+        folds=5,
+        seed=7,
+    )
+
+    assert len(residuals) == players
+    assert summary.loc[0, "oof_r2"] > 0.99
+    assert residuals["incremental_residual"].abs().mean() < 0.02
+
+
+def test_incremental_half_reliability_recovers_stable_residual_trait():
+    rng = np.random.default_rng(7)
+    players = 80
+    batter = np.arange(players)
+    trait = rng.normal(0.0, 0.3, players)
+    early_chase = rng.uniform(0.15, 0.45, players)
+    late_chase = rng.uniform(0.15, 0.45, players)
+
+    early = pd.DataFrame(
+        {
+            "batter": batter,
+            "season_half": "early",
+            "decision_value_per_100": 1.0 - 3.0 * early_chase + trait,
+            "statcast_chase_rate": early_chase,
+        }
+    )
+    late = pd.DataFrame(
+        {
+            "batter": batter,
+            "season_half": "late",
+            "decision_value_per_100": 1.0 - 3.0 * late_chase + trait,
+            "statcast_chase_rate": late_chase,
+        }
+    )
+    frame = pd.concat([early, late], ignore_index=True)
+
+    residuals, reliability = incremental_half_reliability(
+        frame,
+        feature_sets={"chase_only": ["statcast_chase_rate"]},
+        folds=5,
+        seed=7,
+    )
+
+    chase_row = reliability.loc[
+        reliability["construct_set"].eq("chase_only")
+    ].iloc[0]
+
+    assert len(residuals) == players * 2
+    assert chase_row["players"] == players
+    assert chase_row["pearson_r"] > 0.8
+
+
+def test_residual_outcome_correlations():
+    residuals = pd.DataFrame(
+        {
+            "batter": np.arange(40),
+            "construct_set": "plate_discipline",
+            "incremental_residual": np.arange(40, dtype=float),
+        }
+    )
+    construct = pd.DataFrame(
+        {
+            "batter": np.arange(40),
+            "re24_per_100_pa": np.arange(40, dtype=float) * 2.0,
+        }
+    )
+
+    result = residual_outcome_correlations(
+        residuals,
+        construct,
+        references=["re24_per_100_pa"],
+        min_pairs=30,
+    )
+
+    assert len(result) == 1
+    assert result.loc[0, "pearson_r"] == pytest.approx(1.0)
+    assert result.loc[0, "spearman_rho"] == pytest.approx(1.0)
