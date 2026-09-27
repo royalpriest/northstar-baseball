@@ -330,6 +330,52 @@ The doubly robust numbers average immediate transition value over the **observed
 not full dynamic policy values because an alternative action can change future state occupancy. A future
 sequential model would need explicit transition dynamics or fitted policy evaluation.
 
+## Phase 2h: pitch-state robustness audit
+
+Pitch-state V2 is not promoted directly to a player metric. Its saved September holdout predictions are first
+subjected to sensitivity analysis.
+
+### Overlap sensitivity
+
+The primary V2 analysis uses:
+
+`0.05 <= P(swing | X) <= 0.95`
+
+The robustness audit reevaluates the same saved out-of-time predictions under:
+- 5%-95%
+- 10%-90%
+- 20%-80%
+
+These tighter windows reduce reliance on observations where one action was rarely chosen. The action-value
+models are not refit in this first audit; the goal is to test whether the holdout conclusion is sensitive to
+common-support restrictions.
+
+### Clustered uncertainty
+
+Pitch outcomes within the same game are not independent. The audit therefore computes the model-action minus
+observed-action doubly robust score at the pitch level, then resamples whole games with replacement. The
+reported 95% interval is a game-cluster bootstrap conditional on the already-fitted propensity and outcome
+models.
+
+### Subgroup checks
+
+The saved holdout is summarized by:
+- balls-strikes count
+- Statcast zone
+
+For sufficiently large subgroups, NorthStar records observed swing share, model-selected swing share, observed
+transition value, doubly robust model-action value, action advantage, modeled Q-gap magnitude, and agreement
+with the model-selected action.
+
+### Player stability
+
+September is split at September 15. Batters with enough decisions in both halves are compared on:
+- mean modeled chosen-action advantage
+- optimal-choice rate
+
+Pearson and Spearman correlations across the two halves are reported. This is a short-horizon reliability
+diagnostic, not proof of a stable season-level skill.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
