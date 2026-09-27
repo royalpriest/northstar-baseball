@@ -723,6 +723,47 @@ NorthStar joins the existing selection component with execution as two separate 
 is created at this stage. A combined statistic will only be considered if execution shows meaningful
 out-of-time and player-level reliability and later survives construct validation against xwOBA/contact quality.
 
+## Phase 2p: interpretation of swing execution V1
+
+The external 2024-to-2025 swing-execution model improves on the empirical count/zone/pitch-type baseline, but
+realized one-step swing value is too noisy to support a stable player execution axis.
+
+The key distinction is between **opportunity stability** and **execution stability**:
+
+- expected swing opportunity value is moderately repeatable across season halves
+- actual swing value is weakly repeatable
+- actual-minus-expected execution value remains only weakly repeatable
+
+This indicates that the all-in-one target combines several mechanisms with different noise properties:
+
+1. swing-and-miss versus contact
+2. foul contact versus ball in play
+3. quality of batted-ball contact
+4. fielding / baserunning / subsequent state effects embedded in one-step run value
+
+NorthStar therefore does not discard execution. Instead, V2 decomposes it into two cleaner conditional tasks:
+
+### Contact execution
+
+Among observed swings:
+
+`Contact residual = I(contact) - P(contact | swing, pitch/context)`
+
+This asks whether a hitter makes contact more often than a 2024 league model expects on the pitches they
+actually swing at.
+
+### Damage execution
+
+Among balls put into play with a valid Statcast contact-quality target:
+
+`Damage residual = observed contact-quality target - E[target | BIP, pitch/context]`
+
+The initial target is Statcast estimated wOBA using launch speed/angle. Exit velocity, launch angle, and the
+estimated-wOBA target are **outcomes only** and are never model features.
+
+Each component must pass external-season model checks and player split-half reliability independently before
+NorthStar considers retaining it as a player axis.
+
 ## Phase 3: NorthStar Chance Creation Added (CCA)
 
 CCA will only be formally defined after the probability model is calibrated and validated out-of-time.
