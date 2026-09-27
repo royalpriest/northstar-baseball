@@ -136,6 +136,10 @@ Evaluation:
 - Spearman rank correlation
 - binned predicted-vs-observed holdout plot
 
+The first model fit excludes PAs with non-zero `within_pa_state_re24` by default. Those observations are still
+preserved in the attribution audit, but their terminal event begins from a state that was not known at the
+start of the PA. A sensitivity run may include them explicitly.
+
 The same chronological August validation / September holdout is retained. Player-level residual analysis is
 performed only after the continuous target model is evaluated out-of-time.
 
