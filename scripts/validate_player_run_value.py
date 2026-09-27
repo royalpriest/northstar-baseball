@@ -5,8 +5,8 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from pybaseball import statcast_batter_expected_stats
 
-from northstar.data.fangraphs import fetch_fangraphs_batting
 from northstar.validation.offense import (
     DEFAULT_REFERENCE_METRICS,
     build_correlation_summary,
@@ -17,12 +17,12 @@ from northstar.validation.offense import (
 DEFAULT_INPUT = Path("reports/tables/player_run_value_2025.csv")
 DEFAULT_MERGED = Path("reports/tables/player_run_value_validation_2025.csv")
 DEFAULT_CORRELATIONS = Path("reports/tables/player_run_value_correlations_2025.csv")
-DEFAULT_FIGURE = Path("reports/figures/re24_vs_wrcplus_2025.png")
+DEFAULT_FIGURE = Path("reports/figures/re24_vs_xwoba_2025.png")
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Validate NorthStar RE24 against established FanGraphs batting metrics."
+        description="Validate NorthStar RE24 against Baseball Savant batting metrics."
     )
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
     parser.add_argument("--season", type=int, default=2025)
@@ -31,38 +31,50 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _player_name_column(frame: pd.DataFrame) -> str | None:
+    for column in ("last_name, first_name", "player_name"):
+        if column in frame.columns:
+            return column
+    return None
+
+
 def save_scatter(
     merged: pd.DataFrame,
     output: Path,
     annotate: int = 8,
 ) -> None:
-    required = {"re24_per_100_pa", "wRC+", "Name"}
+    required = {"re24_per_100_pa", "est_woba"}
     if not required.issubset(merged.columns):
-        print("wRC+ scatter skipped because required columns were unavailable.")
+        print("xwOBA scatter skipped because required columns were unavailable.")
         return
 
-    plot = merged.loc[:, ["Name", "re24_per_100_pa", "wRC+"]].copy()
+    name_column = _player_name_column(merged)
+    columns = ["re24_per_100_pa", "est_woba"]
+    if name_column:
+        columns.append(name_column)
+
+    plot = merged.loc[:, columns].copy()
     plot["re24_per_100_pa"] = pd.to_numeric(plot["re24_per_100_pa"], errors="coerce")
-    plot["wRC+"] = pd.to_numeric(plot["wRC+"], errors="coerce")
-    plot = plot.dropna()
+    plot["est_woba"] = pd.to_numeric(plot["est_woba"], errors="coerce")
+    plot = plot.dropna(subset=["re24_per_100_pa", "est_woba"])
 
     if plot.empty:
-        print("wRC+ scatter skipped because there were no matched rows.")
+        print("xwOBA scatter skipped because there were no matched rows.")
         return
 
     fig, ax = plt.subplots(figsize=(8, 6))
-    ax.scatter(plot["wRC+"], plot["re24_per_100_pa"], alpha=0.7)
-    ax.set_xlabel("FanGraphs wRC+")
+    ax.scatter(plot["est_woba"], plot["re24_per_100_pa"], alpha=0.7)
+    ax.set_xlabel("Baseball Savant xwOBA")
     ax.set_ylabel("NorthStar RE24 per 100 PA")
-    ax.set_title("2025 MLB: NorthStar RE24 vs wRC+")
+    ax.set_title("2025 MLB: NorthStar RE24 vs xwOBA")
     ax.grid(alpha=0.2)
 
-    if annotate > 0:
+    if annotate > 0 and name_column:
         labels = plot.nlargest(annotate, "re24_per_100_pa")
         for _, row in labels.iterrows():
             ax.annotate(
-                str(row["Name"]),
-                (row["wRC+"], row["re24_per_100_pa"]),
+                str(row[name_column]),
+                (row["est_woba"], row["re24_per_100_pa"]),
                 xytext=(4, 4),
                 textcoords="offset points",
                 fontsize=8,
@@ -88,10 +100,10 @@ def main() -> None:
 
     leaderboard = pd.read_csv(args.input)
 
-    print(f"Downloading {args.season} FanGraphs batting stats from the modern API...")
-    reference = fetch_fangraphs_batting(
-        season=args.season,
-        min_pa=args.min_pa,
+    print(f"Downloading {args.season} Baseball Savant expected batting stats...")
+    reference = statcast_batter_expected_stats(
+        args.season,
+        minPA=args.min_pa,
     )
 
     merged = merge_with_reference_stats(
@@ -113,7 +125,7 @@ def main() -> None:
 
     print()
     print(
-        f"Matched {len(merged):,} NorthStar hitters to FanGraphs "
+        f"Matched {len(merged):,} NorthStar hitters to Baseball Savant "
         f"(minimum {args.min_pa} PA)."
     )
 
