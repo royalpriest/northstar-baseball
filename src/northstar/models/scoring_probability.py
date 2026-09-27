@@ -12,6 +12,30 @@ MODEL_CATEGORICAL_FEATURES = [
 ]
 MODEL_NUMERIC_FEATURES = ["inning"]
 
+CONTEXT_CATEGORICAL_FEATURES = [
+    "base_state_before",
+    "outs_before",
+    "inning_topbot",
+    "batter_hand",
+    "pitcher_hand",
+    "park_team",
+]
+
+CONTEXT_NUMERIC_FEATURES = [
+    "inning",
+    "score_diff_before",
+    "is_home_batting",
+    "batter_prior_re24_per_pa",
+    "batter_prior_positive_pa_pct",
+    "batter_prior_log_count",
+    "pitcher_prior_re24_per_pa",
+    "pitcher_prior_positive_pa_pct",
+    "pitcher_prior_log_count",
+]
+
+CONTEXT_REQUIRED_COLUMNS = set(CONTEXT_CATEGORICAL_FEATURES + CONTEXT_NUMERIC_FEATURES)
+
+
 REQUIRED_COLUMNS = {
     "game_date",
     "runs_to_end",
@@ -21,6 +45,17 @@ REQUIRED_COLUMNS = {
     "inning",
     "base_out_state_before",
 }
+
+
+def validate_context_columns(frame: pd.DataFrame) -> None:
+    """Ensure the rebuilt PA dataset contains all V2 context-model fields."""
+    missing = CONTEXT_REQUIRED_COLUMNS.difference(frame.columns)
+    if missing:
+        raise ValueError(
+            "Context model columns are missing. Rebuild the 2025 baseline from "
+            "the cached raw Statcast files before training V2. Missing: "
+            f"{sorted(missing)}"
+        )
 
 
 @dataclass(frozen=True)
