@@ -105,6 +105,30 @@ reports/figures/player_run_value_2025_top20.png
 This is a benchmark, not CCA. The later machine-learning metric must be evaluated against this simpler
 run-expectancy baseline.
 
+## Validate the player benchmark
+
+NorthStar compares RE24 per 100 plate appearances with established FanGraphs offensive metrics before
+developing CCA. The validation uses the Chadwick player-ID crosswalk to join MLBAM IDs from Statcast to
+FanGraphs IDs, then compares NorthStar RE24 with OPS, wOBA, and wRC+.
+
+Run:
+
+```bash
+python scripts/validate_player_run_value.py --season 2025 --min-pa 300
+```
+
+Outputs:
+
+```text
+reports/tables/player_run_value_validation_2025.csv
+reports/tables/player_run_value_correlations_2025.csv
+reports/figures/re24_vs_wrcplus_2025.png
+```
+
+The goal is not for RE24 to perfectly duplicate an existing statistic. A strong positive relationship is a
+sanity check that the pipeline captures real offensive quality; meaningful differences help identify what
+NorthStar may be measuring differently and what the later CCA model needs to explain.
+
 ## Project layout
 
 ```text
