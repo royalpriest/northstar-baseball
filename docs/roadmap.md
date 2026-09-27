@@ -63,25 +63,35 @@
 - [x] Add logistic pitch-decision model
 - [x] Add XGBoost pitch-decision model
 - [x] Add out-of-time calibration and batter behavior summary
-- [ ] Run September holdout evaluation and preserve results
+- [x] Run September holdout evaluation and preserve strong results
 - [ ] Audit unrecognized / excluded Statcast pitch descriptions
-- [ ] Build counterfactual swing-vs-take value model
-- [ ] Validate decision value before naming a player metric
 
-## M7 — Canada layer
+## M7 — Pitch decision value
+- [x] Define training-only pitch-to-PA-end run-value return
+- [x] Reuse validated swing propensity model
+- [x] Add common-support trimming and stabilized propensity weights
+- [x] Add separate swing/take XGBoost value models
+- [x] Add count+zone+action value baseline
+- [x] Add doubly robust policy-value diagnostics
+- [ ] Run September holdout evaluation and preserve results
+- [ ] Audit overlap and extreme propensity regions
+- [ ] Add cross-fitting / sensitivity analysis if V1 is promising
+- [ ] Validate player-level stability before naming a metric
+
+## M8 — Canada layer
 - [ ] Canadian-born player identity mapping
 - [ ] Toronto Blue Jays view
 - [ ] Canadian player leaderboard
 - [ ] Player comparison report
 
-## M8 — Product
+## M9 — Product
 - [ ] FastAPI service
 - [ ] PostgreSQL results store
 - [ ] Next.js interface
 - [ ] Player pages
 - [ ] Interactive visualizations
 
-## M9 — Production engineering
+## M10 — Production engineering
 - [ ] Docker
 - [ ] GitHub Actions
 - [ ] Scheduled ingestion
