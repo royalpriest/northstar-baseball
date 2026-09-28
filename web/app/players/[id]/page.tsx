@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { PercentileBar } from "@/components/percentile-bar";
-import { getPlayer } from "@/lib/api";
+import { getPlayer, NorthStarApiError } from "@/lib/api";
 import {
   decimal,
   integer,
@@ -21,8 +21,11 @@ export default async function PlayerPage({ params }: Props) {
   let player;
   try {
     player = await getPlayer(id);
-  } catch {
-    notFound();
+  } catch (error) {
+    if (error instanceof NorthStarApiError && error.status === 404) {
+      notFound();
+    }
+    throw error;
   }
 
   const place = [player.birth_city, player.birth_state_province, player.birth_country]
