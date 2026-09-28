@@ -40,12 +40,17 @@ export default async function HomePage() {
 
         <div className="hero-visual" aria-hidden="true">
           <div className="orbit orbit--one">
-            <span className="orbit__node" />
+            <span className="orbit__node orbit__node--one" />
           </div>
           <div className="orbit orbit--two">
-            <span className="orbit__node" />
+            <span className="orbit__node orbit__node--two" />
           </div>
-          <div className="orbit orbit--three" />
+          <div className="orbit orbit--three">
+            <span className="orbit__node orbit__node--three" />
+          </div>
+          <div className="signal-arc signal-arc--one" />
+          <div className="signal-arc signal-arc--two" />
+          <div className="signal-arc signal-arc--three" />
           <div className="hero-core">
             <div>
               <strong>3</strong>
@@ -55,6 +60,10 @@ export default async function HomePage() {
           <div className="hero-float hero-float--a">
             <span>Selection</span>
             <strong>Decision quality</strong>
+          </div>
+          <div className="hero-float hero-float--c">
+            <span>Contact</span>
+            <strong>Bat-to-ball execution</strong>
           </div>
           <div className="hero-float hero-float--b">
             <span>Damage</span>
@@ -76,8 +85,11 @@ export default async function HomePage() {
         </div>
 
         <div className="card-grid">
-          <Link href="/players" className="feature-card">
+          <Link href="/players" className="feature-card feature-card--selection">
             <span className="feature-card__index">01 / SELECTION</span>
+            <span className="feature-card__signal" aria-hidden="true">
+              <i /><i /><i />
+            </span>
             <h3>What did he choose?</h3>
             <p>
               Decision value relative to count, location, pitch type, base/out
@@ -85,8 +97,11 @@ export default async function HomePage() {
             </p>
             <span className="feature-card__link">Explore hitter decisions ↗</span>
           </Link>
-          <Link href="/players" className="feature-card">
+          <Link href="/players" className="feature-card feature-card--contact">
             <span className="feature-card__index">02 / CONTACT</span>
+            <span className="feature-card__signal" aria-hidden="true">
+              <i /><i /><i />
+            </span>
             <h3>Did he make contact?</h3>
             <p>
               Contact above expectation on the swings he took, controlling for
@@ -94,8 +109,11 @@ export default async function HomePage() {
             </p>
             <span className="feature-card__link">Explore contact context ↗</span>
           </Link>
-          <Link href="/players" className="feature-card">
+          <Link href="/players" className="feature-card feature-card--damage">
             <span className="feature-card__index">03 / DAMAGE</span>
+            <span className="feature-card__signal" aria-hidden="true">
+              <i /><i /><i />
+            </span>
             <h3>What did contact become?</h3>
             <p>
               xwOBA contact quality above expectation, separating impact from
