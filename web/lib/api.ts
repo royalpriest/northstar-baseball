@@ -11,6 +11,18 @@ const serverBase =
   process.env.NEXT_PUBLIC_NORTHSTAR_API_URL ??
   "http://127.0.0.1:8000";
 
+export class NorthStarApiError extends Error {
+  status: number;
+  path: string;
+
+  constructor(status: number, path: string) {
+    super(`NorthStar API request failed (${status}) for ${path}`);
+    this.name = "NorthStarApiError";
+    this.status = status;
+    this.path = path;
+  }
+}
+
 async function request<T>(path: string): Promise<T> {
   const response = await fetch(`${serverBase}${path}`, {
     cache: "no-store",
@@ -18,9 +30,7 @@ async function request<T>(path: string): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(
-      `NorthStar API request failed (${response.status}) for ${path}`,
-    );
+    throw new NorthStarApiError(response.status, path);
   }
 
   return response.json() as Promise<T>;
