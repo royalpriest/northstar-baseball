@@ -32,7 +32,7 @@ export default async function PlayerPage({ params }: Props) {
   return (
     <div className="page-shell page-shell--narrow">
       <section className="profile-header">
-        <div>
+        <div className="profile-header__identity">
           <span className="eyebrow">NorthStar hitter profile · 2025</span>
           <h1>{player.player_name}</h1>
           <div className="profile-header__meta">
@@ -42,14 +42,39 @@ export default async function PlayerPage({ params }: Props) {
             {player.canadian_born ? <span className="meta-pill">Canadian-born</span> : null}
           </div>
         </div>
-        <div className="profile-id">
-          <span>MLBAM</span>
-          <strong>{player.batter}</strong>
+
+        <div className="profile-signature" aria-label="NorthStar three-axis signature">
+          <div className="profile-signature__orbit" aria-hidden="true" />
+          <div className="profile-signature__center" aria-hidden="true">
+            <span>
+              {player.player_name
+                .split(" ")
+                .slice(0, 2)
+                .map((part) => part[0])
+                .join("")}
+            </span>
+          </div>
+          <div className="profile-signature__axis profile-signature__axis--selection">
+            <span>Selection</span>
+            <strong>{percentile(player.selection_context_percentile)}</strong>
+          </div>
+          <div className="profile-signature__axis profile-signature__axis--contact">
+            <span>Contact</span>
+            <strong>{percentile(player.contact_context_percentile)}</strong>
+          </div>
+          <div className="profile-signature__axis profile-signature__axis--damage">
+            <span>Damage</span>
+            <strong>{percentile(player.damage_context_percentile)}</strong>
+          </div>
+          <div className="profile-id">
+            <span>MLBAM</span>
+            <strong>{player.batter}</strong>
+          </div>
         </div>
       </section>
 
       <section className="axes-grid">
-        <article className="axis-card">
+        <article className="axis-card axis-card--selection">
           <span className="eyebrow">Selection</span>
           <div className="axis-card__value">
             {percentile(player.selection_context_percentile)}
@@ -57,12 +82,13 @@ export default async function PlayerPage({ params }: Props) {
           <div className="axis-card__raw">
             {signed(player.shrunk_centered_per_100, 2)} value / 100
           </div>
-          <div className="notice">
-            Decision quality relative to pitch and game context.
+          <div className="axis-card__footer">
+            <span>Decision quality relative to pitch and game context.</span>
+            <i style={{ width: `${Math.max(0, Math.min(100, player.selection_context_percentile ?? 0))}%` }} />
           </div>
         </article>
 
-        <article className="axis-card">
+        <article className="axis-card axis-card--contact">
           <span className="eyebrow">Contact</span>
           <div className="axis-card__value">
             {percentile(player.contact_context_percentile)}
@@ -70,12 +96,13 @@ export default async function PlayerPage({ params }: Props) {
           <div className="axis-card__raw">
             {signed(player.contact_above_expected_per_100_swings, 2)} pp / 100 swings
           </div>
-          <div className="notice">
-            Contact relative to the modeled difficulty of swings taken.
+          <div className="axis-card__footer">
+            <span>Contact relative to the modeled difficulty of swings taken.</span>
+            <i style={{ width: `${Math.max(0, Math.min(100, player.contact_context_percentile ?? 0))}%` }} />
           </div>
         </article>
 
-        <article className="axis-card">
+        <article className="axis-card axis-card--damage">
           <span className="eyebrow">Damage</span>
           <div className="axis-card__value">
             {percentile(player.damage_context_percentile)}
@@ -83,10 +110,22 @@ export default async function PlayerPage({ params }: Props) {
           <div className="axis-card__raw">
             {signed(player.damage_xwoba_points_above_expected, 2)} xwOBA pts
           </div>
-          <div className="notice">
-            Contact quality relative to the opportunities presented.
+          <div className="axis-card__footer">
+            <span>Contact quality relative to the opportunities presented.</span>
+            <i style={{ width: `${Math.max(0, Math.min(100, player.damage_context_percentile ?? 0))}%` }} />
           </div>
         </article>
+      </section>
+
+      <section className="profile-section-intro">
+        <div>
+          <span className="eyebrow">Under the hood</span>
+          <h2>Context beside convention.</h2>
+        </div>
+        <p>
+          NorthStar keeps modeled context and established outcomes visible at
+          the same time, so one number never has to carry the whole story.
+        </p>
       </section>
 
       <section className="profile-sections">
@@ -170,10 +209,13 @@ export default async function PlayerPage({ params }: Props) {
         </article>
       </section>
 
-      <div className="notice">
-        NorthStar axes are contextual diagnostics. This page intentionally
-        does not calculate a single overall player score, grade, or
-        standalone predictive-skill claim.
+      <div className="profile-disclaimer">
+        <span className="status-dot" />
+        <p>
+          NorthStar axes are contextual diagnostics. This page intentionally
+          does not calculate a single overall player score, grade, or
+          standalone predictive-skill claim.
+        </p>
       </div>
     </div>
   );
