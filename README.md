@@ -181,6 +181,7 @@ or a design decision changes because of evidence.
 
 | Date | Type | Event | Outcome / fix |
 | --- | --- | --- | --- |
+| 2026-09-27 | Frontend bug | The comparison workbench returned **Failed to fetch** in the browser while server-rendered NorthStar pages were working. | Browser interactions now use a same-origin Next.js proxy at `/api/northstar/*`, with the FastAPI upstream URL kept server-side. This removes browser CORS/origin mismatch risk for comparison and live search and returns a clearer 502 message if FastAPI is actually offline. |
 | 2026-09-27 | Frontend visual pass | Player profile V2 completed after Aaron Judge browser review. | Rebalanced the oversized empty header with a three-axis player signature, gave Selection / Contact / Damage distinct visual identities, replaced nested notice boxes with compact percentile tracks, added a clearer transition into supporting metrics, refined detail-card hierarchy, and increased disclaimer legibility without introducing a composite score. |
 | 2026-09-27 | Frontend visual pass | Homepage V2 polish completed after first browser review. | Increased supporting-text/nav/search scale, tightened hero-to-content spacing, expanded the NorthStar orbital visual to all three axes, added layered signal paths and reduced-motion-safe micro-motion, and gave Selection / Contact / Damage cards distinct visual signatures without adding dashboard clutter. |
 | 2026-09-27 | Frontend security | Next.js production build completed successfully, then `npm audit` reported **3 vulnerabilities (2 high, 1 critical)** through `next`, `postcss`, and `sharp`. npm indicated the remediation path is Next.js **16.3.6**. | Updated `next` and `eslint-config-next` from 16.2.6 to 16.3.6. Regenerate the lockfile with `npm install`, then rerun `npm audit` and `npm run build`; do not use `npm audit fix --force`. |
@@ -1673,11 +1674,10 @@ Local frontend environment variables are documented in `web/.env.example`:
 
 ```text
 NORTHSTAR_API_URL=http://127.0.0.1:8000
-NEXT_PUBLIC_NORTHSTAR_API_URL=http://127.0.0.1:8000
 ```
 
-The first variable is used by Next.js server-rendered pages. The public URL is used only by interactive browser
-features such as live player search and the comparison workbench.
+The API URL stays server-side. Interactive browser features such as live player search and the comparison workbench
+call a same-origin Next.js proxy, which forwards requests to FastAPI.
 
 Configuration:
 
