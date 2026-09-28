@@ -181,6 +181,10 @@ or a design decision changes because of evidence.
 
 | Date | Type | Event | Outcome / fix |
 | --- | --- | --- | --- |
+| 2026-09-27 | Frontend visual pass | Canada V2 retains the existing hero and NorthStar palette while adding birthplace/province context, full Selection / Contact / Damage shapes, separate lens leaders, and clearer summary cards. | Percentiles remain league-relative, exact leader ties are retained, missing axes remain unavailable rather than zero, and mobile rows preserve all three axes. Canadian-born still means MLB birth country equals Canada; no citizenship inference or composite score is introduced. |
+| 2026-09-27 | Data presentation | Canada RE24 coverage now counts finite values in the displayed cohort instead of calling a separately limited leaderboard and labeling its count qualified. | Zero and negative values count as available. The page explains that RE24 is joined from the separate run-value validation source; a missing value is not zero or evidence of poor performance. No individual missing-value cause or qualification threshold is invented. |
+| 2026-09-27 | Frontend validation | Canada V2 passed the production build, four frontend data-handling tests, and ESLint for changed code. Production-browser inspection used the committed Canadian hitter CSV through a temporary API fixture at desktop (1440 px) and mobile (390 px) widths. | Eight rows and 24 axes render without horizontal overflow or browser runtime errors; the RE24 explanation link works. The mobile section heading was stacked after visual review. PostgreSQL integration was not rerun in this environment. |
+| 2026-09-27 | Validation warning | Full-project frontend lint remains blocked by the pre-existing synchronous state update in `web/components/search-box.tsx` (`react-hooks/set-state-in-effect`), with an existing internal-navigation warning in the same file. | Canada V2 changed-file lint passes; unrelated search behavior was left unchanged. The initial browser download failed, so visual checks used a temporary npm-provided Chromium runtime without adding a project dependency. |
 | 2026-09-27 | Frontend bug | A player-page backend failure was being swallowed by the dynamic route and rendered as the generic **404 / off the board** screen, making an API outage look like an unknown hitter. | Player requests now preserve API status codes: only a real HTTP 404 becomes the hitter-not-found page. Other backend failures surface a dedicated profile-service error state with retry guidance. |
 | 2026-09-27 | Frontend visual pass | Blue Jays V2 completed after browser review. | Reworked the page into a team-context surface with Toronto exposure / primary-team / multi-team / Canadian-born summary cards, three separate NorthStar context leaders, richer roster rows with full three-axis shape and exposure flags, and clearer language distinguishing Toronto membership from full-season MLB diagnostics. |
 | 2026-09-27 | Frontend visual pass | Player index V2 completed after browser review. | Turned the page from a long RE24 list into a discovery surface with switchable RE24 / Selection / Contact / Damage lenses, richer rows showing each hitter's three-axis NorthStar shape, sample context, clearer hierarchy, and responsive behavior while preserving search as the primary action. |
@@ -1674,6 +1678,19 @@ Open:
 http://localhost:3000
 ```
 
+Frontend verification (run from `web/`; the TypeScript test runner requires Node.js 22.6+):
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+Canada V2 tests cover missing/zero RE24 values, empty cohorts, independent lens leaders and ties,
+and incomplete birthplace metadata. Its summary and lens cards use the same returned Canadian-born
+cohort as the hitter rows; percentiles retain their existing league-relative meaning.
+
+
 Local frontend environment variables are documented in `web/.env.example`:
 
 ```text
@@ -1732,3 +1749,4 @@ rather than reverse-engineering a single ranking statistic.
 - Retrosheet is planned for historical validation and complementary play-by-play coverage
 
 See `docs/methodology.md` and `docs/roadmap.md`.
+
