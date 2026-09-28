@@ -181,6 +181,20 @@ or a design decision changes because of evidence.
 
 | Date | Type | Event | Outcome / fix |
 | --- | --- | --- | --- |
+| 2026-09-27 | Frontend visual pass | Canada V2 retains the existing hero and NorthStar palette while adding birthplace/province context, full Selection / Contact / Damage shapes, separate lens leaders, and clearer summary cards. | Percentiles remain league-relative, exact leader ties are retained, missing axes remain unavailable rather than zero, and mobile rows preserve all three axes. Canadian-born still means MLB birth country equals Canada; no citizenship inference or composite score is introduced. |
+| 2026-09-27 | Data presentation | Canada RE24 coverage now counts finite values in the displayed cohort instead of calling a separately limited leaderboard and labeling its count qualified. | Zero and negative values count as available. The page explains that RE24 is joined from the separate run-value validation source; a missing value is not zero or evidence of poor performance. No individual missing-value cause or qualification threshold is invented. |
+| 2026-09-27 | Frontend validation | Canada V2 passed the production build, four frontend data-handling tests, and ESLint for changed code. Production-browser inspection used the committed Canadian hitter CSV through a temporary API fixture at desktop (1440 px) and mobile (390 px) widths. | Eight rows and 24 axes render without horizontal overflow or browser runtime errors; the RE24 explanation link works. The mobile section heading was stacked after visual review. PostgreSQL integration was not rerun in this environment. |
+| 2026-09-27 | Validation warning | Full-project frontend lint remains blocked by the pre-existing synchronous state update in `web/components/search-box.tsx` (`react-hooks/set-state-in-effect`), with an existing internal-navigation warning in the same file. | Canada V2 changed-file lint passes; unrelated search behavior was left unchanged. The initial browser download failed, so visual checks used a temporary npm-provided Chromium runtime without adding a project dependency. |
+| 2026-09-27 | Frontend bug | A player-page backend failure was being swallowed by the dynamic route and rendered as the generic **404 / off the board** screen, making an API outage look like an unknown hitter. | Player requests now preserve API status codes: only a real HTTP 404 becomes the hitter-not-found page. Other backend failures surface a dedicated profile-service error state with retry guidance. |
+| 2026-09-27 | Frontend visual pass | Blue Jays V2 completed after browser review. | Reworked the page into a team-context surface with Toronto exposure / primary-team / multi-team / Canadian-born summary cards, three separate NorthStar context leaders, richer roster rows with full three-axis shape and exposure flags, and clearer language distinguishing Toronto membership from full-season MLB diagnostics. |
+| 2026-09-27 | Frontend visual pass | Player index V2 completed after browser review. | Turned the page from a long RE24 list into a discovery surface with switchable RE24 / Selection / Contact / Damage lenses, richer rows showing each hitter's three-axis NorthStar shape, sample context, clearer hierarchy, and responsive behavior while preserving search as the primary action. |
+| 2026-09-27 | Frontend visual pass | Comparison workbench V2 completed after successful Judge vs. Arráez browser test. | Replaced the table-first presentation with visual hitter profile cards, three-axis percentile rails, compact established-outcome summaries, a clearer metric matrix, and refined controls while preserving the no-winner/no-composite interpretation. |
+| 2026-09-27 | Frontend bug | The comparison workbench returned **Failed to fetch** in the browser while server-rendered NorthStar pages were working. | Browser interactions now use a same-origin Next.js proxy at `/api/northstar/*`, with the FastAPI upstream URL kept server-side. This removes browser CORS/origin mismatch risk for comparison and live search and returns a clearer 502 message if FastAPI is actually offline. |
+| 2026-09-27 | Frontend visual pass | Player profile V2 completed after Aaron Judge browser review. | Rebalanced the oversized empty header with a three-axis player signature, gave Selection / Contact / Damage distinct visual identities, replaced nested notice boxes with compact percentile tracks, added a clearer transition into supporting metrics, refined detail-card hierarchy, and increased disclaimer legibility without introducing a composite score. |
+| 2026-09-27 | Frontend visual pass | Homepage V2 polish completed after first browser review. | Increased supporting-text/nav/search scale, tightened hero-to-content spacing, expanded the NorthStar orbital visual to all three axes, added layered signal paths and reduced-motion-safe micro-motion, and gave Selection / Contact / Damage cards distinct visual signatures without adding dashboard clutter. |
+| 2026-09-27 | Frontend security | Next.js production build completed successfully, then `npm audit` reported **3 vulnerabilities (2 high, 1 critical)** through `next`, `postcss`, and `sharp`. npm indicated the remediation path is Next.js **16.3.6**. | Updated `next` and `eslint-config-next` from 16.2.6 to 16.3.6. Regenerate the lockfile with `npm install`, then rerun `npm audit` and `npm run build`; do not use `npm audit fix --force`. |
+| 2026-09-27 | Frontend setup | `web/` dependency installation completed successfully: **343 packages added / 344 audited**. npm also reported an ESLint deprecation warning plus **3 dependency vulnerabilities (2 high, 1 critical)**. | Installation itself succeeded. Do **not** apply `npm audit fix --force` blindly; inspect `npm audit` first, then update only the affected packages without destabilizing the Next.js stack. |
+| 2026-09-27 | Product milestone | Next.js Web UI V1 started on `feat/web-ui-v1`. | Added a responsive dark NorthStar interface with live API-backed landing page, hitter search, individual player profiles, Canadian-born and Toronto views, and an interactive 2-4 player comparison workbench. Visual design keeps contextual diagnostics distinct from established metrics and avoids an overall score. |
 | 2026-09-27 | Parity fix | PostgreSQL smoke tests confirmed metadata, player search, Toronto team filtering, and Canadian RE24 leaderboard parity, but the SQL-backed `/api/v1/compare` response exposed the entire stored profile JSON instead of the smaller comparison-field contract used by the CSV backend. | SQL comparison responses now filter through the shared `COMPARISON_FIELDS` contract, with a regression test preventing backend-specific extra fields. |
 | 2026-09-27 | Success | PostgreSQL Product Store V1 passed its first real local integration run. Docker Compose started `postgres:17-alpine` healthy on port 5432, the canonical 2025 profile loader inserted **404 profiles**, and FastAPI `/api/v1/meta` returned `storage_backend: postgresql` with **404 players**. | This confirms the application is reading NorthStar profiles from PostgreSQL rather than the CSV fallback. |
 | 2026-09-27 | Success | FastAPI V1 was merged into `main` through PR #21 after **117 tests**, Uvicorn runtime checks, live Judge search, Judge/Arráez comparison, and UTF-8 response hardening. | NorthStar now has a stable read-only application API over the validated profile dataset. |
@@ -1633,6 +1647,59 @@ The first SQL schema keeps frequently queried product fields as typed columns wh
 canonical profile in JSON. This lets the product migrate away from flat files without discarding validated
 research fields that are not yet first-class UI columns.
 
+## Run the Next.js interface
+
+The first NorthStar web client lives in `web/` and consumes the FastAPI service.
+
+It includes:
+
+- a dark, data-forward landing page with live 2025 dataset status
+- global hitter search by name or MLBAM ID
+- individual hitter profile pages
+- separate Selection / Contact / Damage context presentation
+- established wOBA, xwOBA, chase, contact, barrel, and RE24 context
+- Canadian-born player view
+- Toronto Blue Jays 2025 exposure view
+- interactive 2-4 hitter comparison
+- responsive desktop/mobile layouts
+- explicit product language preserving NorthStar's no-composite-score interpretation
+
+Run the API first, then in a second terminal:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Open:
+
+```text
+http://localhost:3000
+```
+
+Frontend verification (run from `web/`; the TypeScript test runner requires Node.js 22.6+):
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+Canada V2 tests cover missing/zero RE24 values, empty cohorts, independent lens leaders and ties,
+and incomplete birthplace metadata. Its summary and lens cards use the same returned Canadian-born
+cohort as the hitter rows; percentiles retain their existing league-relative meaning.
+
+
+Local frontend environment variables are documented in `web/.env.example`:
+
+```text
+NORTHSTAR_API_URL=http://127.0.0.1:8000
+```
+
+The API URL stays server-side. Interactive browser features such as live player search and the comparison workbench
+call a same-origin Next.js proxy, which forwards requests to FastAPI.
+
 Configuration:
 
 ```text
@@ -1656,6 +1723,7 @@ northstar-baseball/
 ├── notebooks/
 ├── reports/
 ├── scripts/
+├── web/                  # Next.js product interface
 ├── src/northstar/
 │   ├── data/
 │   ├── features/
@@ -1681,3 +1749,4 @@ rather than reverse-engineering a single ranking statistic.
 - Retrosheet is planned for historical validation and complementary play-by-play coverage
 
 See `docs/methodology.md` and `docs/roadmap.md`.
+
