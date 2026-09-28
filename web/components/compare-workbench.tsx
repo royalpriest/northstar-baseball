@@ -21,6 +21,40 @@ const rows: Array<{
   { label: "RE24 / 100 PA", render: (p) => signed(p.re24_per_100_pa, 2) },
 ];
 
+const axes: Array<{
+  key: "selection_context_percentile" | "contact_context_percentile" | "damage_context_percentile";
+  label: string;
+  className: string;
+}> = [
+  {
+    key: "selection_context_percentile",
+    label: "Selection",
+    className: "compare-axis--selection",
+  },
+  {
+    key: "contact_context_percentile",
+    label: "Contact",
+    className: "compare-axis--contact",
+  },
+  {
+    key: "damage_context_percentile",
+    label: "Damage",
+    className: "compare-axis--damage",
+  },
+];
+
+function clamped(value?: number | null) {
+  return Math.max(0, Math.min(100, value ?? 0));
+}
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("");
+}
+
 export function CompareWorkbench() {
   const [players, setPlayers] = useState(["592450", "650333"]);
   const [result, setResult] = useState<CompareResponse | null>(null);
@@ -83,43 +117,33 @@ export function CompareWorkbench() {
           there is no winner or overall grade.
         </p>
 
-        {players.map((player, index) => (
-          <div key={index} style={{ position: "relative" }}>
-            <input
-              className="compare-input"
-              value={player}
-              onChange={(event) => update(index, event.target.value)}
-              placeholder={index === 0 ? "Aaron Judge or 592450" : "Luis Arráez or 650333"}
-              aria-label={`Player ${index + 1}`}
-            />
-            {players.length > 2 ? (
-              <button
-                type="button"
-                onClick={() => removePlayer(index)}
-                aria-label={`Remove player ${index + 1}`}
-                style={{
-                  position: "absolute",
-                  right: 10,
-                  top: 11,
-                  border: 0,
-                  background: "transparent",
-                  color: "#65758a",
-                  cursor: "pointer",
-                }}
-              >
-                ×
-              </button>
-            ) : null}
-          </div>
-        ))}
+        <div className="compare-input-stack">
+          {players.map((player, index) => (
+            <div key={index} className="compare-input-wrap">
+              <span className="compare-input-index">{String(index + 1).padStart(2, "0")}</span>
+              <input
+                className="compare-input"
+                value={player}
+                onChange={(event) => update(index, event.target.value)}
+                placeholder={index === 0 ? "Aaron Judge or 592450" : "Luis Arráez or 650333"}
+                aria-label={`Player ${index + 1}`}
+              />
+              {players.length > 2 ? (
+                <button
+                  type="button"
+                  onClick={() => removePlayer(index)}
+                  className="compare-remove"
+                  aria-label={`Remove player ${index + 1}`}
+                >
+                  ×
+                </button>
+              ) : null}
+            </div>
+          ))}
+        </div>
 
         {players.length < 4 ? (
-          <button
-            type="button"
-            onClick={addPlayer}
-            className="filter-pill"
-            style={{ width: "100%", marginBottom: 10 }}
-          >
+          <button type="button" onClick={addPlayer} className="compare-add">
             + Add another hitter
           </button>
         ) : null}
@@ -134,34 +158,103 @@ export function CompareWorkbench() {
       <section className="compare-output">
         {result ? (
           <>
-            <table className="compare-table">
-              <thead>
-                <tr>
-                  <th>Metric</th>
-                  {result.players.map((player) => (
-                    <th key={player.batter}>
-                      {player.player_name}
-                      <br />
-                      <span style={{ color: "#65758a", fontWeight: 500 }}>
-                        {player.primary_team_2025 ?? "MLB"}
+            <div className="compare-output__header">
+              <div>
+                <span className="eyebrow">Context shape</span>
+                <h2>Same scale. Different paths.</h2>
+              </div>
+              <span>{result.players.length} hitter profiles</span>
+            </div>
+
+            <div
+              className="compare-profile-grid"
+              style={{ "--compare-columns": result.players.length } as React.CSSProperties}
+            >
+              {result.players.map((player) => (
+                <article className="compare-profile-card" key={player.batter}>
+                  <div className="compare-profile-card__head">
+                    <div className="compare-avatar">{initials(player.player_name)}</div>
+                    <div>
+                      <strong>{player.player_name}</strong>
+                      <span>
+                        {player.primary_team_2025 ?? "MLB"} · MLBAM {player.batter}
                       </span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.label}>
-                    <td>{row.label}</td>
+                    </div>
+                  </div>
+
+                  <div className="compare-axis-list">
+                    {axes.map((axis) => {
+                      const value = player[axis.key] as number | null | undefined;
+                      return (
+                        <div className={`compare-axis ${axis.className}`} key={axis.key}>
+                          <div className="compare-axis__meta">
+                            <span>{axis.label}</span>
+                            <strong>{percentile(value)}</strong>
+                          </div>
+                          <div className="compare-axis__track">
+                            <i style={{ width: `${clamped(value)}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="compare-profile-card__stats">
+                    <div>
+                      <span>wOBA</span>
+                      <strong>{decimal(player.woba)}</strong>
+                    </div>
+                    <div>
+                      <span>xwOBA</span>
+                      <strong>{decimal(player.est_woba)}</strong>
+                    </div>
+                    <div>
+                      <span>RE24 / 100</span>
+                      <strong>{signed(player.re24_per_100_pa, 2)}</strong>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <div className="compare-matrix-header">
+              <div>
+                <span className="eyebrow">Metric matrix</span>
+                <h3>Context beside convention.</h3>
+              </div>
+              <p>Percentiles are league-relative within the available 2025 sample.</p>
+            </div>
+
+            <div className="compare-table-wrap">
+              <table className="compare-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
                     {result.players.map((player) => (
-                      <td key={player.batter}>{row.render(player)}</td>
+                      <th key={player.batter}>
+                        {player.player_name}
+                        <br />
+                        <span>{player.primary_team_2025 ?? "MLB"}</span>
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="notice" style={{ margin: 18 }}>
-              {result.interpretation}
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.label}>
+                      <td>{row.label}</td>
+                      {result.players.map((player) => (
+                        <td key={player.batter}>{row.render(player)}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="compare-interpretation">
+              <span className="status-dot" />
+              <p>{result.interpretation}</p>
             </div>
           </>
         ) : (
