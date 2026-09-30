@@ -84,7 +84,7 @@ export default function HowItWorksPage() {
           <p>
             Contact compares what happened on swings with how difficult those
             swings were expected to be. A low Contact percentile does not simply
-            mean "low batting average" or "bad hitter."
+            mean “low batting average” or “bad hitter.”
           </p>
         </article>
         <article className="guide-step guide-step--damage">
@@ -138,7 +138,7 @@ export default function HowItWorksPage() {
       <div className="profile-disclaimer">
         <span className="status-dot" />
         <p>
-          NorthStar's current Selection, Contact, and Damage components are
+          NorthStar’s current Selection, Contact, and Damage components are
           contextual diagnostics. They are not combined into an overall score
           and are not presented as standalone novel predictive-skill claims.
         </p>
