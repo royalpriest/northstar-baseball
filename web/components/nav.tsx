@@ -6,6 +6,7 @@ const links = [
   { href: "/blue-jays", label: "Blue Jays" },
   { href: "/canada", label: "Canada" },
   { href: "/compare", label: "Compare" },
+  { href: "/how-it-works", label: "Guide" },
 ];
 
 export function Nav() {
