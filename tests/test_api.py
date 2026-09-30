@@ -69,6 +69,13 @@ def test_player_search_supports_name_team_and_canadian_scope():
     assert search.status_code == 200
     assert search.json()["items"][0]["batter"] == 10
 
+    last_name = client.get(
+        "/api/v1/players",
+        params={"query": "canada"},
+    )
+    assert last_name.status_code == 200
+    assert last_name.json()["items"][0]["batter"] == 10
+
     toronto = client.get(
         "/api/v1/players",
         params={"team": "TOR"},
@@ -132,7 +139,7 @@ def test_compare_returns_two_to_four_profiles_without_winner():
     response = client.get(
         "/api/v1/compare",
         params=[
-            ("player", "10"),
+            ("player", "Canada"),
             ("player", "Gamma"),
         ],
     )
