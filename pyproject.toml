@@ -37,7 +37,7 @@ dev = [
 ]
 
 [tool.fastapi]
-entrypoint = "northstar.api.app:app"
+entrypoint = "app:app"
 
 [tool.setuptools.packages.find]
 where = ["src"]
