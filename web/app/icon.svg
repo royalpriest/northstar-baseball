@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="NorthStar Baseball">
+  <rect x="12" y="12" width="488" height="488" rx="104" fill="#ffffff" stroke="#e8edf3" stroke-width="4"/>
+  <path
+    d="M104 390V156h82l146 159v-95h76v170h-83L180 232v158h-76Z"
+    fill="#082b5c"
+  />
+  <path
+    d="M352 62 369 132 440 150 369 168 352 238 335 168 264 150 335 132 352 62Z"
+    fill="#1499f5"
+  />
+  <path
+    d="M352 126 360 142 376 150 360 158 352 174 344 158 328 150 344 142 352 126Z"
+    fill="#ffffff"
+  />
+</svg>
