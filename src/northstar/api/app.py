@@ -281,12 +281,19 @@ def create_app(
             ...,
             description=(
                 "Repeat the player query parameter 2-4 times using "
-                "MLBAM IDs or exact player names."
+                "MLBAM IDs, first names, last names, or full player names."
             ),
         ),
     ) -> dict[str, object]:
         profile_store = _store(request)
-        resolved = profile_store.resolve_players(player)
+
+        try:
+            resolved = profile_store.resolve_players(player)
+        except (KeyError, ValueError) as exc:
+            raise HTTPException(
+                status_code=422,
+                detail=str(exc),
+            ) from exc
 
         if len(resolved) < 2 or len(resolved) > 4:
             raise HTTPException(
