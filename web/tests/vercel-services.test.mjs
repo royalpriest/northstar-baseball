@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
 const config = JSON.parse(
   await readFile(new URL("../../vercel.json", import.meta.url), "utf8"),
 );
 
-test("Vercel services keep FastAPI internal behind the Next.js service", () => {
+test("Vercel services keep FastAPI internal behind the Next.js service", async () => {
   assert.equal(config.services.web.root, "web");
   assert.equal(config.services.web.framework, "nextjs");
 
@@ -21,7 +21,8 @@ test("Vercel services keep FastAPI internal behind the Next.js service", () => {
 
   assert.equal(config.services.api.root, ".");
   assert.equal(config.services.api.framework, "fastapi");
-  assert.equal(config.services.api.entrypoint, "northstar.api.app:app");
+  assert.equal(config.services.api.entrypoint, "app:app");
+  await access(new URL("../../app.py", import.meta.url));
 
   assert.deepEqual(config.rewrites, [
     {
