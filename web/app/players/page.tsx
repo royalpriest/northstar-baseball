@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { PlayerExplorerRow } from "@/components/player-explorer-row";
-import { PlayerRow } from "@/components/player-row";
+import { ResponsivePlayerList } from "@/components/responsive-player-list";
 import { SearchBox } from "@/components/search-box";
 import { getLeaderboard, getMeta, searchPlayers } from "@/lib/api";
 
@@ -70,9 +69,9 @@ export default async function PlayersPage({ searchParams }: Props) {
             {trimmed ? `Results for “${trimmed}”` : "Find a hitter."}
           </h1>
           <p>
-            Search the canonical 2025 NorthStar profile by player name or
-            MLBAM ID, or browse qualified hitters through one contextual lens
-            at a time.
+            Search the canonical 2025 NorthStar profile by first name, last
+            name, full name, or MLBAM ID, or browse qualified hitters through
+            one contextual lens at a time.
           </p>
         </div>
         <div className="page-hero__aside">
@@ -83,7 +82,7 @@ export default async function PlayersPage({ searchParams }: Props) {
       </section>
 
       <div className="toolbar player-index-toolbar">
-        <SearchBox compact placeholder="Search by player name or MLBAM ID…" />
+        <SearchBox compact placeholder="Search first/last name or MLBAM ID…" />
       </div>
 
       {!trimmed ? (
@@ -125,22 +124,12 @@ export default async function PlayersPage({ searchParams }: Props) {
           </div>
         ) : null}
 
-        {players.map((player, index) =>
-          trimmed ? (
-            <PlayerRow
-              key={player.batter}
-              player={player}
-              rank={index + 1}
-            />
-          ) : (
-            <PlayerExplorerRow
-              key={player.batter}
-              player={player}
-              rank={index + 1}
-              lens={activeLens}
-            />
-          ),
-        )}
+        <ResponsivePlayerList
+          players={players}
+          searchMode={Boolean(trimmed)}
+          lens={activeLens}
+          mobileLimit={8}
+        />
       </section>
 
       <div className="player-index-note">
