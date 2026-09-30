@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, type CSSProperties } from "react";
 import { browserApiBase } from "@/lib/browser-config";
 import { decimal, percentile, signed } from "@/lib/format";
 import type { CompareResponse, PlayerProfile } from "@/lib/types";
@@ -26,21 +26,9 @@ const axes: Array<{
   label: string;
   className: string;
 }> = [
-  {
-    key: "selection_context_percentile",
-    label: "Selection",
-    className: "compare-axis--selection",
-  },
-  {
-    key: "contact_context_percentile",
-    label: "Contact",
-    className: "compare-axis--contact",
-  },
-  {
-    key: "damage_context_percentile",
-    label: "Damage",
-    className: "compare-axis--damage",
-  },
+  { key: "selection_context_percentile", label: "Selection", className: "selection" },
+  { key: "contact_context_percentile", label: "Contact", className: "contact" },
+  { key: "damage_context_percentile", label: "Damage", className: "damage" },
 ];
 
 function clamped(value?: number | null) {
@@ -108,19 +96,20 @@ export function CompareWorkbench() {
   }
 
   return (
-    <div className="compare-shell">
-      <form className="compare-controls" onSubmit={submit}>
-        <span className="eyebrow">Workbench</span>
-        <h2>Choose 2–4 hitters</h2>
-        <p>
-          Use a first name, last name, full name, or MLBAM ID. If a short name
-          matches multiple hitters, NorthStar will ask for a little more detail.
-          The view keeps each metric separate — there is no winner or overall grade.
-        </p>
+    <div className="compare-shell compare-shell--editorial">
+      <form className="compare-controls compare-controls--editorial" onSubmit={submit}>
+        <div className="compare-controls__intro">
+          <span className="eyebrow">Set the field</span>
+          <h2>Choose 2–4 hitters.</h2>
+          <p>
+            First name, last name, full name, or MLBAM ID all work. Each player
+            stays on the same 0–100 league-relative field.
+          </p>
+        </div>
 
-        <div className="compare-input-stack">
+        <div className="compare-input-stack compare-input-stack--editorial">
           {players.map((player, index) => (
-            <div key={index} className="compare-input-wrap">
+            <div key={index} className="compare-input-wrap compare-input-wrap--editorial">
               <span className="compare-input-index">{String(index + 1).padStart(2, "0")}</span>
               <input
                 className="compare-input"
@@ -143,90 +132,91 @@ export function CompareWorkbench() {
           ))}
         </div>
 
-        {players.length < 4 ? (
-          <button type="button" onClick={addPlayer} className="compare-add">
-            + Add another hitter
+        <div className="compare-controls__actions">
+          {players.length < 4 ? (
+            <button type="button" onClick={addPlayer} className="compare-add">
+              + Add hitter
+            </button>
+          ) : <span />}
+          <button className="primary-button" disabled={loading}>
+            {loading ? "Comparing…" : "Compare profiles"}
           </button>
-        ) : null}
-
-        <button className="primary-button" disabled={loading}>
-          {loading ? "Comparing…" : "Compare profiles"}
-        </button>
+        </div>
 
         {error ? <div className="notice" role="alert">{error}</div> : null}
       </form>
 
-      <section className="compare-output" aria-live="polite" aria-busy={loading}>
+      <section className="compare-output compare-output--editorial" aria-live="polite" aria-busy={loading}>
         {result ? (
           <>
-            <div className="compare-output__header">
+            <div className="compare-output__header compare-output__header--editorial">
               <div>
-                <span className="eyebrow">Context shape</span>
-                <h2>Same scale. Different paths.</h2>
+                <span className="eyebrow">Shared field</span>
+                <h2>Where the profiles separate.</h2>
               </div>
-              <span>{result.players.length} hitter profiles</span>
+              <span>{result.players.length} hitters · 2025</span>
             </div>
 
-            <div
-              className="compare-profile-grid"
-              style={{ "--compare-columns": result.players.length } as React.CSSProperties}
-            >
-              {result.players.map((player) => (
-                <article className="compare-profile-card" key={player.batter}>
-                  <div className="compare-profile-card__head">
-                    <div className="compare-avatar">{initials(player.player_name)}</div>
-                    <div>
-                      <strong>{player.player_name}</strong>
-                      <span>
-                        {player.primary_team_2025 ?? "MLB"} · MLBAM {player.batter}
-                      </span>
-                    </div>
+            <div className="compare-spectrum">
+              {axes.map((axis) => (
+                <div className={`compare-spectrum__axis compare-spectrum__axis--${axis.className}`} key={axis.key}>
+                  <div className="compare-spectrum__label">
+                    <span>{axis.label}</span>
+                    <small>0–100 percentile</small>
                   </div>
-
-                  <div className="compare-axis-list">
-                    {axes.map((axis) => {
+                  <div className="compare-spectrum__track">
+                    <span className="compare-spectrum__midpoint" aria-hidden="true" />
+                    {result.players.map((player, index) => {
                       const value = player[axis.key] as number | null | undefined;
+                      const position = clamped(value);
                       return (
-                        <div className={`compare-axis ${axis.className}`} key={axis.key}>
-                          <div className="compare-axis__meta">
-                            <span>{axis.label}</span>
-                            <strong>{percentile(value)}</strong>
-                          </div>
-                          <div className="compare-axis__track">
-                            <i style={{ width: `${clamped(value)}%` }} />
-                          </div>
+                        <div
+                          className="compare-spectrum__marker"
+                          key={player.batter}
+                          style={{
+                            "--position": `${position}%`,
+                            "--marker-index": index,
+                          } as CSSProperties}
+                        >
+                          <span>{initials(player.player_name)}</span>
+                          <strong>{percentile(value)}</strong>
                         </div>
                       );
                     })}
                   </div>
+                </div>
+              ))}
+            </div>
 
-                  <div className="compare-profile-card__stats">
-                    <div>
-                      <span>wOBA</span>
-                      <strong>{decimal(player.woba)}</strong>
-                    </div>
-                    <div>
-                      <span>xwOBA</span>
-                      <strong>{decimal(player.est_woba)}</strong>
-                    </div>
-                    <div>
-                      <span>RE24 / 100</span>
-                      <strong>{signed(player.re24_per_100_pa, 2)}</strong>
-                    </div>
+            <div
+              className="compare-identity-grid"
+              style={{ "--compare-columns": result.players.length } as CSSProperties}
+            >
+              {result.players.map((player) => (
+                <article className="compare-identity-card" key={player.batter}>
+                  <div className="compare-identity-card__top">
+                    <span>{initials(player.player_name)}</span>
+                    <small>{player.primary_team_2025 ?? "MLB"}</small>
+                  </div>
+                  <strong>{player.player_name}</strong>
+                  <div className="compare-identity-card__stats">
+                    <div><span>wOBA</span><strong>{decimal(player.woba)}</strong></div>
+                    <div><span>xwOBA</span><strong>{decimal(player.est_woba)}</strong></div>
+                    <div><span>RE24 / 100</span><strong>{signed(player.re24_per_100_pa, 2)}</strong></div>
                   </div>
                 </article>
               ))}
             </div>
 
-            <div className="compare-matrix-header">
+            <div className="compare-matrix-header compare-matrix-header--editorial">
               <div>
-                <span className="eyebrow">Metric matrix</span>
+                <span className="eyebrow">Supporting measures</span>
                 <h3>Context beside convention.</h3>
               </div>
               <p>Percentiles are league-relative within the available 2025 sample.</p>
             </div>
 
-            <div className="compare-table-wrap">
+            <div className="compare-table-wrap compare-table-wrap--editorial">
               <table className="compare-table">
                 <caption className="sr-only">
                   Side-by-side NorthStar and established offensive metrics for the selected hitters
@@ -256,21 +246,24 @@ export function CompareWorkbench() {
               </table>
             </div>
 
-            <div className="compare-interpretation">
+            <div className="compare-interpretation compare-interpretation--editorial">
               <span className="status-dot" />
               <p>{result.interpretation}</p>
             </div>
           </>
         ) : (
-          <div className="compare-empty">
-            <div>
-              <span className="eyebrow">Ready</span>
-              <h2>Put two hitter shapes side by side.</h2>
-              <p>
-                Judge vs. Arráez is preloaded because it makes the three-axis
-                model immediately visible: selection, contact, and damage can
-                tell very different stories.
-              </p>
+          <div className="compare-empty compare-empty--editorial">
+            <span className="eyebrow">Ready</span>
+            <h2>Start with Judge and Arráez.</h2>
+            <p>
+              The preloaded pair makes the idea visible immediately: hitters can
+              reach offensive value through very different combinations of
+              selection, contact, and damage.
+            </p>
+            <div className="compare-empty__ghost-field" aria-hidden="true">
+              <span />
+              <span />
+              <span />
             </div>
           </div>
         )}
