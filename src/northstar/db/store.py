@@ -7,6 +7,10 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from northstar.db.models import HitterProfile, HitterTeamMembership
 from northstar.profiles.comparison import COMPARISON_FIELDS
+from northstar.profiles.hitter import (
+    normalize_player_name,
+    player_name_matches,
+)
 
 
 PLAYER_SUMMARY_FIELDS = [
@@ -104,6 +108,7 @@ class DatabaseProfileStore:
             HitterProfile.season == self._season
         )
 
+        name_query: str | None = None
         if query is not None and query.strip():
             needle = query.strip()
             if needle.isdigit():
@@ -111,11 +116,7 @@ class DatabaseProfileStore:
                     HitterProfile.batter == int(needle)
                 )
             else:
-                statement = statement.where(
-                    func.lower(HitterProfile.player_name).contains(
-                        needle.casefold()
-                    )
-                )
+                name_query = needle
 
         if canadian_born is not None:
             statement = statement.where(
@@ -133,9 +134,18 @@ class DatabaseProfileStore:
             statement = statement.order_by(
                 desc(HitterProfile.season_plate_appearances),
                 asc(HitterProfile.player_name),
-            ).limit(limit)
+            )
 
-            models = session.scalars(statement).all()
+            if name_query is None:
+                models = session.scalars(statement.limit(limit)).all()
+            else:
+                candidates = session.scalars(statement).all()
+                models = [
+                    model
+                    for model in candidates
+                    if player_name_matches(model.player_name, name_query)
+                ][:limit]
+
             return [_summary(dict(model.profile_json)) for model in models]
 
     def canadian_players(
@@ -274,9 +284,48 @@ class DatabaseProfileStore:
         players: Iterable[str],
     ) -> list[str | int]:
         resolved: list[str | int] = []
-        for player in players:
-            value = str(player).strip()
-            if not value:
-                continue
-            resolved.append(int(value) if value.isdigit() else value)
+
+        with self._sessions() as session:
+            all_players = session.scalars(
+                select(HitterProfile)
+                .where(HitterProfile.season == self._season)
+                .order_by(asc(HitterProfile.player_name))
+            ).all()
+
+            for player in players:
+                value = str(player).strip()
+                if not value:
+                    continue
+                if value.isdigit():
+                    resolved.append(int(value))
+                    continue
+
+                normalized = normalize_player_name(value)
+                exact = [
+                    model
+                    for model in all_players
+                    if normalize_player_name(model.player_name) == normalized
+                ]
+                if len(exact) == 1:
+                    resolved.append(int(exact[0].batter))
+                    continue
+
+                matches = [
+                    model
+                    for model in all_players
+                    if player_name_matches(model.player_name, value)
+                ]
+                if not matches:
+                    raise KeyError(f"No hitter matched {player!r}")
+                if len(matches) > 1:
+                    options = ", ".join(
+                        model.player_name for model in matches[:5]
+                    )
+                    raise ValueError(
+                        f"Multiple hitters matched {player!r}: {options}. "
+                        "Use more of the name or the MLBAM ID."
+                    )
+
+                resolved.append(int(matches[0].batter))
+
         return resolved
