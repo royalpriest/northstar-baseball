@@ -22,12 +22,12 @@ export function ResponsivePlayerList({
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const hiddenCount = Math.max(0, players.length - mobileLimit);
+  const className = expanded
+    ? "responsive-player-list responsive-player-list--expanded"
+    : "responsive-player-list";
 
   return (
-    <div
-      className={\`responsive-player-list \${expanded ? "responsive-player-list--expanded" : ""}\`}
-      style={{ "--mobile-row-limit": mobileLimit } as React.CSSProperties}
-    >
+    <div className={className}>
       <div className="responsive-player-list__rows">
         {players.map((player, index) =>
           searchMode ? (
@@ -56,7 +56,9 @@ export function ResponsivePlayerList({
         >
           <span>{expanded ? "Show less" : "Show more"}</span>
           <small>
-            {expanded ? \`\${players.length} shown\` : \`\${mobileLimit} of \${players.length} shown\`}
+            {expanded
+              ? players.length + " shown"
+              : mobileLimit + " of " + players.length + " shown"}
           </small>
         </button>
       ) : null}
