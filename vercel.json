@@ -16,7 +16,7 @@
     "api": {
       "root": ".",
       "framework": "fastapi",
-      "entrypoint": "northstar.api.app:app",
+      "entrypoint": "app:app",
       "installCommand": "python -m pip install -r requirements-api.txt && python -m pip install --no-deps ."
     }
   },
