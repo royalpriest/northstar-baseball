@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from northstar.profiles.comparison import build_hitter_comparison
+from northstar.profiles.hitter import player_name_matches, select_hitter_profile
 
 
 DEFAULT_PROFILE_PATH = Path(
@@ -148,12 +149,8 @@ class ProfileStore:
             if needle.isdigit():
                 id_match = frame["batter"].eq(int(needle))
 
-            name_match = (
-                frame["player_name"]
-                .fillna("")
-                .astype(str)
-                .str.casefold()
-                .str.contains(needle, regex=False)
+            name_match = frame["player_name"].fillna("").map(
+                lambda name: player_name_matches(name, needle)
             )
             frame = frame.loc[id_match | name_match].copy()
 
@@ -321,5 +318,10 @@ class ProfileStore:
             value = str(player).strip()
             if not value:
                 continue
-            resolved.append(int(value) if value.isdigit() else value)
+            if value.isdigit():
+                resolved.append(int(value))
+                continue
+
+            row = select_hitter_profile(self._profile, value)
+            resolved.append(int(row["batter"]))
         return resolved
