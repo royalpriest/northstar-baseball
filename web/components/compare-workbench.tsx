@@ -152,10 +152,10 @@ export function CompareWorkbench() {
           {loading ? "Comparing…" : "Compare profiles"}
         </button>
 
-        {error ? <div className="notice">{error}</div> : null}
+        {error ? <div className="notice" role="alert">{error}</div> : null}
       </form>
 
-      <section className="compare-output">
+      <section className="compare-output" aria-live="polite" aria-busy={loading}>
         {result ? (
           <>
             <div className="compare-output__header">
@@ -227,6 +227,9 @@ export function CompareWorkbench() {
 
             <div className="compare-table-wrap">
               <table className="compare-table">
+                <caption className="sr-only">
+                  Side-by-side NorthStar and established offensive metrics for the selected hitters
+                </caption>
                 <thead>
                   <tr>
                     <th>Metric</th>
