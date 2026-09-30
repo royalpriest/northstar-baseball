@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PercentileBar } from "@/components/percentile-bar";
 import { getPlayer, NorthStarApiError } from "@/lib/api";
@@ -8,6 +9,10 @@ import {
   percentRate,
   signed,
 } from "@/lib/format";
+import {
+  percentilePlainEnglish,
+  playerInterpretation,
+} from "@/lib/interpretation";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +36,7 @@ export default async function PlayerPage({ params }: Props) {
   const place = [player.birth_city, player.birth_state_province, player.birth_country]
     .filter(Boolean)
     .join(", ");
+  const interpretation = playerInterpretation(player);
 
   return (
     <div className="page-shell page-shell--narrow">
@@ -120,6 +126,36 @@ export default async function PlayerPage({ params }: Props) {
         </article>
       </section>
 
+      <section className="profile-reading">
+        <div className="profile-reading__header">
+          <div>
+            <span className="eyebrow">Plain-English read</span>
+            <h2>What this profile says.</h2>
+          </div>
+          <Link href="/how-it-works" className="link-arrow">
+            How NorthStar works ↗
+          </Link>
+        </div>
+
+        <div className="profile-reading__grid">
+          <article>
+            <span>Selection · {percentile(player.selection_context_percentile)}</span>
+            <p>{interpretation.selection}</p>
+            <small>{percentilePlainEnglish(player.selection_context_percentile)}</small>
+          </article>
+          <article>
+            <span>Contact · {percentile(player.contact_context_percentile)}</span>
+            <p>{interpretation.contact}</p>
+            <small>{percentilePlainEnglish(player.contact_context_percentile)}</small>
+          </article>
+          <article>
+            <span>Damage · {percentile(player.damage_context_percentile)}</span>
+            <p>{interpretation.damage}</p>
+            <small>{percentilePlainEnglish(player.damage_context_percentile)}</small>
+          </article>
+        </div>
+      </section>
+
       <section className="profile-section-intro">
         <div>
           <span className="eyebrow">Under the hood</span>
@@ -138,11 +174,13 @@ export default async function PlayerPage({ params }: Props) {
 
           <PercentileBar
             label="Chase avoidance"
+            help="League-relative ranking for avoiding swings at pitches outside the strike zone."
             value={player.chase_avoidance_percentile}
             detail={`Chase rate ${percentRate(player.statcast_chase_rate)}`}
           />
           <PercentileBar
             label="Selection context"
+            help="Decision quality after accounting for pitch and game context."
             value={player.selection_context_percentile}
             detail={`${integer(player.eligible_decisions)} modeled decisions`}
             tone="violet"
@@ -155,12 +193,14 @@ export default async function PlayerPage({ params }: Props) {
 
           <PercentileBar
             label="Contact rate"
+            help="How often the hitter made contact when swinging."
             value={player.contact_rate_percentile}
             detail={`Observed contact ${percentRate(player.statcast_contact_rate)}`}
             tone="cyan"
           />
           <PercentileBar
             label="Contact context"
+            help="Contact execution relative to the modeled difficulty of the swings taken."
             value={player.contact_context_percentile}
             detail={`${integer(player.swings)} modeled swings`}
             tone="cyan"
@@ -173,16 +213,19 @@ export default async function PlayerPage({ params }: Props) {
 
           <PercentileBar
             label="xwOBA on contact"
+            help="Expected offensive value of batted-ball contact, shown here as a league-relative percentile."
             value={player.xwoba_on_contact_percentile}
             detail={decimal(player.statcast_xwoba_on_contact)}
           />
           <PercentileBar
             label="Barrel rate"
+            help="Share of batted balls meeting Statcast barrel quality thresholds."
             value={player.barrel_percentile}
             detail={percentRate(player.statcast_barrel_rate)}
           />
           <PercentileBar
             label="Damage context"
+            help="Contact quality relative to the opportunities presented."
             value={player.damage_context_percentile}
             detail={`${integer(player.batted_balls)} batted balls`}
             tone="violet"
@@ -195,16 +238,19 @@ export default async function PlayerPage({ params }: Props) {
 
           <PercentileBar
             label="wOBA"
+            help="Weighted On-Base Average, an established offensive outcome metric."
             value={player.woba_percentile}
             detail={decimal(player.woba)}
           />
           <PercentileBar
             label="xwOBA"
+            help="Expected wOBA based on Statcast quality-of-contact inputs."
             value={player.xwoba_percentile}
             detail={decimal(player.est_woba)}
           />
           <PercentileBar
             label="RE24 / 100 PA"
+            help="Run expectancy change per 100 plate appearances, when available in NorthStar's validation source."
             value={player.re24_percentile}
             detail={signed(player.re24_per_100_pa, 2)}
             tone="cyan"
