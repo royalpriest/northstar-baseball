@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
+import { Space_Mono } from "next/font/google";
 import "@/app/globals.css";
 import { Nav } from "@/components/nav";
+
+const spaceMono = Space_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-space-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -17,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang="en" data-scroll-behavior="smooth" className={spaceMono.variable}>
       <body>
         <a className="skip-link" href="#main-content">
           Skip to content
