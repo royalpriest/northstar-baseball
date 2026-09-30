@@ -3169,3 +3169,218 @@ a {
   .canada-roster-key { padding: 16px 18px; }
   .canada-coverage { padding: 22px; }
 }
+
+/* Interpretation and guide layer */
+.metric-term {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+  cursor: help;
+}
+
+.metric-term > span {
+  width: 14px;
+  height: 14px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 50%;
+  color: #8192a7;
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.profile-reading {
+  margin-top: 18px;
+  padding: 26px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(79, 140, 255, 0.05), transparent 28%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.012));
+}
+
+.profile-reading__header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.profile-reading__header h2 {
+  margin: 6px 0 0;
+  font-size: 24px;
+  letter-spacing: -0.035em;
+}
+
+.profile-reading__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding-top: 14px;
+}
+
+.profile-reading__grid article {
+  min-height: 190px;
+  padding: 19px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.014);
+}
+
+.profile-reading__grid article > span {
+  color: var(--blue-bright);
+  font-size: 9px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.profile-reading__grid article:nth-child(2) > span {
+  color: var(--cyan);
+}
+
+.profile-reading__grid article:nth-child(3) > span {
+  color: var(--violet);
+}
+
+.profile-reading__grid p {
+  margin: 17px 0 14px;
+  color: #a2b0c1;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.profile-reading__grid small {
+  color: #708197;
+  font-size: 9.5px;
+  line-height: 1.5;
+}
+
+.guide-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 38px 0 18px;
+}
+
+.guide-step {
+  --guide-color: var(--blue-bright);
+  min-height: 280px;
+  padding: 26px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--guide-color) 8%, transparent), transparent 42%),
+    rgba(255, 255, 255, 0.018);
+}
+
+.guide-step--contact {
+  --guide-color: var(--cyan);
+}
+
+.guide-step--damage {
+  --guide-color: var(--violet);
+}
+
+.guide-step > span {
+  color: var(--guide-color);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+}
+
+.guide-step h2 {
+  margin: 74px 0 12px;
+  font-size: 27px;
+  letter-spacing: -0.04em;
+}
+
+.guide-step p {
+  margin: 0;
+  color: #98a8ba;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.guide-example {
+  margin: 18px 0 18px;
+  padding: 30px;
+  border: 1px solid rgba(120, 166, 255, 0.18);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 90% 10%, rgba(79, 140, 255, 0.08), transparent 30%),
+    rgba(79, 140, 255, 0.025);
+}
+
+.guide-example h2 {
+  margin: 9px 0 14px;
+  font-size: clamp(28px, 3vw, 40px);
+  letter-spacing: -0.045em;
+}
+
+.guide-example p {
+  max-width: 850px;
+  color: #a2b0c1;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.glossary-card {
+  min-height: 160px;
+  padding: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.016);
+}
+
+.glossary-card h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.glossary-card p {
+  margin: 0;
+  color: #8fa0b4;
+  font-size: 11.5px;
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .profile-reading__grid,
+  .guide-steps,
+  .glossary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-reading__grid article,
+  .guide-step {
+    min-height: 0;
+  }
+
+  .guide-step h2 {
+    margin-top: 38px;
+  }
+}
+
+@media (max-width: 760px) {
+  .profile-reading__header {
+    display: block;
+  }
+
+  .profile-reading__header .link-arrow {
+    display: inline-block;
+    margin-top: 12px;
+  }
+}
