@@ -201,5 +201,16 @@ def test_api_security_headers_are_present():
 
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["x-permitted-cross-domain-policies"] == "none"
     assert response.headers["referrer-policy"] == "no-referrer"
     assert "camera=()" in response.headers["permissions-policy"]
+
+
+def test_production_api_sets_hsts(monkeypatch):
+    monkeypatch.setenv("NORTHSTAR_ENV", "production")
+    client = TestClient(create_app(store=ProfileStore(_profile())))
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.headers["strict-transport-security"] == "max-age=31536000"
