@@ -40,17 +40,24 @@ def _client() -> TestClient:
     return TestClient(create_app(store=store))
 
 
-def test_health_and_meta():
+def test_health_ready_and_meta():
     client = _client()
 
     root = client.get("/")
     assert root.status_code == 200
     assert root.json()["docs"] == "/docs"
+    assert root.json()["ready"] == "/ready"
     assert root.json()["api"] == "/api/v1"
 
     health = client.get("/health")
     assert health.status_code == 200
     assert health.json()["status"] == "ok"
+
+    ready = client.get("/ready")
+    assert ready.status_code == 200
+    assert ready.json()["status"] == "ready"
+    assert ready.json()["players"] == 3
+    assert ready.json()["storage_backend"] == "csv"
 
     meta = client.get("/api/v1/meta")
     assert meta.status_code == 200
@@ -169,3 +176,30 @@ def test_json_responses_preserve_unicode_names():
     assert response.status_code == 200
     assert response.json()["player_name"] == "Luis Arráez"
     assert "charset=utf-8" in response.headers["content-type"].lower()
+
+
+def test_production_requires_database_backend(monkeypatch):
+    monkeypatch.setenv("NORTHSTAR_ENV", "production")
+    monkeypatch.delenv("NORTHSTAR_DATABASE_URL", raising=False)
+
+    client = TestClient(create_app())
+
+    ready = client.get("/ready")
+    assert ready.status_code == 503
+    assert ready.json()["detail"] == (
+        "NorthStar database backend is required in production."
+    )
+
+    root = client.get("/")
+    assert root.status_code == 200
+    assert root.json()["docs"] is None
+    assert root.json()["openapi"] is None
+
+
+def test_api_security_headers_are_present():
+    response = _client().get("/health")
+
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["referrer-policy"] == "no-referrer"
+    assert "camera=()" in response.headers["permissions-policy"]
