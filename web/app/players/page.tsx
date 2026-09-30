@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { PlayerExplorerRow } from "@/components/player-explorer-row";
-import { PlayerRow } from "@/components/player-row";
+import { ResponsivePlayerList } from "@/components/responsive-player-list";
 import { SearchBox } from "@/components/search-box";
 import { getLeaderboard, getMeta, searchPlayers } from "@/lib/api";
 
@@ -125,22 +124,12 @@ export default async function PlayersPage({ searchParams }: Props) {
           </div>
         ) : null}
 
-        {players.map((player, index) =>
-          trimmed ? (
-            <PlayerRow
-              key={player.batter}
-              player={player}
-              rank={index + 1}
-            />
-          ) : (
-            <PlayerExplorerRow
-              key={player.batter}
-              player={player}
-              rank={index + 1}
-              lens={activeLens}
-            />
-          ),
-        )}
+        <ResponsivePlayerList
+          players={players}
+          searchMode={Boolean(trimmed)}
+          lens={activeLens}
+          mobileLimit={8}
+        />
       </section>
 
       <div className="player-index-note">
