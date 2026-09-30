@@ -113,8 +113,9 @@ export function CompareWorkbench() {
         <span className="eyebrow">Workbench</span>
         <h2>Choose 2–4 hitters</h2>
         <p>
-          Use exact names or MLBAM IDs. The view keeps each metric separate —
-          there is no winner or overall grade.
+          Use a first name, last name, full name, or MLBAM ID. If a short name
+          matches multiple hitters, NorthStar will ask for a little more detail.
+          The view keeps each metric separate — there is no winner or overall grade.
         </p>
 
         <div className="compare-input-stack">
@@ -125,7 +126,7 @@ export function CompareWorkbench() {
                 className="compare-input"
                 value={player}
                 onChange={(event) => update(index, event.target.value)}
-                placeholder={index === 0 ? "Aaron Judge or 592450" : "Luis Arráez or 650333"}
+                placeholder={index === 0 ? "Judge, Aaron, or 592450" : "Arráez, Luis, or 650333"}
                 aria-label={`Player ${index + 1}`}
               />
               {players.length > 2 ? (
