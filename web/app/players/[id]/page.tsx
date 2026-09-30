@@ -129,7 +129,7 @@ export default async function PlayerPage({ params }: Props) {
       <section className="profile-reading">
         <div className="profile-reading__header">
           <div>
-            <span className="eyebrow">Plain-English read</span>
+            <span className="eyebrow">Reading the shape</span>
             <h2>What this profile says.</h2>
           </div>
           <Link href="/how-it-works" className="link-arrow">
