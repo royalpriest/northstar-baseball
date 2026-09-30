@@ -19,10 +19,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <a className="skip-link" href="#main-content">
+          Skip to content
+        </a>
         <div className="ambient ambient--one" aria-hidden="true" />
         <div className="ambient ambient--two" aria-hidden="true" />
         <Nav />
-        <main>{children}</main>
+        <main id="main-content">{children}</main>
       </body>
     </html>
   );
