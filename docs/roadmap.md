@@ -249,7 +249,8 @@
 - [x] Add plain-language player interpretation and metric guide
 - [ ] Run Next.js build and local browser review
 - [ ] Refine interactive visualizations after visual QA
-- [ ] Run site-wide consistency, accessibility, and mobile review
+- [x] Run first site-wide consistency, accessibility, and mobile implementation pass
+- [ ] Complete browser QA at 375 / 430 / 768 / 1024 / desktop widths
 
 ## M22 — Production engineering
 - [ ] Docker
