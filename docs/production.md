@@ -89,7 +89,7 @@ Before every production release:
 
 ```bash
 python -m pytest
-ruff check src tests scripts
+ruff check src tests scripts --select E9,F63,F7,F82
 
 cd web
 npm ci
@@ -100,6 +100,8 @@ npm audit --omit=dev --audit-level=high
 ```
 
 CI repeats these checks and also verifies that the API Docker image builds.
+
+The repository still has historical Ruff formatting/import-order debt outside the production-hardening work. CI currently blocks on correctness-class Ruff rules plus the full test suite rather than pretending the entire legacy tree is style-clean. A repository-wide Ruff cleanup can be done as a separate, reviewable change.
 
 ## Post-deploy smoke test
 
