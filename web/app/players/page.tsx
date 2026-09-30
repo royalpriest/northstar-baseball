@@ -69,9 +69,9 @@ export default async function PlayersPage({ searchParams }: Props) {
             {trimmed ? `Results for “${trimmed}”` : "Find a hitter."}
           </h1>
           <p>
-            Search the canonical 2025 NorthStar profile by player name or
-            MLBAM ID, or browse qualified hitters through one contextual lens
-            at a time.
+            Search the canonical 2025 NorthStar profile by first name, last
+            name, full name, or MLBAM ID, or browse qualified hitters through
+            one contextual lens at a time.
           </p>
         </div>
         <div className="page-hero__aside">
@@ -82,7 +82,7 @@ export default async function PlayersPage({ searchParams }: Props) {
       </section>
 
       <div className="toolbar player-index-toolbar">
-        <SearchBox compact placeholder="Search by player name or MLBAM ID…" />
+        <SearchBox compact placeholder="Search first/last name or MLBAM ID…" />
       </div>
 
       {!trimmed ? (
