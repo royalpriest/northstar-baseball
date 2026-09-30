@@ -70,7 +70,7 @@ export function SearchBox({
 
   return (
     <div className={`search-shell ${compact ? "search-shell--compact" : ""}`}>
-      <form className="search-box" onSubmit={submit}>
+      <form className="search-box" onSubmit={submit} role="search">
         <span className="search-box__icon" aria-hidden="true">⌕</span>
         <input
           ref={inputRef}
@@ -79,13 +79,21 @@ export function SearchBox({
           placeholder={placeholder}
           aria-label={placeholder}
           autoComplete="off"
+          aria-expanded={normalized.length >= 2}
+          aria-controls="player-search-results"
+          aria-autocomplete="list"
         />
         <kbd>Ctrl K</kbd>
       </form>
 
       {normalized.length >= 2 ? (
-        <div className="search-results">
-          <div className="search-results__meta">
+        <div
+          className="search-results"
+          id="player-search-results"
+          role="listbox"
+          aria-label="Player search results"
+        >
+          <div className="search-results__meta" aria-live="polite">
             <span>{loading ? "Searching…" : "Players"}</span>
             {!loading ? <span>{results.length} shown</span> : null}
           </div>
@@ -94,6 +102,7 @@ export function SearchBox({
               href={`/players/${player.batter}`}
               className="search-result"
               key={player.batter}
+              role="option"
             >
               <span className="search-result__initials">
                 {player.player_name
