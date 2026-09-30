@@ -139,3 +139,19 @@ def test_select_hitter_profile_raises_for_unknown_player():
 
     with pytest.raises(KeyError):
         select_hitter_profile(profile, "Nobody")
+
+
+def test_select_hitter_profile_supports_first_last_partial_and_accents():
+    profile = pd.DataFrame(
+        {
+            "batter": [10, 20, 30],
+            "player_name": ["Aaron Judge", "Luis Arráez", "Luis Robert Jr."],
+        }
+    )
+
+    assert select_hitter_profile(profile, "Aaron")["batter"] == 10
+    assert select_hitter_profile(profile, "Judge")["batter"] == 10
+    assert select_hitter_profile(profile, "Arraez")["batter"] == 20
+
+    with pytest.raises(ValueError, match="Multiple hitters matched"):
+        select_hitter_profile(profile, "Luis")

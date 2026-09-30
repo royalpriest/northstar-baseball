@@ -17,12 +17,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body>
+        <a className="skip-link" href="#main-content">
+          Skip to content
+        </a>
         <div className="ambient ambient--one" aria-hidden="true" />
         <div className="ambient ambient--two" aria-hidden="true" />
         <Nav />
-        <main>{children}</main>
+        <main id="main-content" tabIndex={-1}>{children}</main>
       </body>
     </html>
   );

@@ -40,17 +40,24 @@ def _client() -> TestClient:
     return TestClient(create_app(store=store))
 
 
-def test_health_and_meta():
+def test_health_ready_and_meta():
     client = _client()
 
     root = client.get("/")
     assert root.status_code == 200
     assert root.json()["docs"] == "/docs"
+    assert root.json()["ready"] == "/ready"
     assert root.json()["api"] == "/api/v1"
 
     health = client.get("/health")
     assert health.status_code == 200
     assert health.json()["status"] == "ok"
+
+    ready = client.get("/ready")
+    assert ready.status_code == 200
+    assert ready.json()["status"] == "ready"
+    assert ready.json()["players"] == 3
+    assert ready.json()["storage_backend"] == "csv"
 
     meta = client.get("/api/v1/meta")
     assert meta.status_code == 200
@@ -68,6 +75,13 @@ def test_player_search_supports_name_team_and_canadian_scope():
     )
     assert search.status_code == 200
     assert search.json()["items"][0]["batter"] == 10
+
+    last_name = client.get(
+        "/api/v1/players",
+        params={"query": "canada"},
+    )
+    assert last_name.status_code == 200
+    assert last_name.json()["items"][0]["batter"] == 10
 
     toronto = client.get(
         "/api/v1/players",
@@ -132,7 +146,7 @@ def test_compare_returns_two_to_four_profiles_without_winner():
     response = client.get(
         "/api/v1/compare",
         params=[
-            ("player", "10"),
+            ("player", "Canada"),
             ("player", "Gamma"),
         ],
     )
@@ -162,3 +176,41 @@ def test_json_responses_preserve_unicode_names():
     assert response.status_code == 200
     assert response.json()["player_name"] == "Luis Arráez"
     assert "charset=utf-8" in response.headers["content-type"].lower()
+
+
+def test_production_requires_database_backend(monkeypatch):
+    monkeypatch.setenv("NORTHSTAR_ENV", "production")
+    monkeypatch.delenv("NORTHSTAR_DATABASE_URL", raising=False)
+
+    client = TestClient(create_app())
+
+    ready = client.get("/ready")
+    assert ready.status_code == 503
+    assert ready.json()["detail"] == (
+        "NorthStar database backend is required in production."
+    )
+
+    root = client.get("/")
+    assert root.status_code == 200
+    assert root.json()["docs"] is None
+    assert root.json()["openapi"] is None
+
+
+def test_api_security_headers_are_present():
+    response = _client().get("/health")
+
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["x-permitted-cross-domain-policies"] == "none"
+    assert response.headers["referrer-policy"] == "no-referrer"
+    assert "camera=()" in response.headers["permissions-policy"]
+
+
+def test_production_api_sets_hsts(monkeypatch):
+    monkeypatch.setenv("NORTHSTAR_ENV", "production")
+    client = TestClient(create_app(store=ProfileStore(_profile())))
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.headers["strict-transport-security"] == "max-age=31536000"

@@ -245,8 +245,12 @@
 - [x] Add searchable player index and individual player pages
 - [x] Add Canadian-born and Toronto Blue Jays product views
 - [x] Add interactive 2-4 player comparison workbench
+- [x] Add Canada V2 birthplace/context presentation
+- [x] Add plain-language player interpretation and metric guide
 - [ ] Run Next.js build and local browser review
 - [ ] Refine interactive visualizations after visual QA
+- [x] Run first site-wide consistency, accessibility, and mobile implementation pass
+- [ ] Complete browser QA at 375 / 430 / 768 / 1024 / desktop widths
 
 ## M22 — Production engineering
 - [ ] Docker

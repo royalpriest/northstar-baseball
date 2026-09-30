@@ -32,8 +32,10 @@ first-pitch state from final-pitch outcome.
 - SHAP
 - matplotlib
 - pytest + Ruff
-
-Later phases add FastAPI, PostgreSQL, Next.js/TypeScript, and Datadog.
+- FastAPI
+- PostgreSQL + SQLAlchemy
+- Next.js 16 / React 19 / TypeScript
+- Docker + GitHub Actions
 
 ## Setup
 
@@ -181,6 +183,18 @@ or a design decision changes because of evidence.
 
 | Date | Type | Event | Outcome / fix |
 | --- | --- | --- | --- |
+| 2026-09-30 | Production gate | The hardened release workflow completed successfully after fixing the leaderboard script defects uncovered by CI. | Python correctness checks and the full pytest suite passed; frontend ESLint, tests, production build, and runtime dependency audit passed; and the minimal FastAPI Docker image built successfully. |
+| 2026-09-30 | CI correctness | After the newline syntax repair, the production correctness gate found three additional real errors in `build_player_leaderboard.py`: the removed `DEFAULT_TABLE` name was still referenced and `table_output` was printed before assignment. | Restored explicit output selection between `DEFAULT_TOTAL_TABLE` and `DEFAULT_RATE_TABLE`, then used that resolved path consistently for directory creation, CSV output, and status reporting. |
+| 2026-09-30 | CI correctness | The narrowed Ruff correctness gate exposed a real syntax error in `scripts/build_player_leaderboard.py`: a literal `\n` had been committed between the total and rate output-path constants. | Replaced the escaped characters with an actual newline so the script parses again; this is exactly the kind of production-blocking defect the correctness gate is intended to catch. |
+| 2026-09-30 | CI hardening | The first production CI run failed its repository-wide Ruff step with 67 pre-existing style/import-order findings even though the web checks and API container build passed. | Kept Ruff in CI as a correctness gate (`E9,F63,F7,F82`) alongside the full pytest suite instead of mixing a large legacy formatting cleanup into production hardening. Repository-wide Ruff cleanup remains a separate maintenance task. |
+| 2026-09-30 | Production hardening | Prepared NorthStar for deployment rather than local-only execution. | Production now requires PostgreSQL, disables CSV fallback and API docs by default, adds `/ready`, generic backend-failure responses, gzip and security headers, frontend/API timeouts, server-only API configuration, a non-root minimal FastAPI Docker image, CI release gates, Dependabot, and a production runbook. |
+| 2026-09-30 | Search UX | Player lookup was inconsistent: general search tolerated partial names, while comparison still expected exact full names. | Unified name resolution across the in-memory profile store, PostgreSQL store, API comparison endpoint, CLI/profile selector, homepage search, Players search, and comparison UI. First name, last name, partial name, full name, and MLBAM ID are now supported; accent-insensitive matching is included, exact matches are preferred, and ambiguous short names return a clear request for more detail instead of silently choosing a hitter. |
+| 2026-09-30 | Frontend build | The new responsive player-list component failed lint/build with an invalid-character / unterminated-template error. | The generated TSX contained escaped backticks and interpolation markers as literal source characters. Rewrote the component with ordinary string composition so ESLint and Turbopack can parse it cleanly. |
+| 2026-09-30 | Mobile UX | Small-screen navigation and long player leaderboards still felt desktop-shaped. | Reworked primary navigation into a fixed glass dock below 820px so it remains available on the homepage and every route, added safe-area spacing, and capped the mobile Players list at 8 rows with an accessible Show more / Show less control while preserving the full list on larger screens. |
+| 2026-09-30 | Frontend lint | The first accessibility/responsive pass surfaced 8 ESLint findings: unescaped JSX punctuation in the Guide, synchronous state resets inside a search effect, internal navigation through `window.location.href`, and combobox ARIA attributes applied to the input's implicit textbox role. | Replaced JSX punctuation with typographic text, made short-query search state derived instead of synchronously reset in the effect, switched internal navigation to Next.js `useRouter().push()`, and declared the search input as a proper combobox while preserving its live result list semantics. |
+| 2026-09-30 | Product UX | Completed the first site-wide consistency, responsive, and accessibility pass. | Added active navigation states, a keyboard skip link, visible focus treatment, keyboard-readable metric help, improved search/comparison semantics, reduced-motion support, stronger secondary-text contrast, and responsive behavior across navigation, profiles, comparison tables, search results, discovery rows, and team-context surfaces at tablet and mobile widths. |
+| 2026-09-30 | Product UX | Added the first plain-language interpretation layer for non-expert users. | Player profiles now explain Selection / Contact / Damage in plain English, percentiles include a direct “higher than about X% of profiled hitters” interpretation, metric labels can expose concise help text, and a new `/how-it-works` guide defines the NorthStar axes plus wOBA, xwOBA, RE24, chase rate, and barrel rate without introducing a composite score. |
+| 2026-09-27 | Dev warning | Next.js reported a hydration mismatch on `/compare` because browser-injected `data-new-gr-c-s-check-loaded` and `data-gr-ext-installed` attributes appeared on `<body>` before React hydrated. | These attributes are injected by Grammarly, not NorthStar. Disable Grammarly for localhost or test in an extension-free/incognito window; no application code change is required unless the warning persists without extensions. |
 | 2026-09-27 | Frontend visual pass | Canada V2 retains the existing hero and NorthStar palette while adding birthplace/province context, full Selection / Contact / Damage shapes, separate lens leaders, and clearer summary cards. | Percentiles remain league-relative, exact leader ties are retained, missing axes remain unavailable rather than zero, and mobile rows preserve all three axes. Canadian-born still means MLB birth country equals Canada; no citizenship inference or composite score is introduced. |
 | 2026-09-27 | Data presentation | Canada RE24 coverage now counts finite values in the displayed cohort instead of calling a separately limited leaderboard and labeling its count qualified. | Zero and negative values count as available. The page explains that RE24 is joined from the separate run-value validation source; a missing value is not zero or evidence of poor performance. No individual missing-value cause or qualification threshold is invented. |
 | 2026-09-27 | Frontend validation | Canada V2 passed the production build, four frontend data-handling tests, and ESLint for changed code. Production-browser inspection used the committed Canadian hitter CSV through a temporary API fixture at desktop (1440 px) and mobile (390 px) widths. | Eight rows and 24 axes render without horizontal overflow or browser runtime errors; the RE24 explanation link works. The mobile section heading was stacked after visual review. PostgreSQL integration was not rerun in this environment. |
@@ -1640,8 +1654,9 @@ $env:NORTHSTAR_DATABASE_URL="postgresql+psycopg://northstar:northstar@localhost:
 python -m uvicorn northstar.api.app:app --reload
 ```
 
-If `NORTHSTAR_DATABASE_URL` is absent, the API intentionally keeps the CSV-backed store as a fallback. Both
-backends implement the same player/search/team/leaderboard/comparison semantics.
+If `NORTHSTAR_DATABASE_URL` is absent during local development, the API keeps the CSV-backed store as a fallback.
+When `NORTHSTAR_ENV=production`, PostgreSQL is required and the CSV fallback is disabled. Both backends implement
+the same player/search/team/leaderboard/comparison semantics.
 
 The first SQL schema keeps frequently queried product fields as typed columns while retaining the complete
 canonical profile in JSON. This lets the product migrate away from flat files without discarding validated
@@ -1695,6 +1710,7 @@ Local frontend environment variables are documented in `web/.env.example`:
 
 ```text
 NORTHSTAR_API_URL=http://127.0.0.1:8000
+NORTHSTAR_API_TIMEOUT_MS=8000
 ```
 
 The API URL stays server-side. Interactive browser features such as live player search and the comparison workbench
@@ -1710,6 +1726,15 @@ NORTHSTAR_CORS_ORIGINS
     Comma-separated allowed browser origins.
     Defaults to localhost:3000 and 127.0.0.1:3000.
 ```
+
+## Production
+
+Production hardening now includes strict PostgreSQL-backed runtime configuration, separate liveness and readiness
+checks, bounded upstream request timeouts, baseline security headers, a non-root FastAPI container image, automated
+dependency updates, and CI release gates for Python, frontend, and container builds.
+
+See `docs/production.md` for the deployment order, environment variables, database-load procedure, release gate,
+and post-deploy smoke test.
 
 ## Project layout
 

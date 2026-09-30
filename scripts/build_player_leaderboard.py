@@ -11,7 +11,8 @@ from northstar.metrics.player_value import build_player_run_value
 
 
 DEFAULT_INPUT = Path("data/processed/plate_appearances_2025.parquet")
-DEFAULT_TOTAL_TABLE = Path("reports/tables/player_run_value_2025.csv")\nDEFAULT_RATE_TABLE = Path("reports/tables/player_run_value_2025_rate.csv")
+DEFAULT_TOTAL_TABLE = Path("reports/tables/player_run_value_2025.csv")
+DEFAULT_RATE_TABLE = Path("reports/tables/player_run_value_2025_rate.csv")
 DEFAULT_FIGURE = Path("reports/figures/player_run_value_2025_top20.png")
 
 
@@ -139,12 +140,19 @@ def main() -> None:
     if not args.skip_names:
         leaderboard = add_player_names(leaderboard)
 
-    DEFAULT_TABLE.parent.mkdir(parents=True, exist_ok=True)
-    leaderboard.to_csv(DEFAULT_TABLE, index=False)
+    table_output = (
+        DEFAULT_TOTAL_TABLE
+        if args.sort == "total"
+        else DEFAULT_RATE_TABLE
+    )
+    table_output.parent.mkdir(parents=True, exist_ok=True)
+    leaderboard.to_csv(table_output, index=False)
 
     figure_output = DEFAULT_FIGURE
     if args.sort == "rate":
-        figure_output = Path("reports/figures/player_run_value_2025_rate_top20.png")
+        figure_output = Path(
+            "reports/figures/player_run_value_2025_rate_top20.png"
+        )
 
     save_chart(
         leaderboard,

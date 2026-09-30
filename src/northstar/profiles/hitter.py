@@ -1,6 +1,45 @@
 from __future__ import annotations
 
+import unicodedata
+
 import pandas as pd
+
+
+def normalize_player_name(value: object) -> str:
+    """Normalize player names for forgiving user-facing lookup."""
+    decomposed = unicodedata.normalize("NFKD", str(value))
+    without_marks = "".join(
+        character
+        for character in decomposed
+        if not unicodedata.combining(character)
+    )
+    words = "".join(
+        character.casefold() if character.isalnum() else " "
+        for character in without_marks
+    )
+    return " ".join(words.split())
+
+
+def player_name_matches(name: object, query: object) -> bool:
+    """Match a full, first, last, or partial player-name query."""
+    normalized_name = normalize_player_name(name)
+    normalized_query = normalize_player_name(query)
+    if not normalized_query:
+        return False
+    if normalized_name == normalized_query:
+        return True
+
+    compact_name = normalized_name.replace(" ", "")
+    compact_query = normalized_query.replace(" ", "")
+    if compact_query and compact_query in compact_name:
+        return True
+
+    name_tokens = normalized_name.split()
+    query_tokens = normalized_query.split()
+    return all(
+        any(query_token in name_token for name_token in name_tokens)
+        for query_token in query_tokens
+    )
 
 
 def _percentile(
@@ -381,7 +420,7 @@ def select_hitter_profile(
     profile: pd.DataFrame,
     player: str | int,
 ) -> pd.Series:
-    """Select one hitter by MLBAM batter ID or case-insensitive exact name."""
+    """Select one hitter by MLBAM ID or a unique first/last/full-name query."""
     if "batter" not in profile.columns:
         raise ValueError("profile must contain batter")
 
@@ -391,20 +430,29 @@ def select_hitter_profile(
     else:
         if "player_name" not in profile.columns:
             raise ValueError("profile must contain player_name")
-        query = str(player).strip().casefold()
+
+        query = normalize_player_name(player)
+        names = profile["player_name"].fillna("").map(normalize_player_name)
+
+        exact = profile.loc[names.eq(query)]
+        if len(exact) == 1:
+            return exact.iloc[0]
+
         matches = profile.loc[
             profile["player_name"]
-            .astype("string")
-            .str.strip()
-            .str.casefold()
-            .eq(query)
+            .fillna("")
+            .map(lambda name: player_name_matches(name, query))
         ]
 
     if matches.empty:
         raise KeyError(f"No hitter matched {player!r}")
     if len(matches) > 1:
+        options = ", ".join(
+            matches["player_name"].astype(str).head(5).tolist()
+        )
         raise ValueError(
-            f"Multiple hitters matched {player!r}; use the batter ID."
+            f"Multiple hitters matched {player!r}: {options}. "
+            "Use more of the name or the MLBAM ID."
         )
 
     return matches.iloc[0]
