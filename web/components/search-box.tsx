@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { browserApiBase } from "@/lib/browser-config";
 import type { PlayerListResponse, PlayerSummary } from "@/lib/types";
 
@@ -16,8 +17,10 @@ export function SearchBox({
 }: Props) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PlayerSummary[]>([]);
+  const [resultQuery, setResultQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
   const normalized = useMemo(() => query.trim(), [query]);
 
   useEffect(() => {
@@ -33,8 +36,6 @@ export function SearchBox({
 
   useEffect(() => {
     if (normalized.length < 2) {
-      setResults([]);
-      setLoading(false);
       return;
     }
 
@@ -46,11 +47,19 @@ export function SearchBox({
           `${browserApiBase}/api/v1/players?query=${encodeURIComponent(normalized)}&limit=6`,
           { signal: controller.signal },
         );
-        if (!response.ok) return;
+        if (!response.ok) {
+          setResults([]);
+          setResultQuery(normalized);
+          return;
+        }
         const data = (await response.json()) as PlayerListResponse;
         setResults(data.items);
+        setResultQuery(normalized);
       } catch (error) {
-        if ((error as Error).name !== "AbortError") setResults([]);
+        if ((error as Error).name !== "AbortError") {
+          setResults([]);
+          setResultQuery(normalized);
+        }
       } finally {
         setLoading(false);
       }
@@ -62,10 +71,14 @@ export function SearchBox({
     };
   }, [normalized]);
 
+  const visibleResults = resultQuery === normalized ? results : [];
+  const visibleLoading =
+    normalized.length >= 2 && (loading || resultQuery !== normalized);
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!normalized) return;
-    window.location.href = `/players?q=${encodeURIComponent(normalized)}`;
+    router.push(`/players?q=${encodeURIComponent(normalized)}`);
   }
 
   return (
@@ -79,9 +92,11 @@ export function SearchBox({
           placeholder={placeholder}
           aria-label={placeholder}
           autoComplete="off"
+          role="combobox"
           aria-expanded={normalized.length >= 2}
           aria-controls="player-search-results"
           aria-autocomplete="list"
+          aria-haspopup="listbox"
         />
         <kbd>Ctrl K</kbd>
       </form>
@@ -94,10 +109,10 @@ export function SearchBox({
           aria-label="Player search results"
         >
           <div className="search-results__meta" aria-live="polite">
-            <span>{loading ? "Searching…" : "Players"}</span>
-            {!loading ? <span>{results.length} shown</span> : null}
+            <span>{visibleLoading ? "Searching…" : "Players"}</span>
+            {!visibleLoading ? <span>{visibleResults.length} shown</span> : null}
           </div>
-          {results.map((player) => (
+          {visibleResults.map((player) => (
             <Link
               href={`/players/${player.batter}`}
               className="search-result"
@@ -120,7 +135,7 @@ export function SearchBox({
               <span>↗</span>
             </Link>
           ))}
-          {!loading && results.length === 0 ? (
+          {!visibleLoading && visibleResults.length === 0 ? (
             <p className="search-results__empty">No matching hitter in the 2025 profile.</p>
           ) : null}
         </div>
