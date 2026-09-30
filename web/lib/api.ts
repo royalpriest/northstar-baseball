@@ -1,3 +1,5 @@
+import { connection } from "next/server";
+
 import {
   CompareResponse,
   LeaderboardResponse,
@@ -40,6 +42,8 @@ export class NorthStarApiError extends Error {
 }
 
 async function request<T>(path: string): Promise<T> {
+  await connection();
+
   let response: Response;
 
   try {

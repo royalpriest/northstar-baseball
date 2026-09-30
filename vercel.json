@@ -1,0 +1,31 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "web": {
+      "root": "web",
+      "framework": "nextjs",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "api",
+          "format": "url",
+          "env": "NORTHSTAR_API_URL"
+        }
+      ]
+    },
+    "api": {
+      "root": ".",
+      "framework": "fastapi",
+      "entrypoint": "northstar.api.app:app",
+      "installCommand": "python -m pip install -r requirements-api.txt && python -m pip install --no-deps ."
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "web"
+      }
+    }
+  ]
+}
