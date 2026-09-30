@@ -2,21 +2,25 @@ import { CompareWorkbench } from "@/components/compare-workbench";
 
 export default function ComparePage() {
   return (
-    <div className="page-shell page-shell--narrow">
-      <section className="page-hero">
-        <div className="page-hero__copy">
-          <span className="eyebrow">Player comparison</span>
-          <h1 className="page-title">Different hitters. Same scale.</h1>
+    <div className="page-shell page-shell--narrow compare-page--editorial">
+      <section className="compare-masthead">
+        <span className="eyebrow">Player comparison · 2025</span>
+        <div className="compare-masthead__grid">
+          <h1>
+            Different hitters.
+            <br />
+            <em>Same scale.</em>
+          </h1>
           <p>
-            Compare contextual NorthStar axes with established offensive
-            measures. The interface is designed to reveal player shape, not
-            manufacture a winner.
+            Put 2–4 hitter profiles on one league-relative field. NorthStar
+            shows where their shapes diverge without turning the comparison
+            into a winner or a composite ranking.
           </p>
         </div>
-        <div className="page-hero__aside">
-          2–4 hitters
-          <br />
-          League-relative percentiles
+        <div className="compare-masthead__rule">
+          <span>0</span>
+          <span>League percentile</span>
+          <span>100</span>
         </div>
       </section>
 

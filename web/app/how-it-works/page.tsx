@@ -1,147 +1,80 @@
 import Link from "next/link";
 
 const glossary = [
-  {
-    term: "Percentile",
-    definition:
-      "A league-relative rank within the available 2025 NorthStar hitter sample. A 90th percentile value means the hitter ranks above roughly 90% of profiled hitters on that measure.",
-  },
-  {
-    term: "Selection",
-    definition:
-      "Swing/take decision quality after accounting for pitch and game context. It asks whether the hitter made good decisions given what was presented.",
-  },
-  {
-    term: "Contact",
-    definition:
-      "Contact execution relative to how difficult the hitter's swings were expected to be. It is not the same thing as raw contact rate.",
-  },
-  {
-    term: "Damage",
-    definition:
-      "Quality of contact relative to expected damage opportunity. It asks what the hitter did with the contact opportunities that actually occurred.",
-  },
-  {
-    term: "wOBA",
-    definition:
-      "Weighted On-Base Average. A conventional offensive metric that gives different weights to different ways of reaching base.",
-  },
-  {
-    term: "xwOBA",
-    definition:
-      "Expected wOBA based on quality-of-contact and related Statcast inputs. NorthStar displays it as an established reference metric, not as a NorthStar axis.",
-  },
-  {
-    term: "RE24",
-    definition:
-      "Run expectancy change across plate appearances, including changes in base/out state and runs scored. NorthStar reports it per 100 plate appearances when the validation source has a value.",
-  },
-  {
-    term: "Chase rate",
-    definition:
-      "How often a hitter swings at pitches outside the strike zone. Lower chase is generally reflected as stronger chase avoidance.",
-  },
-  {
-    term: "Barrel rate",
-    definition:
-      "The share of batted balls meeting Statcast's barrel combination of exit velocity and launch angle.",
-  },
-];
+  ["Percentile", "League-relative rank within the available 2025 NorthStar hitter sample."],
+  ["Selection", "Swing/take decision quality after accounting for pitch and game context."],
+  ["Contact", "Contact execution relative to the modeled difficulty of the swings taken."],
+  ["Damage", "Quality of contact relative to expected damage opportunity."],
+  ["wOBA", "Weighted On-Base Average, shown as an established offensive reference metric."],
+  ["xwOBA", "Expected wOBA based on Statcast quality-of-contact inputs."],
+  ["RE24", "Run expectancy change across plate appearances, reported per 100 PA when available."],
+  ["Chase rate", "How often a hitter swings at pitches outside the strike zone."],
+  ["Barrel rate", "Share of batted balls meeting Statcast barrel exit-velocity and launch-angle thresholds."],
+] as const;
 
 export default function HowItWorksPage() {
   return (
-    <div className="page-shell page-shell--narrow guide-page">
-      <section className="page-hero">
-        <div className="page-hero__copy">
+    <div className="page-shell page-shell--narrow guide-page guide-page--editorial">
+      <section className="compact-masthead compact-masthead--split">
+        <div>
           <span className="eyebrow">Reading NorthStar</span>
-          <h1 className="page-title">Three questions. No mystery grade.</h1>
-          <p>
-            NorthStar is designed to explain hitter shape, not compress every
-            skill into one number. Start with Selection, Contact, and Damage,
-            then use familiar metrics such as wOBA, xwOBA, and RE24 for context.
-          </p>
+          <h1>Three questions. No mystery grade.</h1>
         </div>
-        <div className="page-hero__aside">
-          2025 hitter profiles
-          <br />
-          Contextual diagnostics
-        </div>
+        <p className="compact-masthead__lede">Start with Selection, Contact, and Damage. Then use familiar outcomes such as wOBA, xwOBA, and RE24 to check the shape against conventional context.</p>
       </section>
 
-      <section className="guide-steps">
-        <article className="guide-step guide-step--selection">
-          <span>01 / Selection</span>
+      <section className="guide-sequence">
+        <article className="guide-sequence__row guide-sequence__row--selection">
+          <span>01</span>
+          <div><strong>Selection</strong><small>Decision quality</small></div>
           <h2>What did he choose?</h2>
-          <p>
-            NorthStar evaluates swing and take decisions in the situation they
-            occurred. A high percentile means those decisions graded strongly
-            relative to other profiled hitters after context was considered.
-          </p>
+          <p>Evaluates swing and take decisions in the context in which they occurred.</p>
         </article>
-        <article className="guide-step guide-step--contact">
-          <span>02 / Contact</span>
+        <article className="guide-sequence__row guide-sequence__row--contact">
+          <span>02</span>
+          <div><strong>Contact</strong><small>Bat-to-ball</small></div>
           <h2>Did he execute the swing?</h2>
-          <p>
-            Contact compares what happened on swings with how difficult those
-            swings were expected to be. A low Contact percentile does not simply
-            mean “low batting average” or “bad hitter.”
-          </p>
+          <p>Compares actual contact with how difficult those swings were expected to be.</p>
         </article>
-        <article className="guide-step guide-step--damage">
-          <span>03 / Damage</span>
+        <article className="guide-sequence__row guide-sequence__row--damage">
+          <span>03</span>
+          <div><strong>Damage</strong><small>Impact</small></div>
           <h2>What did contact become?</h2>
-          <p>
-            Damage looks at quality of contact relative to opportunity. It is
-            kept separate from Selection and Contact so very different hitter
-            shapes remain visible.
-          </p>
+          <p>Measures contact quality relative to the opportunities that produced it.</p>
         </article>
       </section>
 
-      <section className="guide-example">
-        <span className="eyebrow">Example</span>
-        <h2>How to read 98th · 4th · 100th.</h2>
-        <p>
-          A hitter with 98th-percentile Selection, 4th-percentile Contact, and
-          100th-percentile Damage made exceptionally strong decisions and
-          produced elite damage relative to context, while contact execution
-          relative to swing difficulty was a much weaker part of the profile.
-          NorthStar does not average those three numbers into one grade.
-        </p>
-        <Link href="/compare" className="link-arrow">
-          See two very different hitter shapes ↗
-        </Link>
+      <section className="guide-example guide-example--editorial">
+        <div>
+          <span className="eyebrow">Example profile</span>
+          <h2>98 · 4 · 100</h2>
+        </div>
+        <div>
+          <p><strong>98 Selection</strong> — exceptionally strong contextual decisions.</p>
+          <p><strong>4 Contact</strong> — weak contact execution relative to swing difficulty.</p>
+          <p><strong>100 Damage</strong> — elite contact quality relative to opportunity.</p>
+          <Link href="/compare" className="link-arrow">Compare hitter shapes ↗</Link>
+        </div>
       </section>
 
-      <section className="section">
-        <div className="section-header">
-          <div>
-            <span className="eyebrow">Glossary</span>
-            <h2>Baseball terms, in plain English.</h2>
-          </div>
-          <p>
-            These definitions explain how the product uses each term. They are
-            intentionally concise rather than a replacement for the methodology.
-          </p>
+      <section className="glossary-sheet">
+        <div className="glossary-sheet__heading">
+          <span className="eyebrow">Glossary</span>
+          <h2>The terms NorthStar uses.</h2>
         </div>
-
-        <div className="glossary-grid">
-          {glossary.map((item) => (
-            <article className="glossary-card" key={item.term}>
-              <h3>{item.term}</h3>
-              <p>{item.definition}</p>
-            </article>
+        <div className="glossary-sheet__list">
+          {glossary.map(([term, definition]) => (
+            <div className="glossary-sheet__row" key={term}>
+              <strong>{term}</strong>
+              <p>{definition}</p>
+            </div>
           ))}
         </div>
       </section>
 
-      <div className="profile-disclaimer">
+      <div className="editorial-note">
         <span className="status-dot" />
-        <p>
-          NorthStar’s current Selection, Contact, and Damage components are
-          contextual diagnostics. They are not combined into an overall score
-          and are not presented as standalone novel predictive-skill claims.
-        </p>
+        <p>Selection, Contact, and Damage are contextual diagnostics. They are not combined into an overall score or presented as standalone predictive-skill claims.</p>
       </div>
     </div>
   );

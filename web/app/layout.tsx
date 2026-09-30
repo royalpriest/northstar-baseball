@@ -26,6 +26,27 @@ export default function RootLayout({
         <div className="ambient ambient--two" aria-hidden="true" />
         <Nav />
         <main id="main-content" tabIndex={-1}>{children}</main>
+        <footer className="site-footer">
+          <div className="site-footer__inner">
+            <span className="site-footer__brand">NorthStar Baseball</span>
+            <nav className="site-footer__links" aria-label="Creator links">
+              <a
+                href="https://royalpriest.dev"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Portfolio ↗
+              </a>
+              <a
+                href="https://github.com/royalpriest"
+                target="_blank"
+                rel="noreferrer"
+              >
+                GitHub ↗
+              </a>
+            </nav>
+          </div>
+        </footer>
       </body>
     </html>
   );
