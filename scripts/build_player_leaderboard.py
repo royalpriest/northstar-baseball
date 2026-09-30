@@ -11,7 +11,8 @@ from northstar.metrics.player_value import build_player_run_value
 
 
 DEFAULT_INPUT = Path("data/processed/plate_appearances_2025.parquet")
-DEFAULT_TOTAL_TABLE = Path("reports/tables/player_run_value_2025.csv")\nDEFAULT_RATE_TABLE = Path("reports/tables/player_run_value_2025_rate.csv")
+DEFAULT_TOTAL_TABLE = Path("reports/tables/player_run_value_2025.csv")
+DEFAULT_RATE_TABLE = Path("reports/tables/player_run_value_2025_rate.csv")
 DEFAULT_FIGURE = Path("reports/figures/player_run_value_2025_top20.png")
 
 
