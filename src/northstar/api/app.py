@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from northstar.api.store import DEFAULT_PROFILE_PATH, ProfileStore
@@ -18,6 +20,29 @@ from northstar.db.store import DatabaseProfileStore
 
 API_VERSION = "v1"
 SEASON = 2025
+logger = logging.getLogger(__name__)
+
+
+def _is_production() -> bool:
+    return os.getenv("NORTHSTAR_ENV", "development").strip().casefold() == "production"
+
+
+def _env_flag(name: str, *, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().casefold() in {"1", "true", "yes", "on"}
+
+
+def _docs_enabled() -> bool:
+    return _env_flag("NORTHSTAR_ENABLE_DOCS", default=not _is_production())
+
+
+def _auto_create_schema() -> bool:
+    return _env_flag(
+        "NORTHSTAR_AUTO_CREATE_SCHEMA",
+        default=not _is_production(),
+    )
 
 
 class Utf8JSONResponse(JSONResponse):
@@ -49,23 +74,28 @@ def _store(
     if database_url:
         try:
             engine = create_engine_from_url(database_url)
-            create_schema(engine)
+            if _auto_create_schema():
+                create_schema(engine)
             current = DatabaseProfileStore(
                 session_factory(engine),
                 season=SEASON,
             )
         except Exception as exc:
+            logger.exception("Failed to initialize NorthStar database backend")
             raise HTTPException(
                 status_code=503,
-                detail=(
-                    "NorthStar database backend is unavailable: "
-                    f"{exc}"
-                ),
+                detail="NorthStar database backend is unavailable.",
             ) from exc
 
         request.app.state.db_engine = engine
         request.app.state.profile_store = current
         return current
+
+    if _is_production():
+        raise HTTPException(
+            status_code=503,
+            detail="NorthStar database backend is required in production.",
+        )
 
     profile_path = Path(
         os.getenv(
@@ -89,10 +119,14 @@ def create_app(
     *,
     store: ProfileStore | None = None,
 ) -> FastAPI:
+    docs_enabled = _docs_enabled()
     service = FastAPI(
         title="NorthStar Baseball API",
         default_response_class=Utf8JSONResponse,
         version="0.1.0",
+        docs_url="/docs" if docs_enabled else None,
+        redoc_url="/redoc" if docs_enabled else None,
+        openapi_url="/openapi.json" if docs_enabled else None,
         description=(
             "Read-only API for NorthStar hitter profiles, contextual "
             "diagnostics, Canadian-born views, team views, and comparisons."
@@ -100,6 +134,8 @@ def create_app(
     )
     service.state.profile_store = store
     service.state.db_engine = None
+
+    service.add_middleware(GZipMiddleware, minimum_size=1024)
 
     service.add_middleware(
         CORSMiddleware,
@@ -109,6 +145,18 @@ def create_app(
         allow_headers=["*"],
     )
 
+    @service.middleware("http")
+    async def security_headers(request: Request, call_next):
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        response.headers.setdefault(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=()",
+        )
+        return response
+
     @service.get("/")
     def root() -> dict[str, object]:
         return {
@@ -116,8 +164,9 @@ def create_app(
             "api_version": API_VERSION,
             "season": SEASON,
             "health": "/health",
-            "docs": "/docs",
-            "openapi": "/openapi.json",
+            "ready": "/ready",
+            "docs": "/docs" if docs_enabled else None,
+            "openapi": "/openapi.json" if docs_enabled else None,
             "api": f"/api/{API_VERSION}",
         }
 
@@ -127,6 +176,38 @@ def create_app(
             "status": "ok",
             "service": "northstar-baseball-api",
             "api_version": API_VERSION,
+            "season": SEASON,
+        }
+
+    @service.get("/ready")
+    def ready(request: Request) -> dict[str, object]:
+        try:
+            profile_store = _store(request)
+            players = profile_store.size
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.exception("NorthStar readiness check failed")
+            raise HTTPException(
+                status_code=503,
+                detail="NorthStar data backend is not ready.",
+            ) from exc
+
+        if players <= 0:
+            raise HTTPException(
+                status_code=503,
+                detail="NorthStar data backend contains no player profiles.",
+            )
+
+        return {
+            "status": "ready",
+            "service": "northstar-baseball-api",
+            "storage_backend": (
+                "postgresql"
+                if isinstance(profile_store, DatabaseProfileStore)
+                else "csv"
+            ),
+            "players": players,
             "season": SEASON,
         }
 
