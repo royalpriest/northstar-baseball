@@ -1,15 +1,37 @@
 import type { NextRequest } from "next/server";
 
-const upstreamBase =
-  process.env.NORTHSTAR_API_URL ?? "http://127.0.0.1:8000";
+const DEFAULT_LOCAL_API = "http://127.0.0.1:8000";
+const DEFAULT_TIMEOUT_MS = 8000;
 
 type RouteContext = {
   params: Promise<{ path: string[] }>;
 };
 
+function upstreamBase(): string | null {
+  const configured = process.env.NORTHSTAR_API_URL?.trim();
+  if (configured) return configured;
+
+  return process.env.NODE_ENV === "production" ? null : DEFAULT_LOCAL_API;
+}
+
+function upstreamTimeoutMs(): number {
+  const configured = Number(process.env.NORTHSTAR_API_TIMEOUT_MS);
+  return Number.isFinite(configured) && configured > 0
+    ? configured
+    : DEFAULT_TIMEOUT_MS;
+}
+
 export async function GET(request: NextRequest, context: RouteContext) {
+  const configuredBase = upstreamBase();
+  if (!configuredBase) {
+    return Response.json(
+      { detail: "NorthStar API is not configured." },
+      { status: 503 },
+    );
+  }
+
   const { path } = await context.params;
-  const base = upstreamBase.endsWith("/") ? upstreamBase : `${upstreamBase}/`;
+  const base = configuredBase.endsWith("/") ? configuredBase : `${configuredBase}/`;
   const upstream = new URL(
     path.map((segment) => encodeURIComponent(segment)).join("/"),
     base,
@@ -22,6 +44,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       headers: {
         Accept: "application/json",
       },
+      signal: AbortSignal.timeout(upstreamTimeoutMs()),
     });
 
     const body = await response.arrayBuffer();
@@ -34,13 +57,17 @@ export async function GET(request: NextRequest, context: RouteContext) {
         "Cache-Control": "no-store",
       },
     });
-  } catch {
+  } catch (error) {
+    const timedOut =
+      error instanceof DOMException && error.name === "TimeoutError";
+
     return Response.json(
       {
-        detail:
-          "NorthStar API is not reachable. Make sure FastAPI is running on the configured NORTHSTAR_API_URL.",
+        detail: timedOut
+          ? "NorthStar API timed out."
+          : "NorthStar API is temporarily unavailable.",
       },
-      { status: 502 },
+      { status: timedOut ? 504 : 502 },
     );
   }
 }
