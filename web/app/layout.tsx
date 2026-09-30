@@ -25,7 +25,7 @@ export default function RootLayout({
         <div className="ambient ambient--one" aria-hidden="true" />
         <div className="ambient ambient--two" aria-hidden="true" />
         <Nav />
-        <main id="main-content">{children}</main>
+        <main id="main-content" tabIndex={-1}>{children}</main>
       </body>
     </html>
   );
