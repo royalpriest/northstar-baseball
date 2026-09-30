@@ -13,7 +13,7 @@ type Props = {
 
 export function SearchBox({
   compact = false,
-  placeholder = "Search any MLB hitter…",
+  placeholder = "Search first/last name or MLBAM ID…",
 }: Props) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PlayerSummary[]>([]);
