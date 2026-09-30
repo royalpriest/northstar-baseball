@@ -32,8 +32,10 @@ first-pitch state from final-pitch outcome.
 - SHAP
 - matplotlib
 - pytest + Ruff
-
-Later phases add FastAPI, PostgreSQL, Next.js/TypeScript, and Datadog.
+- FastAPI
+- PostgreSQL + SQLAlchemy
+- Next.js 16 / React 19 / TypeScript
+- Docker + GitHub Actions
 
 ## Setup
 
@@ -181,6 +183,7 @@ or a design decision changes because of evidence.
 
 | Date | Type | Event | Outcome / fix |
 | --- | --- | --- | --- |
+| 2026-09-30 | Production hardening | Prepared NorthStar for deployment rather than local-only execution. | Production now requires PostgreSQL, disables CSV fallback and API docs by default, adds `/ready`, generic backend-failure responses, gzip and security headers, frontend/API timeouts, server-only API configuration, a non-root minimal FastAPI Docker image, CI release gates, Dependabot, and a production runbook. |
 | 2026-09-30 | Search UX | Player lookup was inconsistent: general search tolerated partial names, while comparison still expected exact full names. | Unified name resolution across the in-memory profile store, PostgreSQL store, API comparison endpoint, CLI/profile selector, homepage search, Players search, and comparison UI. First name, last name, partial name, full name, and MLBAM ID are now supported; accent-insensitive matching is included, exact matches are preferred, and ambiguous short names return a clear request for more detail instead of silently choosing a hitter. |
 | 2026-09-30 | Frontend build | The new responsive player-list component failed lint/build with an invalid-character / unterminated-template error. | The generated TSX contained escaped backticks and interpolation markers as literal source characters. Rewrote the component with ordinary string composition so ESLint and Turbopack can parse it cleanly. |
 | 2026-09-30 | Mobile UX | Small-screen navigation and long player leaderboards still felt desktop-shaped. | Reworked primary navigation into a fixed glass dock below 820px so it remains available on the homepage and every route, added safe-area spacing, and capped the mobile Players list at 8 rows with an accessible Show more / Show less control while preserving the full list on larger screens. |
@@ -1647,8 +1650,9 @@ $env:NORTHSTAR_DATABASE_URL="postgresql+psycopg://northstar:northstar@localhost:
 python -m uvicorn northstar.api.app:app --reload
 ```
 
-If `NORTHSTAR_DATABASE_URL` is absent, the API intentionally keeps the CSV-backed store as a fallback. Both
-backends implement the same player/search/team/leaderboard/comparison semantics.
+If `NORTHSTAR_DATABASE_URL` is absent during local development, the API keeps the CSV-backed store as a fallback.
+When `NORTHSTAR_ENV=production`, PostgreSQL is required and the CSV fallback is disabled. Both backends implement
+the same player/search/team/leaderboard/comparison semantics.
 
 The first SQL schema keeps frequently queried product fields as typed columns while retaining the complete
 canonical profile in JSON. This lets the product migrate away from flat files without discarding validated
@@ -1702,6 +1706,7 @@ Local frontend environment variables are documented in `web/.env.example`:
 
 ```text
 NORTHSTAR_API_URL=http://127.0.0.1:8000
+NORTHSTAR_API_TIMEOUT_MS=8000
 ```
 
 The API URL stays server-side. Interactive browser features such as live player search and the comparison workbench
@@ -1717,6 +1722,15 @@ NORTHSTAR_CORS_ORIGINS
     Comma-separated allowed browser origins.
     Defaults to localhost:3000 and 127.0.0.1:3000.
 ```
+
+## Production
+
+Production hardening now includes strict PostgreSQL-backed runtime configuration, separate liveness and readiness
+checks, bounded upstream request timeouts, baseline security headers, a non-root FastAPI container image, automated
+dependency updates, and CI release gates for Python, frontend, and container builds.
+
+See `docs/production.md` for the deployment order, environment variables, database-load procedure, release gate,
+and post-deploy smoke test.
 
 ## Project layout
 
