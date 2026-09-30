@@ -150,6 +150,15 @@ def create_app(
         response = await call_next(request)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault(
+            "X-Permitted-Cross-Domain-Policies",
+            "none",
+        )
+        if _is_production():
+            response.headers.setdefault(
+                "Strict-Transport-Security",
+                "max-age=31536000",
+            )
         response.headers.setdefault("Referrer-Policy", "no-referrer")
         response.headers.setdefault(
             "Permissions-Policy",
