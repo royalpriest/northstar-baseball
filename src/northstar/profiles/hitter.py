@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import unicodedata
+
 import pandas as pd
 
 
