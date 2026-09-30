@@ -6,10 +6,26 @@ import {
   PlayerProfile,
 } from "@/lib/types";
 
-const serverBase =
-  process.env.NORTHSTAR_API_URL ??
-  process.env.NEXT_PUBLIC_NORTHSTAR_API_URL ??
-  "http://127.0.0.1:8000";
+const DEFAULT_LOCAL_API = "http://127.0.0.1:8000";
+const DEFAULT_TIMEOUT_MS = 8000;
+
+function apiBase(): string {
+  const configured = process.env.NORTHSTAR_API_URL?.trim();
+  if (configured) return configured.replace(/\/$/, "");
+
+  if (process.env.NODE_ENV === "production") {
+    throw new NorthStarApiError(503, "configuration");
+  }
+
+  return DEFAULT_LOCAL_API;
+}
+
+function apiTimeoutMs(): number {
+  const configured = Number(process.env.NORTHSTAR_API_TIMEOUT_MS);
+  return Number.isFinite(configured) && configured > 0
+    ? configured
+    : DEFAULT_TIMEOUT_MS;
+}
 
 export class NorthStarApiError extends Error {
   status: number;
@@ -24,10 +40,20 @@ export class NorthStarApiError extends Error {
 }
 
 async function request<T>(path: string): Promise<T> {
-  const response = await fetch(`${serverBase}${path}`, {
-    cache: "no-store",
-    headers: { Accept: "application/json" },
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${apiBase()}${path}`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(apiTimeoutMs()),
+    });
+  } catch (error) {
+    if (error instanceof NorthStarApiError) throw error;
+    const status =
+      error instanceof DOMException && error.name === "TimeoutError" ? 504 : 502;
+    throw new NorthStarApiError(status, path);
+  }
 
   if (!response.ok) {
     throw new NorthStarApiError(response.status, path);
