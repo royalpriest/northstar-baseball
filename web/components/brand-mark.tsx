@@ -1,8 +1,8 @@
 export function BrandMark() {
   return (
-    <span className="brand-mark" aria-hidden="true">
-      <span className="brand-mark__dot" />
-      <span className="brand-mark__ring" />
+    <span className="brand-mark brand-mark--northstar" aria-hidden="true">
+      <span className="brand-mark__letter">N</span>
+      <span className="brand-mark__star" />
     </span>
   );
 }

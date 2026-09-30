@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { LensSignature } from "@/components/lens-signature";
 import { PercentileBar } from "@/components/percentile-bar";
 import { getPlayer, NorthStarApiError } from "@/lib/api";
 import {
@@ -39,105 +40,59 @@ export default async function PlayerPage({ params }: Props) {
   const interpretation = playerInterpretation(player);
 
   return (
-    <div className="page-shell page-shell--narrow">
-      <section className="profile-header">
-        <div className="profile-header__identity">
+    <div className="page-shell page-shell--narrow editorial-profile">
+      <section className="editorial-profile__masthead">
+        <div className="editorial-profile__identity">
           <span className="eyebrow">NorthStar hitter profile · 2025</span>
           <h1>{player.player_name}</h1>
-          <div className="profile-header__meta">
-            <span className="meta-pill">{player.primary_team_2025 ?? "MLB"}</span>
-            <span className="meta-pill">{integer(player.season_plate_appearances)} PA</span>
-            {place ? <span className="meta-pill">{place}</span> : null}
-            {player.canadian_born ? <span className="meta-pill">Canadian-born</span> : null}
+          <div className="editorial-profile__meta">
+            <span>{player.primary_team_2025 ?? "MLB"}</span>
+            <span>{integer(player.season_plate_appearances)} PA</span>
+            <span>MLBAM {player.batter}</span>
+            {player.canadian_born ? <span>Canadian-born</span> : null}
           </div>
+          {place ? <p className="editorial-profile__place">Born {place}</p> : null}
         </div>
 
-        <div className="profile-signature" aria-label="NorthStar three-axis signature">
-          <div className="profile-signature__orbit" aria-hidden="true" />
-          <div className="profile-signature__center" aria-hidden="true">
-            <span>
-              {player.player_name
-                .split(" ")
-                .slice(0, 2)
-                .map((part) => part[0])
-                .join("")}
-            </span>
-          </div>
-          <div className="profile-signature__axis profile-signature__axis--selection">
-            <span>Selection</span>
-            <strong>{percentile(player.selection_context_percentile)}</strong>
-          </div>
-          <div className="profile-signature__axis profile-signature__axis--contact">
-            <span>Contact</span>
-            <strong>{percentile(player.contact_context_percentile)}</strong>
-          </div>
-          <div className="profile-signature__axis profile-signature__axis--damage">
-            <span>Damage</span>
-            <strong>{percentile(player.damage_context_percentile)}</strong>
-          </div>
-          <div className="profile-id">
-            <span>MLBAM</span>
-            <strong>{player.batter}</strong>
-          </div>
+        <div className="editorial-profile__season">
+          <span>2025</span>
+          <small>MLB hitter profile</small>
         </div>
       </section>
 
-      <section className="axes-grid">
-        <article className="axis-card axis-card--selection">
-          <span className="eyebrow">Selection</span>
-          <div className="axis-card__value">
-            {percentile(player.selection_context_percentile)}
-          </div>
-          <div className="axis-card__raw">
-            {signed(player.shrunk_centered_per_100, 2)} value / 100
-          </div>
-          <div className="axis-card__footer">
-            <span>Decision quality relative to pitch and game context.</span>
-            <i style={{ width: `${Math.max(0, Math.min(100, player.selection_context_percentile ?? 0))}%` }} />
-          </div>
-        </article>
+      <section className="profile-lens-stage">
+        <div className="profile-lens-stage__intro">
+          <span className="eyebrow">Three-lens signature</span>
+          <h2>The shape of the hitter.</h2>
+          <p>
+            League-relative percentiles show where this player sits on each
+            NorthStar lens. The midpoint marker is the 50th percentile.
+          </p>
+        </div>
 
-        <article className="axis-card axis-card--contact">
-          <span className="eyebrow">Contact</span>
-          <div className="axis-card__value">
-            {percentile(player.contact_context_percentile)}
-          </div>
-          <div className="axis-card__raw">
-            {signed(player.contact_above_expected_per_100_swings, 2)} pp / 100 swings
-          </div>
-          <div className="axis-card__footer">
-            <span>Contact relative to the modeled difficulty of swings taken.</span>
-            <i style={{ width: `${Math.max(0, Math.min(100, player.contact_context_percentile ?? 0))}%` }} />
-          </div>
-        </article>
-
-        <article className="axis-card axis-card--damage">
-          <span className="eyebrow">Damage</span>
-          <div className="axis-card__value">
-            {percentile(player.damage_context_percentile)}
-          </div>
-          <div className="axis-card__raw">
-            {signed(player.damage_xwoba_points_above_expected, 2)} xwOBA pts
-          </div>
-          <div className="axis-card__footer">
-            <span>Contact quality relative to the opportunities presented.</span>
-            <i style={{ width: `${Math.max(0, Math.min(100, player.damage_context_percentile ?? 0))}%` }} />
-          </div>
-        </article>
+        <LensSignature
+          className="lens-signature--hero"
+          selection={player.selection_context_percentile}
+          contact={player.contact_context_percentile}
+          damage={player.damage_context_percentile}
+          selectionDetail={`${signed(player.shrunk_centered_per_100, 2)} value / 100`}
+          contactDetail={`${signed(player.contact_above_expected_per_100_swings, 2)} pp / 100 swings`}
+          damageDetail={`${signed(player.damage_xwoba_points_above_expected, 2)} xwOBA pts`}
+        />
       </section>
 
-      <section className="profile-reading">
+      <section className="profile-reading profile-reading--editorial">
         <div className="profile-reading__header">
           <div>
-            <span className="eyebrow">What the profile shows</span>
-            <h2>What this profile says.</h2>
+            <span className="eyebrow">The read</span>
+            <h2>What the profile shows.</h2>
           </div>
           <Link href="/how-it-works" className="link-arrow">
-            How NorthStar works ↗
+            Methodology ↗
           </Link>
         </div>
 
-        <div className="profile-reading__grid">
+        <div className="profile-reading__grid profile-reading__grid--editorial">
           <article>
             <span>Selection · {percentile(player.selection_context_percentile)}</span>
             <p>{interpretation.selection}</p>
@@ -156,21 +111,47 @@ export default async function PlayerPage({ params }: Props) {
         </div>
       </section>
 
-      <section className="profile-section-intro">
+      <section className="profile-outcome-strip">
+        <div>
+          <span>wOBA</span>
+          <strong>{decimal(player.woba)}</strong>
+          <small>{percentile(player.woba_percentile)} pct</small>
+        </div>
+        <div>
+          <span>xwOBA</span>
+          <strong>{decimal(player.est_woba)}</strong>
+          <small>{percentile(player.xwoba_percentile)} pct</small>
+        </div>
+        <div>
+          <span>RE24 / 100 PA</span>
+          <strong>{signed(player.re24_per_100_pa, 2)}</strong>
+          <small>{percentile(player.re24_percentile)} pct</small>
+        </div>
+        <div>
+          <span>Season PA</span>
+          <strong>{integer(player.season_plate_appearances)}</strong>
+          <small>{player.primary_team_2025 ?? "MLB"} exposure</small>
+        </div>
+      </section>
+
+      <section className="profile-section-intro profile-section-intro--editorial">
         <div>
           <span className="eyebrow">Under the hood</span>
           <h2>Context beside convention.</h2>
         </div>
         <p>
-          NorthStar keeps modeled context and established outcomes visible at
-          the same time, so one number never has to carry the whole story.
+          The supporting measures stay visible so the contextual lenses can be
+          checked against familiar outcomes rather than treated as mysterious
+          scores.
         </p>
       </section>
 
-      <section className="profile-sections">
-        <article className="detail-panel">
-          <span className="eyebrow">Plate discipline</span>
-          <h2>What he chooses to attack.</h2>
+      <section className="profile-sections profile-sections--editorial">
+        <article className="detail-panel detail-panel--editorial">
+          <div className="detail-panel__title">
+            <span className="eyebrow">Plate discipline</span>
+            <h2>What he chooses to attack.</h2>
+          </div>
 
           <PercentileBar
             label="Chase avoidance"
@@ -187,9 +168,11 @@ export default async function PlayerPage({ params }: Props) {
           />
         </article>
 
-        <article className="detail-panel">
-          <span className="eyebrow">Bat-to-ball</span>
-          <h2>What happens when he swings.</h2>
+        <article className="detail-panel detail-panel--editorial">
+          <div className="detail-panel__title">
+            <span className="eyebrow">Bat-to-ball</span>
+            <h2>What happens when he swings.</h2>
+          </div>
 
           <PercentileBar
             label="Contact rate"
@@ -207,9 +190,11 @@ export default async function PlayerPage({ params }: Props) {
           />
         </article>
 
-        <article className="detail-panel">
-          <span className="eyebrow">Contact quality</span>
-          <h2>Damage when contact is made.</h2>
+        <article className="detail-panel detail-panel--editorial">
+          <div className="detail-panel__title">
+            <span className="eyebrow">Contact quality</span>
+            <h2>Damage when contact is made.</h2>
+          </div>
 
           <PercentileBar
             label="xwOBA on contact"
@@ -232,9 +217,11 @@ export default async function PlayerPage({ params }: Props) {
           />
         </article>
 
-        <article className="detail-panel">
-          <span className="eyebrow">Run production</span>
-          <h2>Established outcomes.</h2>
+        <article className="detail-panel detail-panel--editorial">
+          <div className="detail-panel__title">
+            <span className="eyebrow">Run production</span>
+            <h2>Established outcomes.</h2>
+          </div>
 
           <PercentileBar
             label="wOBA"
@@ -258,7 +245,7 @@ export default async function PlayerPage({ params }: Props) {
         </article>
       </section>
 
-      <div className="profile-disclaimer">
+      <div className="profile-disclaimer profile-disclaimer--editorial">
         <span className="status-dot" />
         <p>
           NorthStar axes are contextual diagnostics. This page intentionally
