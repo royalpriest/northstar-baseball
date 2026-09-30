@@ -5,9 +5,14 @@ type Props = {
 
 export function MetricTerm({ label, help }: Props) {
   return (
-    <abbr className="metric-term" title={help}>
+    <span
+      className="metric-term"
+      tabIndex={0}
+      aria-label={`${label}: ${help}`}
+      data-help={help}
+    >
       {label}
       <span aria-hidden="true">?</span>
-    </abbr>
+    </span>
   );
 }
