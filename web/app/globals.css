@@ -3806,7 +3806,26 @@ button:disabled {
 }
 
 @media (max-width: 430px) {
-  .lens-switcher,
+  .lens-switcher {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .lens-tab {
+    min-height: 76px;
+    padding: 12px 14px;
+    align-items: flex-start;
+  }
+
+  .lens-tab span {
+    font-size: 13px;
+  }
+
+  .lens-tab small {
+    margin-top: 5px;
+    line-height: 1.35;
+  }
+
   .toronto-summary {
     grid-template-columns: 1fr;
   }
