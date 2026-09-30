@@ -87,6 +87,8 @@ def test_database_store_searches_name_team_and_canadian_scope():
     store, _ = _store()
 
     assert store.search_players(query="alpha")[0]["batter"] == 10
+    assert store.search_players(query="canada")[0]["batter"] == 10
+    assert store.search_players(query="arraez")[0]["batter"] == 30
     assert store.search_players(team="TOR")[0]["batter"] == 20
     assert store.canadian_players()[0]["batter"] == 10
 
@@ -98,7 +100,10 @@ def test_database_store_returns_unicode_profile_and_comparison():
     assert player is not None
     assert player["player_name"] == "Luis Arráez"
 
-    comparison = store.compare([10, "Luis Arráez"])
+    resolved = store.resolve_players(["Canada", "Arraez"])
+    assert resolved == [10, 30]
+
+    comparison = store.compare(resolved)
     assert [item["batter"] for item in comparison] == [10, 30]
     assert all(set(item).issubset(COMPARISON_FIELDS) for item in comparison)
     assert "complete_three_axis_profile" not in comparison[0]
