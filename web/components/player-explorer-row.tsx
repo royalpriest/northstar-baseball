@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { integer, percentile, signed } from "@/lib/format";
+import { barWidth, integer, percentile, percentileValue, signed } from "@/lib/format";
 import type { PlayerSummary } from "@/lib/types";
 
 type Lens = "re24" | "selection" | "contact" | "damage";
@@ -35,10 +35,6 @@ const lensMeta: Record<
   },
 };
 
-function axisWidth(value?: number | null) {
-  return `${Math.max(0, Math.min(100, value ?? 0))}%`;
-}
-
 export function PlayerExplorerRow({ player, rank, lens }: Props) {
   const selected = lensMeta[lens];
 
@@ -57,18 +53,18 @@ export function PlayerExplorerRow({ player, rank, lens }: Props) {
       <div className="explorer-row__shape" aria-label="NorthStar contextual percentiles">
         <div className="explorer-mini-axis explorer-mini-axis--selection">
           <span>S</span>
-          <i><b style={{ width: axisWidth(player.selection_context_percentile) }} /></i>
-          <strong>{Math.round(player.selection_context_percentile ?? 0)}</strong>
+          <i><b style={{ width: barWidth(player.selection_context_percentile) }} /></i>
+          <strong>{percentileValue(player.selection_context_percentile)}</strong>
         </div>
         <div className="explorer-mini-axis explorer-mini-axis--contact">
           <span>C</span>
-          <i><b style={{ width: axisWidth(player.contact_context_percentile) }} /></i>
-          <strong>{Math.round(player.contact_context_percentile ?? 0)}</strong>
+          <i><b style={{ width: barWidth(player.contact_context_percentile) }} /></i>
+          <strong>{percentileValue(player.contact_context_percentile)}</strong>
         </div>
         <div className="explorer-mini-axis explorer-mini-axis--damage">
           <span>D</span>
-          <i><b style={{ width: axisWidth(player.damage_context_percentile) }} /></i>
-          <strong>{Math.round(player.damage_context_percentile ?? 0)}</strong>
+          <i><b style={{ width: barWidth(player.damage_context_percentile) }} /></i>
+          <strong>{percentileValue(player.damage_context_percentile)}</strong>
         </div>
       </div>
 

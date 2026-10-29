@@ -79,7 +79,7 @@ export default async function HomePage() {
         </div>
 
         <div className="lens-definition-list">
-          <Link href="/players" className="lens-definition lens-definition--selection">
+          <Link href="/players?lens=selection" className="lens-definition lens-definition--selection">
             <span className="lens-definition__index">01</span>
             <div>
               <strong>Selection</strong>
@@ -87,7 +87,7 @@ export default async function HomePage() {
             </div>
             <span className="lens-definition__mark">Decision quality ↗</span>
           </Link>
-          <Link href="/players" className="lens-definition lens-definition--contact">
+          <Link href="/players?lens=contact" className="lens-definition lens-definition--contact">
             <span className="lens-definition__index">02</span>
             <div>
               <strong>Contact</strong>
@@ -95,7 +95,7 @@ export default async function HomePage() {
             </div>
             <span className="lens-definition__mark">Bat-to-ball ↗</span>
           </Link>
-          <Link href="/players" className="lens-definition lens-definition--damage">
+          <Link href="/players?lens=damage" className="lens-definition lens-definition--damage">
             <span className="lens-definition__index">03</span>
             <div>
               <strong>Damage</strong>

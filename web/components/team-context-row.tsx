@@ -1,15 +1,11 @@
 import Link from "next/link";
-import { integer, signed } from "@/lib/format";
+import { barWidth, integer, percentileValue, signed } from "@/lib/format";
 import type { PlayerSummary } from "@/lib/types";
 
 type Props = {
   player: PlayerSummary;
   index: number;
 };
-
-function width(value?: number | null) {
-  return `${Math.max(0, Math.min(100, value ?? 0))}%`;
-}
 
 export function TeamContextRow({ player, index }: Props) {
   const partial = player.primary_team_2025 !== "TOR";
@@ -38,18 +34,18 @@ export function TeamContextRow({ player, index }: Props) {
       <div className="team-context-row__shape">
         <div className="team-mini-axis team-mini-axis--selection">
           <span>S</span>
-          <i><b style={{ width: width(player.selection_context_percentile) }} /></i>
-          <strong>{Math.round(player.selection_context_percentile ?? 0)}</strong>
+          <i><b style={{ width: barWidth(player.selection_context_percentile) }} /></i>
+          <strong>{percentileValue(player.selection_context_percentile)}</strong>
         </div>
         <div className="team-mini-axis team-mini-axis--contact">
           <span>C</span>
-          <i><b style={{ width: width(player.contact_context_percentile) }} /></i>
-          <strong>{Math.round(player.contact_context_percentile ?? 0)}</strong>
+          <i><b style={{ width: barWidth(player.contact_context_percentile) }} /></i>
+          <strong>{percentileValue(player.contact_context_percentile)}</strong>
         </div>
         <div className="team-mini-axis team-mini-axis--damage">
           <span>D</span>
-          <i><b style={{ width: width(player.damage_context_percentile) }} /></i>
-          <strong>{Math.round(player.damage_context_percentile ?? 0)}</strong>
+          <i><b style={{ width: barWidth(player.damage_context_percentile) }} /></i>
+          <strong>{percentileValue(player.damage_context_percentile)}</strong>
         </div>
       </div>
 
