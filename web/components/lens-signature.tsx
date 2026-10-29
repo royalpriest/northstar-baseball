@@ -1,4 +1,4 @@
-import { percentile } from "@/lib/format";
+import { isMissing, percentile } from "@/lib/format";
 
 type Lens = {
   key: "selection" | "contact" | "damage";
@@ -59,6 +59,7 @@ export function LensSignature({
       aria-label="NorthStar three-lens profile"
     >
       {lenses.map((lens) => {
+        const available = !isMissing(lens.value);
         const width = clamp(lens.value);
         return (
           <div className={`lens-line lens-line--${lens.key}`} key={lens.key}>
@@ -69,10 +70,14 @@ export function LensSignature({
             </div>
             <div className="lens-line__track" aria-hidden="true">
               <span className="lens-line__midpoint" />
-              <span className="lens-line__fill" style={{ width: `${width}%` }} />
-              <span className="lens-line__marker" style={{ left: `${width}%` }}>
-                <i />
-              </span>
+              {available ? (
+                <>
+                  <span className="lens-line__fill" style={{ width: `${width}%` }} />
+                  <span className="lens-line__marker" style={{ left: `${width}%` }}>
+                    <i />
+                  </span>
+                </>
+              ) : null}
             </div>
           </div>
         );

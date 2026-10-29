@@ -155,6 +155,8 @@ Already compliant: "Show more" (52px), "+ Add hitter" (46px).
 Each step is its own small PR with tests, merged only after user sign-off:
 
 1. **Data correctness** — dash-for-missing in Explorer and Team rows, correct lens links, formatted PA.
+   *Done:* rows show "—"; the lens signature and Compare board no longer draw a 0% marker for a missing
+   value; covered by `web/tests/missing-values.test.mjs`.
 2. **Touch targets and contrast** — 44px dock links and remove button, raise failing colours to tokens that
    pass AA, 12px text floor.
 3. **Search combobox** — full keyboard model, close on Escape/blur, clean listbox contents.
