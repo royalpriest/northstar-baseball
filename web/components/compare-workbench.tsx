@@ -2,7 +2,7 @@
 
 import { FormEvent, useState, type CSSProperties } from "react";
 import { browserApiBase } from "@/lib/browser-config";
-import { decimal, percentile, signed } from "@/lib/format";
+import { decimal, integer, isMissing, percentile, signed } from "@/lib/format";
 import type { CompareResponse, PlayerProfile } from "@/lib/types";
 
 const supportRows: Array<{
@@ -185,7 +185,7 @@ export function CompareWorkbench() {
                   </div>
                   <div>
                     <strong>{player.player_name}</strong>
-                    <span>{player.primary_team_2025 ?? "MLB"} · {player.season_plate_appearances ?? "—"} PA</span>
+                    <span>{player.primary_team_2025 ?? "MLB"} · {integer(player.season_plate_appearances)} PA</span>
                   </div>
                 </div>
               ))}
@@ -199,6 +199,7 @@ export function CompareWorkbench() {
 
                   {result.players.map((player, index) => {
                     const value = player[axis.key] as number | null | undefined;
+                    const available = !isMissing(value);
                     const position = clamped(value);
                     return (
                       <div className="comparison-board__cell" key={player.batter}>
@@ -208,14 +209,18 @@ export function CompareWorkbench() {
                         </div>
                         <div className="comparison-board__track" aria-label={`${player.player_name} ${axis.label}: ${percentile(value)} percentile`}>
                           <span className="comparison-board__midpoint" />
-                          <span
-                            className={`comparison-board__fill comparison-board__fill--player-${index + 1}`}
-                            style={{ width: `${position}%` }}
-                          />
-                          <span
-                            className={`comparison-board__marker comparison-board__marker--player-${index + 1}`}
-                            style={{ left: `${position}%` }}
-                          />
+                          {available ? (
+                            <>
+                              <span
+                                className={`comparison-board__fill comparison-board__fill--player-${index + 1}`}
+                                style={{ width: `${position}%` }}
+                              />
+                              <span
+                                className={`comparison-board__marker comparison-board__marker--player-${index + 1}`}
+                                style={{ left: `${position}%` }}
+                              />
+                            </>
+                          ) : null}
                         </div>
                       </div>
                     );
