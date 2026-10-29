@@ -35,3 +35,18 @@ export function integer(value?: number | null): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   return Math.round(value).toLocaleString("en-CA");
 }
+
+export function isMissing(value?: number | null): value is null | undefined {
+  return value === null || value === undefined || Number.isNaN(value);
+}
+
+// Bare 0–100 percentile for compact axes; a dash means unavailable, not zero.
+export function percentileValue(value?: number | null): string {
+  if (isMissing(value)) return "—";
+  return String(Math.max(0, Math.min(100, Math.round(value))));
+}
+
+export function barWidth(value?: number | null): string {
+  if (isMissing(value)) return "0%";
+  return `${Math.max(0, Math.min(100, value))}%`;
+}
