@@ -115,4 +115,5 @@ def test_model_frame_drops_incomplete_pitch_features():
 
     assert len(model_frame) == 2
     assert model_frame["release_speed"].dtype.name == "float32"
-    assert model_frame["pitch_type"].dtype == object
+    # pandas 2 keeps text as object; pandas 3 uses its own string dtype.
+    assert pd.api.types.is_string_dtype(model_frame["pitch_type"])
