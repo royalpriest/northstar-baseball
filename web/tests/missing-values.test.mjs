@@ -44,7 +44,7 @@ test("bar fills and markers are only drawn when the percentile exists", async ()
 
   const compare = await source("components/compare-workbench.tsx");
   assert.match(compare, /available \? \(\s*<>\s*<span\s+className=\{`comparison-board__fill/);
-  assert.match(compare, /\{integer\(player\.season_plate_appearances\)\} PA/);
+  assert.match(compare, /\{integer\(player\.season_plate_appearances \?\? player\.plate_appearances\)\} PA/);
 });
 
 test("home lens cards open the matching Players lens", async () => {
