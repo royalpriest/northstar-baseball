@@ -3561,7 +3561,7 @@ button:disabled {
 
   .nav-link {
     flex: 0 0 auto;
-    min-height: 36px;
+    min-height: 44px;
     display: inline-flex;
     align-items: center;
     scroll-snap-align: start;
@@ -3890,6 +3890,22 @@ button:disabled {
     padding-bottom: 86px;
   }
 
+  /* backdrop-filter makes the sticky header the containing block for its
+     position: fixed children, which pinned the bottom dock to the top of the
+     screen on top of the brand. Blur through a pseudo-element instead. */
+  .site-nav {
+    backdrop-filter: none;
+  }
+
+  .site-nav::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    backdrop-filter: blur(22px);
+    pointer-events: none;
+  }
+
   .site-nav__inner {
     grid-template-columns: 1fr auto;
     min-height: 58px;
@@ -3920,7 +3936,7 @@ button:disabled {
 
   .nav-link {
     min-width: 0;
-    min-height: 42px;
+    min-height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -4001,12 +4017,12 @@ button:disabled {
   }
 
   .nav-link {
-    min-height: 40px;
-    font-size: 9.5px;
+    min-height: 44px;
+    font-size: 10px;
   }
 
   main {
-    padding-bottom: 78px;
+    padding-bottom: 82px;
   }
 }
 
@@ -6631,17 +6647,23 @@ body {
     padding: 10px;
   }
 
+  /* Three columns cannot hold a lens label, a 30px value and full player
+     names on a phone; the names overflowed the viewport at 320px. Put the
+     label and value on one line and the names on their own full-width line. */
   .lens-leader-line {
-    grid-template-columns: minmax(105px, 0.65fr) 60px minmax(120px, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 14px;
   }
 
   .lens-leader-line__names {
-    justify-items: end;
+    grid-column: 1 / -1;
+    justify-items: start;
+    text-align: left;
   }
 
   .lens-leader-line__names a,
   .lens-leader-line__names > strong {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .guide-sequence__row {
@@ -7119,6 +7141,13 @@ body {
   .editorial-home {
     width: min(calc(100% - 40px), 920px);
   }
+
+  /* The flat-home layer above re-declares the two-column hero, so the
+     single-column switch has to be restated here or phones get a ~23px
+     text column squeezed beside the featured profile. */
+  .editorial-home .editorial-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 700px) {
@@ -7133,4 +7162,184 @@ body {
     padding-right: 0;
     border-radius: 0;
   }
+
+  /* Keep the damage score on the hitter's line. Without explicit placement
+     the score wrapped under the lens bars as a stray "100th" row. */
+  .editorial-home .editorial-rank__row {
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    gap: 8px 12px;
+    align-items: start;
+  }
+
+  .editorial-home .editorial-rank__number { grid-column: 1; grid-row: 1; }
+  .editorial-home .editorial-rank__identity { grid-column: 2; grid-row: 1; }
+  .editorial-home .editorial-rank__metric { grid-column: 3; grid-row: 1; text-align: right; }
+
+  .editorial-home .editorial-rank__row .lens-signature {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+}
+
+/* Phone and tablet layout choices (approved mockups) ----------------------- */
+
+/* Compare on phones: one lens at a time, every hitter on the same scale. */
+.compare-lens-stack {
+  --player-1: #72a7ff;
+  --player-2: #5bd7d2;
+  --player-3: #f0b866;
+  --player-4: #b49aff;
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .comparison-board,
+  .compare-outcomes {
+    display: none;
+  }
+
+  .compare-lens-stack {
+    display: grid;
+    border-top: 1px solid var(--editorial-line-strong);
+  }
+
+  .compare-lens-stack__lens {
+    padding: 16px 0 12px;
+    border-bottom: 1px solid var(--editorial-line);
+  }
+
+  .compare-lens-stack__lens--selection { --lens-color: var(--selection); }
+  .compare-lens-stack__lens--contact { --lens-color: var(--contact); }
+  .compare-lens-stack__lens--damage { --lens-color: var(--damage); }
+
+  .compare-lens-stack__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .compare-lens-stack__header h3 {
+    margin: 0;
+    color: var(--lens-color, var(--text));
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .compare-lens-stack__header span {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .compare-lens-stack__rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .compare-lens-stack__row {
+    display: grid;
+    grid-template-columns: minmax(0, 118px) minmax(0, 1fr) 52px;
+    gap: 12px;
+    align-items: center;
+    min-height: 40px;
+  }
+
+  .compare-lens-stack__row--outcomes {
+    grid-template-columns: minmax(0, 118px) minmax(0, 1fr) minmax(0, 1fr) 52px;
+  }
+
+  .compare-lens-stack__name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 13px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .compare-lens-stack__dot {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .compare-lens-stack__value {
+    font-size: 14px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .compare-lens-stack__outcome {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .compare-lens-stack__outcome small {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+  }
+}
+
+/* Leaderboard rows on phones and tablets: keep the three-lens shape bars on a
+   second line under the hitter instead of hiding them. */
+@media (max-width: 900px) {
+  .explorer-row:not(.explorer-row--head) {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    gap: 8px 14px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .explorer-row:not(.explorer-row--head) .explorer-row__rank { grid-column: 1; grid-row: 1; }
+  .explorer-row:not(.explorer-row--head) .explorer-row__identity { grid-column: 2; grid-row: 1; }
+  .explorer-row:not(.explorer-row--head) .explorer-row__metric { grid-column: 3; grid-row: 1; }
+
+  .explorer-row:not(.explorer-row--head) .explorer-row__shape {
+    display: grid;
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 760px) {
+  .team-context-row:not(.team-context-row--head) {
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 8px 14px;
+  }
+
+  .team-context-row:not(.team-context-row--head) .team-context-row__index { grid-column: 1; grid-row: 1; }
+  .team-context-row:not(.team-context-row--head) .team-context-row__identity { grid-column: 2; grid-row: 1; }
+  .team-context-row:not(.team-context-row--head) .team-context-row__metric { grid-column: 3; grid-row: 1; }
+
+  .team-context-row:not(.team-context-row--head) .team-context-row__shape {
+    display: grid;
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 900px) {
+  .explorer-mini-axis,
+  .team-mini-axis {
+    grid-template-columns: 14px minmax(0, 1fr) 30px;
+    gap: 8px;
+  }
+
+  .explorer-mini-axis > span,
+  .explorer-mini-axis > strong,
+  .team-mini-axis > span,
+  .team-mini-axis > strong {
+    font-size: 11px;
+  }
+
+  .explorer-mini-axis > span { color: var(--axis-color); }
+  .team-mini-axis > span { color: var(--team-axis); }
 }
