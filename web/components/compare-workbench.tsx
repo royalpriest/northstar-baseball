@@ -2,7 +2,7 @@
 
 import { FormEvent, useState, type CSSProperties } from "react";
 import { browserApiBase } from "@/lib/browser-config";
-import { decimal, percentile, signed } from "@/lib/format";
+import { decimal, integer, isMissing, percentile, signed } from "@/lib/format";
 import type { CompareResponse, PlayerProfile } from "@/lib/types";
 
 const supportRows: Array<{
@@ -46,6 +46,12 @@ const axes: Array<{
 
 function clamped(value?: number | null) {
   return Math.max(0, Math.min(100, value ?? 0));
+}
+
+function shortName(name: string) {
+  const parts = name.split(" ");
+  if (parts.length < 2) return name;
+  return `${parts[0][0]}. ${parts.slice(1).join(" ")}`;
 }
 
 function initials(name: string) {
@@ -185,7 +191,7 @@ export function CompareWorkbench() {
                   </div>
                   <div>
                     <strong>{player.player_name}</strong>
-                    <span>{player.primary_team_2025 ?? "MLB"} · {player.season_plate_appearances ?? "—"} PA</span>
+                    <span>{player.primary_team_2025 ?? "MLB"} · {integer(player.season_plate_appearances ?? player.plate_appearances)} PA</span>
                   </div>
                 </div>
               ))}
@@ -199,6 +205,7 @@ export function CompareWorkbench() {
 
                   {result.players.map((player, index) => {
                     const value = player[axis.key] as number | null | undefined;
+                    const available = !isMissing(value);
                     const position = clamped(value);
                     return (
                       <div className="comparison-board__cell" key={player.batter}>
@@ -208,20 +215,99 @@ export function CompareWorkbench() {
                         </div>
                         <div className="comparison-board__track" aria-label={`${player.player_name} ${axis.label}: ${percentile(value)} percentile`}>
                           <span className="comparison-board__midpoint" />
-                          <span
-                            className={`comparison-board__fill comparison-board__fill--player-${index + 1}`}
-                            style={{ width: `${position}%` }}
-                          />
-                          <span
-                            className={`comparison-board__marker comparison-board__marker--player-${index + 1}`}
-                            style={{ left: `${position}%` }}
-                          />
+                          {available ? (
+                            <>
+                              <span
+                                className={`comparison-board__fill comparison-board__fill--player-${index + 1}`}
+                                style={{ width: `${position}%` }}
+                              />
+                              <span
+                                className={`comparison-board__marker comparison-board__marker--player-${index + 1}`}
+                                style={{ left: `${position}%` }}
+                              />
+                            </>
+                          ) : null}
                         </div>
                       </div>
                     );
                   })}
                 </div>
               ))}
+            </div>
+
+            {/* Phones: one lens at a time, every hitter on the same scale. */}
+            <div className="compare-lens-stack">
+              {axes.map((axis) => (
+                <section
+                  className={`compare-lens-stack__lens compare-lens-stack__lens--${axis.className}`}
+                  key={axis.key}
+                  aria-labelledby={`compare-lens-${axis.className}`}
+                >
+                  <header className="compare-lens-stack__header">
+                    <h3 id={`compare-lens-${axis.className}`}>{axis.label}</h3>
+                    <span>{axis.note}</span>
+                  </header>
+                  <ul className="compare-lens-stack__rows">
+                    {result.players.map((player, index) => {
+                      const value = player[axis.key] as number | null | undefined;
+                      const available = !isMissing(value);
+                      const position = clamped(value);
+                      return (
+                        <li className="compare-lens-stack__row" key={player.batter}>
+                          <span className="compare-lens-stack__name" title={player.player_name}>
+                            <span
+                              className={`compare-lens-stack__dot comparison-board__marker--player-${index + 1}`}
+                              aria-hidden="true"
+                            />
+                            <span className="sr-only">{player.player_name}</span>
+                            <span aria-hidden="true">{shortName(player.player_name)}</span>
+                          </span>
+                          <span className="comparison-board__track" aria-hidden="true">
+                            <span className="comparison-board__midpoint" />
+                            {available ? (
+                              <>
+                                <span
+                                  className={`comparison-board__fill comparison-board__fill--player-${index + 1}`}
+                                  style={{ width: `${position}%` }}
+                                />
+                                <span
+                                  className={`comparison-board__marker comparison-board__marker--player-${index + 1}`}
+                                  style={{ left: `${position}%` }}
+                                />
+                              </>
+                            ) : null}
+                          </span>
+                          <strong className="compare-lens-stack__value">{percentile(value)}</strong>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ))}
+
+              <section className="compare-lens-stack__lens" aria-labelledby="compare-lens-outcomes">
+                <header className="compare-lens-stack__header">
+                  <h3 id="compare-lens-outcomes">Outcomes</h3>
+                  <span>RE24 / 100 at right</span>
+                </header>
+                <ul className="compare-lens-stack__rows">
+                  {result.players.map((player, index) => (
+                    <li className="compare-lens-stack__row compare-lens-stack__row--outcomes" key={player.batter}>
+                      <span className="compare-lens-stack__name" title={player.player_name}>
+                        <span
+                          className={`compare-lens-stack__dot comparison-board__marker--player-${index + 1}`}
+                          aria-hidden="true"
+                        />
+                        <span className="sr-only">{player.player_name}</span>
+                        <span aria-hidden="true">{shortName(player.player_name)}</span>
+                      </span>
+                      <span className="compare-lens-stack__outcome"><small>wOBA</small> {decimal(player.woba)}</span>
+                      <span className="compare-lens-stack__outcome"><small>xwOBA</small> {decimal(player.est_woba)}</span>
+                      <strong className="compare-lens-stack__value">{signed(player.re24_per_100_pa, 2)}</strong>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             </div>
 
             <div
