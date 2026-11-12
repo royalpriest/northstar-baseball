@@ -52,3 +52,18 @@ test("mobile dock links meet the 44px touch target", () => {
     }
   }
 });
+
+test("phones get the one-lens-at-a-time Compare stack instead of the sideways board", async () => {
+  const compare = await readFile(new URL("../components/compare-workbench.tsx", import.meta.url), "utf8");
+  assert.match(compare, /className="compare-lens-stack"/);
+  const phone = mediaBlocks(700).find((block) => block.body.includes(".compare-lens-stack {"));
+  assert.ok(phone, "expected a <=700px rule that shows the lens stack");
+  assert.match(phone.body, /\.comparison-board,\s*\.compare-outcomes \{\s*display: none;/);
+});
+
+test("leaderboard rows keep their shape bars on phones and tablets", () => {
+  const explorer = mediaBlocks(900).find((block) => block.body.includes(".explorer-row__shape {\n    display: grid;"));
+  assert.ok(explorer, "explorer rows must show shape bars at <=900px");
+  const team = mediaBlocks(760).find((block) => block.body.includes(".team-context-row__shape {\n    display: grid;"));
+  assert.ok(team, "team rows must show shape bars at <=760px");
+});
