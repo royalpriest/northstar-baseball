@@ -8,6 +8,8 @@ compare two to four hitters side by side.
 
 **Live site:** https://northstar-baseball.vercel.app
 
+![The NorthStar home page with Aaron Judge's three-lens profile](docs/home.png)
+
 ## Key result
 
 - The 2025 regular season was processed from **742,080 pitches into 190,987 plate appearances**, with each
