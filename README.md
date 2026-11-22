@@ -173,6 +173,8 @@ northstar-baseball/
 - Chadwick player register, via pybaseball, for player names
 - MLB Stats API for player birthplaces (Canadian-born filter)
 
----
+## License
 
-© Royalpriest Babalola. All rights reserved. Shared for viewing.
+Released under the [MIT License](LICENSE). © 2026 Royalpriest Babalola.
+
+Data pulled from Baseball Savant, the Chadwick register and the MLB Stats API stays subject to those sources' own terms.
